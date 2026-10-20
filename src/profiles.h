@@ -66,6 +66,11 @@ typedef struct {
 	uint32_t bgColor;
 	int animFrames, animStep;  /* frames recorded, frames between them */
 	int refresh;               /* frames between captures in normal play */
+	/* layers the capture leaves out on lines [hideY0, hideY1): for a map
+	 * screen that has something of its own where the HUD strip is drawn
+	 * over it, which would show through the HUD (0: none) */
+	uint8_t hideLayers;        /* LAYER_* */
+	int hideY0, hideY1;
 } MapSpec;
 
 typedef struct {

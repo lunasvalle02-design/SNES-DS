@@ -65,6 +65,9 @@ MapResult mapcap_capture(Core* hidden, const MapSpec* m, const uint8_t* state, s
 	out->frames = 0;
 	if (!core_load_state(hidden, state, size)) return MAPCAP_NOT_LIVE;
 	if (!probes_match(hidden, m->live)) return MAPCAP_NOT_LIVE;
+	/* the hidden core draws nothing but captures, so this can stay set */
+	core_hide_layers(hidden, 0, 0, 240);
+	if (m->hideLayers) core_hide_layers(hidden, m->hideLayers, m->hideY0, m->hideY1);
 	/* nothing to look at until the map is up: those frames aren't drawn */
 	core_set_render(hidden, false);
 	run_steps(hidden, m->open);

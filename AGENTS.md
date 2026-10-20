@@ -130,7 +130,7 @@ Copy [`docs/game-template/`](docs/game-template) to `games/<id>/` and fill in `p
 | `split[]` | Up to 4 rules, first match wins: memory probes (`PROBE`, `PROBE_EITHER`) → which layers and lines go to the second screen, as a HUD strip (`SPLIT_HUD`, over the map) or a whole screen (`SPLIT_FULL`, a menu) |
 | `hudShowY0/Y1` | The lines of a HUD strip worth showing |
 | `bootMuteFrames` | Frames of sound to mute after power-on |
-| `map` | How the hidden core opens the map, when a capture may start (`live`), how to know it's up (`shown`), what changes trigger a new capture (`room`), and how to tell a settled, non-empty picture |
+| `map` | How the hidden core opens the map, when a capture may start (`live`), how to know it's up (`shown`), what changes trigger a new capture (`room`), how to tell a settled, non-empty picture, and what the capture leaves out under the HUD strip (`hideLayers`) |
 
 Comment every value with what it is and how it was found, as `games/zelda_alttp/profile.c` does. Then register it in
 [`games/games.c`](games/games.c): `extern const Profile game_<id>;` and `&game_<id>,` in the list. CMake picks up

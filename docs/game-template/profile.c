@@ -45,5 +45,8 @@ const Profile game_<id> = {
 		.minForeground = 2000, .bgColor = 0x000000,
 		.animFrames = 1, .animStep = 4,
 		.refresh = 90,
+		/* layers left out of the capture where the HUD strip goes over it,
+		 * when the map has text of its own there (leave out if not) */
+		.hideLayers = 0, .hideY0 = 0, .hideY1 = 0,
 	},
 };
