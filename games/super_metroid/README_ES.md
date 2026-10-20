@@ -38,8 +38,9 @@ Samus y los botones L/R.
 
 ## Hallazgos
 
-- La intro espera en cada página de texto hasta que se pulsa un botón (A sirve, Start no); si nadie toca nada, nunca
-  llega a Ceres. Los tests la pasan pulsando A.
+- Aquí la intro se detiene tras cada página de texto hasta que se pulsa un botón (A sirve, Start no); si nadie toca
+  nada, nunca llega a Ceres (probado durante 20000 fotogramas). En una consola puede que siga sola, y entonces es una
+  diferencia del núcleo que conviene mirar en la consola; en cualquier caso A la pasa. Los tests pulsan A.
 - En la estación Ceres no se puede pausar: Start no hace nada. Los tests se saltan la huida de Ceres poniendo el
   estado del juego a `20` (Samus llegó al ascensor): el juego hace la explosión y el viaje, aterriza la nave en Zebes
   y sigue como lo haría tras la huida (`$079F` = `00`, sala `$91F8`).

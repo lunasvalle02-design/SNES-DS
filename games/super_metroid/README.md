@@ -36,8 +36,9 @@ and the frame, BG3 the HUD again (lines 0-31), the sprites Samus's marker and th
 
 ## Findings
 
-- The intro waits on each page of text until a button is pressed (A works, Start doesn't); left alone it never
-  reaches Ceres. The tests tap A through it.
+- Here the intro stops after each page of text until a button is pressed (A works, Start doesn't); left alone it
+  never reaches Ceres (20000 frames tried). On a console it may go on by itself, in which case this is a difference
+  in the core worth checking on the device; either way A gets through it. The tests tap A.
 - No pausing on Ceres Station: Start does nothing there. The tests skip Ceres's escape by setting the game state to
   `20` (Samus reached the elevator): the game runs the explosion and the flight, lands the ship on Zebes and goes on
   as it would after the escape (`$079F` = `00`, room `$91F8`).
