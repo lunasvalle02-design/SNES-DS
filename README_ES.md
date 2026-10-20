@@ -9,7 +9,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/licencia-GPL--3.0--or--later-FF8A1F" alt="Licencia: GPL-3.0-or-later"></a>
-  <img src="https://img.shields.io/badge/versi%C3%B3n-0.6.0-FF8A1F" alt="Versión 0.6.0">
+  <img src="https://img.shields.io/badge/versi%C3%B3n-1.0.0-FF8A1F" alt="Versión 1.0.0">
   <img src="https://img.shields.io/badge/plataforma-ROCKNIX%20%7C%20Windows%20%7C%20Linux-3B3129" alt="Plataformas: ROCKNIX, Windows, Linux">
   <img src="https://img.shields.io/badge/lenguaje-C11-3B3129" alt="Lenguaje: C11">
 </p>
@@ -69,8 +69,9 @@ pasan a la segunda pantalla, y un segundo núcleo oculto mantiene allí abierto 
 
 ## Capturas
 
-La consola muestra los dos paneles uno al lado del otro, con la pantalla de arriba a la izquierda. Cuando no hay
-carátula descargada, la app genera una; aquí no se muestra ningún contenido de juegos.
+La consola muestra los dos paneles uno al lado del otro, con la pantalla de arriba a la izquierda. Los iconos de los
+juegos son dibujos originales, que salen cuando no hay carátula descargada; aquí no se muestra ningún contenido de
+juegos.
 
 <p align="center">
   <img src="docs/images/es/library.png" alt="Lista de juegos: el juego elegido en la pantalla de arriba, la lista en la de abajo (táctil)" width="100%">
@@ -80,6 +81,11 @@ carátula descargada, la app genera una; aquí no se muestra ningún contenido d
 <p align="center">
   <img src="docs/images/es/settings.png" alt="Ajustes: arriba qué hace cada ajuste, abajo los ajustes" width="100%">
   <br><sub>Ajustes: arriba qué hace el ajuste elegido, abajo los ajustes.</sub>
+</p>
+
+<p align="center">
+  <img src="docs/images/es/controls.png" alt="Controles: cada botón de la SNES y el botón de la consola en el que está" width="100%">
+  <br><sub>Controles: cada botón de la SNES y el de la consola en el que está; elige uno y pulsa el nuevo botón.</sub>
 </p>
 
 <table>

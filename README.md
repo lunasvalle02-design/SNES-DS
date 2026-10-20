@@ -9,7 +9,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-FF8A1F" alt="License: GPL-3.0-or-later"></a>
-  <img src="https://img.shields.io/badge/version-0.6.0-FF8A1F" alt="Version 0.6.0">
+  <img src="https://img.shields.io/badge/version-1.0.0-FF8A1F" alt="Version 1.0.0">
   <img src="https://img.shields.io/badge/platform-ROCKNIX%20%7C%20Windows%20%7C%20Linux-3B3129" alt="Platforms: ROCKNIX, Windows, Linux">
   <img src="https://img.shields.io/badge/language-C11-3B3129" alt="Language: C11">
 </p>
@@ -68,8 +68,8 @@ move to the second screen, and a hidden second emulator core keeps the game's ow
 
 ## Screenshots
 
-The device runs both panels side by side, top screen on the left. Covers are drawn by the app when none has been
-scraped; no game content is shown here.
+The device runs both panels side by side, top screen on the left. The games' icons are original drawings, shown
+when no cover has been scraped; no game content is shown here.
 
 <p align="center">
   <img src="docs/images/library.png" alt="Game list: the chosen game on the top screen, the list on the bottom (touch) screen" width="100%">
@@ -79,6 +79,11 @@ scraped; no game content is shown here.
 <p align="center">
   <img src="docs/images/settings.png" alt="Settings: what each setting does above, the settings below" width="100%">
   <br><sub>Settings: what the chosen setting does above, the settings below.</sub>
+</p>
+
+<p align="center">
+  <img src="docs/images/controls.png" alt="Controls: each SNES button and the console's button it is on" width="100%">
+  <br><sub>Controls: each SNES button, and the console's button it's on; choose one and press the new button.</sub>
 </p>
 
 <table>

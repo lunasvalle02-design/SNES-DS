@@ -31,6 +31,7 @@ Legend: ✅ done · 🔶 in progress · ⬜ to do
 | 0.4.0-dev | Checked on the console: 60 fps with no audio dropouts; the menu opens with L3 or the R (home) button. Saves, states and settings written safely (a power cut can't corrupt them); the speed log no longer counts time in the menu |
 | 0.5.0 | Two more games, each on its own branch: Super Metroid (the pause map, with the HUD over it) and Super Castlevania IV (the HUD). A profile can crop the game screen while its HUD is below, so Super Metroid's room fills the top screen. Both checked on the console |
 | 0.6.0 | The release candidate. Controls remapped in the settings; an icon for each game in the list; A Link to the Past keeps its HUD on the game screen. CI on GitHub Actions, `CHANGELOG.md`, the device instructions in English. Sleep and resume checked on the console |
+| 1.0.0 | The first stable version: the release candidate, used on the console for some days without problems |
 
 ## The road to 1.0
 
@@ -39,7 +40,7 @@ Legend: ✅ done · 🔶 in progress · ⬜ to do
 | 0.4 | Checked on the console: speed, input, touch; saves that a power cut can't corrupt | ✅ |
 | 0.5 | A second and third game, on `game/…` branches (Super Metroid, Super Castlevania IV), with whatever engine hooks they need; the profile format settles | ✅ |
 | 0.6 (release candidate) | Sleep and resume, long sessions, CI on GitHub Actions, `CHANGELOG.md`, GitHub releases, the device instructions in English | ✅ Long sessions are what the days before 1.0 check |
-| 1.0.0 | The release candidate used on the console for some days without problems | ⬜ |
+| 1.0.0 | The release candidate used on the console for some days without problems | ✅ |
 
 What 1.0 promises, once out (semantic versioning: breaking any of it means 2.0): the `snes-ds.cfg` format, battery
 saves and save states staying loadable, the command-line options, and the profile format game modules are written
