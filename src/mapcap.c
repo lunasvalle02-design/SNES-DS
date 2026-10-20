@@ -27,7 +27,15 @@ static int frame_diff(const uint32_t* a, const uint32_t* b) {
 	return n;
 }
 
-/* run until the picture holds still (blinking markers allowed) */
+static int foreground(const MapSpec* m, const uint32_t* f) {
+	int n = 0;
+	for (int i = 0; i < CORE_W * CORE_H; i++) n += f[i] != m->bgColor;
+	return n;
+}
+
+/* run until the picture holds still (blinking markers allowed). A (nearly)
+ * empty picture doesn't count: A Link to the Past's dungeon map sits on a
+ * black screen for a while before it's drawn */
 static bool settle(Core* c, const MapSpec* m, uint32_t* prev) {
 	int still = 0;
 	memcpy(prev, core_frame(c), sizeof(uint32_t) * CORE_W * CORE_H);
@@ -35,7 +43,8 @@ static bool settle(Core* c, const MapSpec* m, uint32_t* prev) {
 		core_run_frame(c);
 		const uint32_t* now = core_frame(c);
 		if (!probes_match(c, m->shown)) return false;
-		still = frame_diff(prev, now) <= m->maxDiff ? still + 1 : 0;
+		bool same = frame_diff(prev, now) <= m->maxDiff && foreground(m, now) >= m->minForeground;
+		still = same ? still + 1 : 0;
 		memcpy(prev, now, sizeof(uint32_t) * CORE_W * CORE_H);
 		if (still >= m->stableFrames) return true;
 	}
@@ -64,10 +73,7 @@ MapResult mapcap_capture(Core* hidden, const MapSpec* m, const uint8_t* state, s
 			goto done;
 		}
 	}
-	int fg = 0;
-	const uint32_t* f = core_frame(hidden);
-	for (int i = 0; i < CORE_W * CORE_H; i++) fg += f[i] != m->bgColor;
-	if (fg < m->minForeground) {
+	if (foreground(m, core_frame(hidden)) < m->minForeground) {
 		r = MAPCAP_EMPTY;
 		goto done;
 	}

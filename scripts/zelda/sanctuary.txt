@@ -1,0 +1,54 @@
+# A Link to the Past (USA): into a dungeon (the Sanctuary, part of Hyrule
+# Castle) without playing that far, from new_game.txt's `free` state:
+# progress set to "Zelda rescued", save and quit, start from the Sanctuary.
+# Checks the dungeon map capture and the text box against the HUD split.
+# Leaves `sanct` (Link in the Sanctuary) in OUTDIR.
+#
+#   harness ROM out scripts/zelda/new_game.txt
+#   harness ROM out scripts/zelda/sanctuary.txt
+load free
+poke 0xF3C5 2      # progress: Zelda rescued
+tap SELECT         # Continue Game / Save and Quit
+wait 60
+tap DOWN
+wait 20
+tap A              # save and quit: back to the intro
+wait 120
+untiltap 0x10 0xFF 0x01 3000 START   # intro, title -> player select
+until 0x11 0xFF 0x05 300
+wait 60
+untiltap 0x10 0xFF 0x1B 600 A        # file 1 -> the start menu (module 1B)
+wait 60
+tap DOWN           # Start From Sanctuary
+wait 30
+tap A
+until 0x10 0xFF 0x07 600
+until 0x11 0xFF 0x00 600
+wait 60
+expect 0x10 07 00
+expect 0x040C 00   # a dungeon: Hyrule Castle
+expect 0xA0 12 00  # the Sanctuary's room
+save sanct
+
+# the dungeon map, which comes up on a black screen after the fade: the
+# capture must wait for it (it used to give up on the black screen)
+map dungeon ok
+
+# text: below Link when he's high on the screen ($1CD2 = $6244), above when
+# he's low ($6125, forced here); either way it starts below the HUD's lines
+hold UP 40         # up to the priest
+hold LEFT 10
+hold UP 6
+hold A 2
+until 0x1CD3 0xFF 0x62 120
+expect 0x1CD2 44 62
+poke 0x1CD2 0x25   # the box up top instead
+poke 0x1CD3 0x61
+wait 90
+expect 0x10 0E 02
+split 4 0 64       # the profile's split while text is up
+wait 1
+splitbox           # the HUD only: lines 15-59
+shot text_top
+split 0
+sheet sanctuary

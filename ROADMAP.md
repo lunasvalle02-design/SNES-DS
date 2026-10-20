@@ -43,7 +43,9 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente · ❓ decisión abierta
     220 ms en PC. En la casa de Link responde correctamente "no hay mapa aquí".
   - Velocidad de LakeSnes en PC: unos 240 fps (4× tiempo real).
 - ⬜ `tools/ramdiff.py`: comparar volcados de RAM, como en gba-ds.
-- ✅ Test de regresión: `scripts/zelda/new_game.txt` (`expect` y `map … ok`; sale con 1 si algo cambia).
+- ✅ Tests de regresión: `scripts/zelda/new_game.txt` (del encendido al mapa y el menú) y
+  `scripts/zelda/sanctuary.txt` (mazmorra: mapa de mazmorra y cuadro de texto arriba y abajo). Usan `expect`,
+  `map … ok` y `untiltap`, salen con 1 si algo cambia y no necesitan partidas guardadas.
 
 ## Fase 2: App de escritorio con dos pantallas 🔶 (falta el menú de pausa)
 - ✅ `src/main.c`: ventana SDL2 con las dos pantallas apiladas (arriba el juego, abajo la segunda pantalla), escala
@@ -56,20 +58,22 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente · ❓ decisión abierta
 - ✅ Estado rápido (F5/F7) y avance rápido (Tab). ⬜ Varias ranuras.
 - ⬜ Menú de pausa básico (continuar, guardar o cargar estado, cambiar de pantalla, salir).
 
-## Fase 3: Segunda pantalla para Zelda 🔶 (falta probar el mapa de mazmorra)
+## Fase 3: Segunda pantalla para Zelda 🔶 (falta la pantalla de reserva)
 - ✅ `src/profiles.c`: perfiles por juego basados en datos (sondas de memoria con máscara y valor, reglas de
   separación de capas, cómo abrir el mapa).
 - ✅ **HUD abajo:** en los módulos `07`/`09` (incluido el paso entre salas), BG3 de las líneas 0-64 va a la
-  pantalla inferior. Durante los diálogos se queda arriba y abajo se mantiene la última imagen del HUD.
+  pantalla inferior. También durante los diálogos (`0E/02`) y al cruzar puertas (`0F`/`10`): el cuadro de texto
+  empieza en la fila 9 de BG3 (línea 72) si está arriba y en la 18 si está abajo (`$7E1CD2`), así que nunca toca el HUD.
 - ✅ **Menú de objetos abajo:** con `0E/01`, todo BG3 va abajo y el mundo sigue visible arriba.
-- ⬜ **Diálogos:** elegir si se quedan arriba (ahora) o bajan. Opción del perfil.
+- ⬜ **Diálogos abajo** (opcional): llevar también el cuadro de texto a la segunda pantalla. Opción del perfil.
 - ✅ **Mapa en vivo con núcleo oculto** (`src/mapcap.c`, en un hilo): copiar el estado, pulsar X (y X otra vez para
   el mundo entero), esperar a que se estabilice (`$10/$11 = 0E/07` o `0E/03`), capturar 8 frames para la animación
   del marcador, validar y publicar. Se dispara cada ~1,5 s y al cambiar `$A0`/`$8A`.
-- 🔶 Mapa de mazmorra (`0E/03`): el perfil ya lo acepta. ⬜ Probarlo en el Castillo de Hyrule (hace falta un estado
-  guardado allí).
-- ✅ Composición: el mapa con el HUD encima (con transparencia); atenuado donde no hay mapa. ⬜ Diseño configurable
-  (mapa ampliado o mundo entero, HUD a 2×…).
+- ✅ Mapa de mazmorra (`0E/03`). No hace falta tener el objeto mapa (muestra las salas visitadas; el objeto revela el
+  resto). El mapa aparece tras unos frames en negro, que la captura ya no da por buenos.
+- ✅ Composición: el HUD en su propia franja (líneas 12-60) encima del mapa, cada uno a la mayor escala entera que
+  quepa (en 1024×768: HUD a 2× y mapa a 3×, exactamente 768 px). Si no caben los dos, el HUD va sobre el mapa. El
+  mapa se atenúa donde no hay mapa. ⬜ Diseño configurable (mapa ampliado o mundo entero…).
 - ⬜ Pantalla de reserva cuando no hay nada que mostrar: logo o título del juego.
 
 ## Fase 4: Dispositivo (RG DS Plus / RG DS, ROCKNIX) ⬜

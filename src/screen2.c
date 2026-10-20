@@ -117,8 +117,9 @@ void screen2_after_frame(Screen2* s, Core* game) {
 		} else {
 			memcpy(s->hud, f, sizeof(s->hud));
 			s->haveHud = true;
-			s->hudY0 = r->y0 < 0 ? 0 : r->y0;
-			s->hudY1 = r->y1 > CORE_H ? CORE_H : r->y1;
+			bool show = s->p->hudShowY1 > s->p->hudShowY0;
+			s->hudY0 = show ? s->p->hudShowY0 : r->y0 < 0 ? 0 : r->y0;
+			s->hudY1 = show ? s->p->hudShowY1 : r->y1 > CORE_H ? CORE_H : r->y1;
 		}
 	}
 	if (s->worker) {
@@ -137,3 +138,20 @@ void screen2_after_frame(Screen2* s, Core* game) {
 }
 
 const uint32_t* screen2_picture(Screen2* s) { return s->picture; }
+
+const uint32_t* screen2_menu(Screen2* s) { return s->menuUp ? s->menu : NULL; }
+
+const uint32_t* screen2_map(Screen2* s, bool* dim) {
+	if (!s->haveMap || !s->map->frames) return NULL;
+	*dim = s->mapDim;
+	return s->map->pixels[(s->ticks / s->map->step) % s->map->frames];
+}
+
+const uint32_t* screen2_hud(Screen2* s, int* y0, int* y1) {
+	if (!s->haveHud) return NULL;
+	*y0 = s->hudY0;
+	*y1 = s->hudY1;
+	return s->hud;
+}
+
+uint32_t screen2_backdrop(void) { return BACKDROP; }

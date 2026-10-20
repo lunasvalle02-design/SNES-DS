@@ -65,6 +65,9 @@ typedef struct {
 	const char* title;
 	uint32_t crc32[4]; /* of the ROM without a copier header */
 	SplitRule split[SPLITS]; /* first match wins */
+	/* the lines of a SPLIT_HUD worth showing (its strip on the second
+	 * screen); 0, 0: the rule's lines */
+	int hudShowY0, hudShowY1;
 	MapSpec map;
 } Profile;
 

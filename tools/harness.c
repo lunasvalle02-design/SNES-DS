@@ -10,6 +10,9 @@
  *   tap BUTTONS                hold 4 frames, release 4
  *   until ADDR MASK VAL MAX [BUTTONS]
  *                              run until (byte & MASK) == VAL, at most MAX frames
+ *   untiltap ADDR MASK VAL MAX BUTTONS
+ *                              tap BUTTONS every 30 frames until it matches
+ *                              (fails after MAX frames)
  *   shot NAME                  OUTDIR/NAME.png
  *   layershot NAME             NAME_bg1..bg4, _obj, _nobg3 (next frame, each alone)
  *   hide MASK [Y0 Y1]          leave layers out (1 BG1, 2 BG2, 4 BG3, 8 BG4, 16 OBJ)
@@ -278,6 +281,23 @@ static void command(char* line) {
 		} else {
 			printf("until $%06X: %ld frames\n", a, i);
 		}
+	} else if (!strcmp(cmd, "untiltap")) {
+		/* tap BUTTONS every 30 frames until (byte & MASK) == VAL */
+		uint32_t a = parse_addr(argv[1]);
+		uint8_t mask = (uint8_t)parse_num(argv[2]), val = (uint8_t)parse_num(argv[3]);
+		long max = parse_num(argv[4]), i = 0;
+		uint16_t pad = parse_buttons(argv[5]);
+		while (i < max && (core_peek(core, a) & mask) != val) {
+			step(i % 30 < 4 ? pad : 0);
+			i++;
+		}
+		core_set_pad(core, 0, 0);
+		if ((core_peek(core, a) & mask) != val) {
+			char msg[64];
+			snprintf(msg, sizeof(msg), "$%06X is %02X after %ld frames", a, core_peek(core, a), max);
+			fail("untiltap timed out", msg);
+		}
+		printf("untiltap $%06X: %ld frames\n", a, i);
 	} else if (!strcmp(cmd, "shot")) {
 		write_png(argv[1] ? argv[1] : "shot");
 	} else if (!strcmp(cmd, "layershot")) {

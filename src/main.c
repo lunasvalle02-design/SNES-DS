@@ -4,7 +4,9 @@
  *   snes-ds [options] ROM
  *     --layout=stack|side   screens one above the other (default) or side
  *                           by side (the RG DS layout under sway)
- *     --screen=WxH          size of each screen (default 256x224 times --scale)
+ *     --screen=WxH          size of each screen (default: 256x224 times --scale
+ *                           for the game, with room for the HUD above the
+ *                           map on the second screen)
  *     --scale=N             (default 2)
  *     --fullscreen
  *     --save-dir=DIR        where .srm and .stateN go (default: beside the ROM)
@@ -33,6 +35,9 @@
 
 #define SAMPLE_RATE 48000
 #define SAMPLES_PER_FRAME 800
+/* lines a HUD strip takes on the second screen, at 1x (on a screen made
+ * for it) */
+#define HUD_ROOM 48
 
 static struct {
 	const char* romPath;
@@ -40,7 +45,7 @@ static struct {
 	const char* loadState;
 	const char* shot;
 	bool side, fullscreen, noMap, noAudio;
-	int scale, screenW, screenH;
+	int scale, screenW, screenH, secondH;
 	long frames;
 } opt = { .scale = 2 };
 
@@ -75,6 +80,9 @@ static void parse_args(int argc, char** argv) {
 	if (opt.screenW <= 0 || opt.screenH <= 0) {
 		opt.screenW = CORE_W * opt.scale;
 		opt.screenH = CORE_H * opt.scale;
+		opt.secondH = opt.screenH + HUD_ROOM * opt.scale;
+	} else {
+		opt.secondH = opt.screenH;
 	}
 }
 
@@ -156,33 +164,92 @@ static uint16_t pad_buttons(SDL_GameController* gc) {
 	return pad;
 }
 
-/* the largest whole-number scale of the picture inside a screen, centred */
-static SDL_Rect fit(int sx, int sy) {
-	int k = opt.screenW / CORE_W;
-	if (opt.screenH / CORE_H < k) k = opt.screenH / CORE_H;
+/* the largest whole-number scale of the picture inside r, centred */
+static SDL_Rect fit(SDL_Rect r) {
+	int k = r.w / CORE_W;
+	if (r.h / CORE_H < k) k = r.h / CORE_H;
 	if (k < 1) k = 1;
-	SDL_Rect r = { sx + (opt.screenW - CORE_W * k) / 2, sy + (opt.screenH - CORE_H * k) / 2, CORE_W * k, CORE_H * k };
-	return r;
+	SDL_Rect o = { r.x + (r.w - CORE_W * k) / 2, r.y + (r.h - CORE_H * k) / 2, CORE_W * k, CORE_H * k };
+	return o;
 }
 
-/* both screens into a PNG (for --shot) */
-static void save_shot(const char* p, const uint32_t* top, const uint32_t* bottom) {
-	int w = opt.side ? CORE_W * 2 : CORE_W, h = opt.side ? CORE_H : CORE_H * 2;
-	uint8_t* rgb = malloc((size_t)w * h * 3);
-	for (int y = 0; y < h; y++) {
-		for (int x = 0; x < w; x++) {
-			bool second = opt.side ? x >= CORE_W : y >= CORE_H;
-			int sx = opt.side && second ? x - CORE_W : x, sy = !opt.side && second ? y - CORE_H : y;
-			uint32_t c = (second ? bottom : top)[sy * CORE_W + sx];
-			uint8_t* d = rgb + ((size_t)y * w + x) * 3;
-			d[0] = c >> 16;
-			d[1] = c >> 8;
-			d[2] = c;
+typedef struct {
+	SDL_Texture *map, *hud, *menu;
+} SecondTex;
+
+static void fill(SDL_Renderer* ren, SDL_Rect r, uint32_t rgb) {
+	SDL_SetRenderDrawColor(ren, rgb >> 16, rgb >> 8 & 0xFF, rgb & 0xFF, 255);
+	SDL_RenderFillRect(ren, &r);
+}
+
+/* the second screen in r: the menu when it's up; else the HUD strip above
+ * the map when there's room for both (the RG DS Plus' 1024x768: the HUD at
+ * 2x, the map at 3x), else the HUD over the map's top */
+static void draw_second(SDL_Renderer* ren, SDL_Rect r, Screen2* s2, SecondTex* t) {
+	fill(ren, r, screen2_backdrop());
+	const uint32_t* menu = screen2_menu(s2);
+	if (menu) {
+		SDL_UpdateTexture(t->menu, NULL, menu, CORE_W * 4);
+		SDL_Rect d = fit(r);
+		SDL_RenderCopy(ren, t->menu, NULL, &d);
+		return;
+	}
+	bool dim = false;
+	int y0 = 0, y1 = 0;
+	const uint32_t* map = screen2_map(s2, &dim);
+	const uint32_t* hud = screen2_hud(s2, &y0, &y1);
+	int hh = hud ? y1 - y0 : 0;
+	/* map scale k, HUD scale h (k or k - 1): the largest that fit */
+	int k = 0, h = 0;
+	for (int kk = r.w / CORE_W; kk >= 1 && !k; kk--) {
+		for (int hk = kk; hk >= kk - 1 && hk >= 1; hk--) {
+			if (CORE_H * kk + hh * hk <= r.h) {
+				k = kk;
+				h = hk;
+				break;
+			}
 		}
 	}
-	stbi_write_png(p, w, h, 3, rgb, w * 3);
+	if (map) {
+		SDL_UpdateTexture(t->map, NULL, map, CORE_W * 4);
+		SDL_SetTextureColorMod(t->map, dim ? 72 : 255, dim ? 72 : 255, dim ? 72 : 255);
+	}
+	if (hud) SDL_UpdateTexture(t->hud, NULL, hud, CORE_W * 4);
+	if (k) {
+		int top = r.y + (r.h - CORE_H * k - hh * h) / 2;
+		if (hud) {
+			SDL_Rect src = { 0, y0, CORE_W, hh };
+			SDL_Rect d = { r.x + (r.w - CORE_W * h) / 2, top, CORE_W * h, hh * h };
+			SDL_RenderCopy(ren, t->hud, &src, &d);
+		}
+		if (map) {
+			SDL_Rect d = { r.x + (r.w - CORE_W * k) / 2, top + hh * h, CORE_W * k, CORE_H * k };
+			SDL_RenderCopy(ren, t->map, NULL, &d);
+		}
+		return;
+	}
+	SDL_Rect d = fit(r);
+	if (map) SDL_RenderCopy(ren, t->map, NULL, &d);
+	if (hud) SDL_RenderCopy(ren, t->hud, NULL, &d);
+}
+
+/* what's on the window into a PNG (for --shot) */
+static void save_shot(SDL_Renderer* ren, const char* p, int w, int h) {
+	uint32_t* px = malloc((size_t)w * h * 4);
+	uint8_t* rgb = malloc((size_t)w * h * 3);
+	if (px && rgb && SDL_RenderReadPixels(ren, NULL, SDL_PIXELFORMAT_XRGB8888, px, w * 4) == 0) {
+		for (int i = 0; i < w * h; i++) {
+			rgb[i * 3] = px[i] >> 16;
+			rgb[i * 3 + 1] = px[i] >> 8;
+			rgb[i * 3 + 2] = px[i];
+		}
+		stbi_write_png(p, w, h, 3, rgb, w * 3);
+		printf("shot %s\n", p);
+	} else {
+		fprintf(stderr, "can't read the window: %s\n", SDL_GetError());
+	}
+	free(px);
 	free(rgb);
-	printf("shot %s\n", p);
 }
 
 int main(int argc, char** argv) {
@@ -230,8 +297,12 @@ int main(int argc, char** argv) {
 		fprintf(stderr, "SDL: %s\n", SDL_GetError());
 		return 1;
 	}
+	/* the game screen and the second one */
 	int winW = opt.side ? opt.screenW * 2 : opt.screenW;
-	int winH = opt.side ? opt.screenH : opt.screenH * 2;
+	int winH = opt.side ? (opt.secondH > opt.screenH ? opt.secondH : opt.screenH) : opt.screenH + opt.secondH;
+	SDL_Rect gameRect = { 0, 0, opt.screenW, opt.side ? winH : opt.screenH };
+	SDL_Rect secondRect = opt.side ? (SDL_Rect) { opt.screenW, 0, opt.screenW, winH }
+	                               : (SDL_Rect) { 0, opt.screenH, opt.screenW, opt.secondH };
 	char title[128];
 	snprintf(title, sizeof(title), "snes-ds - %s", profile ? profile->title : core_title(game));
 	SDL_Window* win = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, winW, winH,
@@ -245,7 +316,13 @@ int main(int argc, char** argv) {
 	SDL_RenderSetLogicalSize(ren, winW, winH);
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
 	SDL_Texture* texTop = SDL_CreateTexture(ren, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, CORE_W, CORE_H);
-	SDL_Texture* texBottom = SDL_CreateTexture(ren, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, CORE_W, CORE_H);
+	SecondTex tex2 = {
+		SDL_CreateTexture(ren, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, CORE_W, CORE_H),
+		SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, CORE_W, CORE_H),
+		SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, CORE_W, CORE_H),
+	};
+	SDL_SetTextureBlendMode(tex2.hud, SDL_BLENDMODE_BLEND);
+	SDL_SetTextureBlendMode(tex2.menu, SDL_BLENDMODE_BLEND);
 
 	SDL_AudioDeviceID audio = 0;
 	if (!opt.noAudio) {
@@ -330,22 +407,19 @@ int main(int argc, char** argv) {
 			free(now);
 		}
 
-		if (opt.frames && frame >= opt.frames) {
-			if (opt.shot) save_shot(opt.shot, core_frame(game), screen2_picture(s2));
-			quit = true;
-		}
+		bool last = opt.frames && frame >= opt.frames;
+		if (last) quit = true;
 
 		/* fast forward: draw every 4th frame, no audio, no waiting */
-		if (fast && frame % 4) continue;
+		if (fast && frame % 4 && !last) continue;
 
 		SDL_UpdateTexture(texTop, NULL, core_frame(game), CORE_W * 4);
-		SDL_UpdateTexture(texBottom, NULL, screen2_picture(s2), CORE_W * 4);
 		SDL_SetRenderDrawColor(ren, 0, 0, 0, 255);
 		SDL_RenderClear(ren);
-		SDL_Rect a = fit(0, 0);
-		SDL_Rect b = opt.side ? fit(opt.screenW, 0) : fit(0, opt.screenH);
-		SDL_RenderCopy(ren, swapped ? texBottom : texTop, NULL, &a);
-		SDL_RenderCopy(ren, swapped ? texTop : texBottom, NULL, &b);
+		SDL_Rect g = fit(swapped ? secondRect : gameRect);
+		SDL_RenderCopy(ren, texTop, NULL, &g);
+		draw_second(ren, swapped ? gameRect : secondRect, s2, &tex2);
+		if (last && opt.shot) save_shot(ren, opt.shot, winW, winH);
 		SDL_RenderPresent(ren);
 
 		if (fast) {
@@ -376,7 +450,9 @@ int main(int argc, char** argv) {
 	if (gc) SDL_GameControllerClose(gc);
 	if (audio) SDL_CloseAudioDevice(audio);
 	SDL_DestroyTexture(texTop);
-	SDL_DestroyTexture(texBottom);
+	SDL_DestroyTexture(tex2.map);
+	SDL_DestroyTexture(tex2.hud);
+	SDL_DestroyTexture(tex2.menu);
 	SDL_DestroyRenderer(ren);
 	SDL_DestroyWindow(win);
 	SDL_Quit();

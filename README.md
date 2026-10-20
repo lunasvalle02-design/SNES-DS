@@ -9,8 +9,10 @@ el mapa, el HUD o el menú de cada juego. Sigue el modelo de [gba-ds](https://gi
 ## Qué hace ahora (A Link to the Past, USA)
 
 - **Pantalla de juego:** el juego sin el HUD.
-- **Segunda pantalla:** el mapa del mundo en vivo, que un núcleo oculto abre y captura en un hilo aparte cada
-  ~1,5 s y al cambiar de zona, con el marcador animado. Encima va el HUD (corazones, objeto, magia, rupias).
+- **Segunda pantalla:** el HUD (corazones, objeto, magia, rupias) y, debajo, el mapa en vivo: el del mundo en el
+  exterior y el de la mazmorra dentro de ellas. Un núcleo oculto lo abre y lo captura en un hilo aparte cada
+  ~1,5 s y al cambiar de zona, con los marcadores animados. El HUD sale de la pantalla de juego también durante los
+  diálogos.
 - Con el **menú de objetos** abierto, el inventario pasa a la segunda pantalla y el mundo sigue visible.
 - En interiores sin mapa, el último mapa se muestra atenuado.
 
@@ -44,8 +46,9 @@ Opciones (`--layout=side`, `--screen=1024x768`, `--save-dir`, `--no-map`…): ve
 
 Ejecuta el juego frame a frame desde un script: pulsaciones, capturas por capa, `peek`/`watch`/`expect`
 sobre la RAM, estados y captura del mapa. Los comandos están en la cabecera de [tools/harness.c](tools/harness.c).
-`scripts/zelda/new_game.txt` hace de test de regresión: llega desde el encendido hasta el mapa y el menú,
-comprobando por el camino los valores de RAM y la captura del mapa.
+`scripts/zelda/new_game.txt` y `scripts/zelda/sanctuary.txt` (que necesita los estados del primero) hacen de
+tests de regresión: llegan desde el encendido hasta el mapa y el menú, y hasta una mazmorra, comprobando por el
+camino los valores de RAM, la captura del mapa y la separación del HUD.
 
 ## Estructura
 

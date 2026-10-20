@@ -16,10 +16,17 @@ static const Profile profiles[] = {
 			/* the item menu: all of BG3, the world stays on the game screen */
 			{ .when = { M(0x7E0010, 0x0E), M(0x7E0011, 0x01) }, .kind = SPLIT_FULL, .layers = LAYER_BG3, .y0 = 0, .y1 = 224 },
 			/* in play (rooms, scrolling between them): the top of BG3, the HUD
-			 * (lines 15-59).
-			 * Not while text is up (module 0E): the box can sit up there */
+			 * (lines 15-59) */
 			{ .when = { M2(0x7E0010, 0x07, 0x09) }, .kind = SPLIT_HUD, .layers = LAYER_BG3, .y0 = 0, .y1 = 64 },
+			/* text: the box starts at BG3 row 9 (line 72) when it's up top
+			 * ($7E1CD2 = $6125), row 18 below ($6244), so it never reaches
+			 * the HUD's lines */
+			{ .when = { M(0x7E0010, 0x0E), M(0x7E0011, 0x02) }, .kind = SPLIT_HUD, .layers = LAYER_BG3, .y0 = 0, .y1 = 64 },
+			/* going in or out of a door (the spotlight) */
+			{ .when = { M2(0x7E0010, 0x0F, 0x10) }, .kind = SPLIT_HUD, .layers = LAYER_BG3, .y0 = 0, .y1 = 64 },
 		},
+		/* the HUD is lines 15-59; a little room around it */
+		.hudShowY0 = 12, .hudShowY1 = 60,
 		.map = {
 			.enabled = true,
 			.open = { { PAD_X, 4 } },
