@@ -101,7 +101,7 @@ scraped; no game content is shown here.
 
 | Game | Region | CRC32 | Second screen |
 |---|---|---|---|
-| The Legend of Zelda: A Link to the Past | USA (v1.0) | `777AAC2F` | Live world and dungeon maps with the HUD over them; the item menu, while the world stays visible above. The HUD also leaves the game screen during dialogue and at doors. |
+| The Legend of Zelda: A Link to the Past | USA (v1.0) | `777AAC2F` | Live world and dungeon maps; the item menu, while the world stays visible above. The HUD stays on the game screen. |
 | Super Metroid | Japan and USA (v1.0) | `D63ED5F8` | The pause map of the area Samus is in, refreshed as she explores, with the HUD (energy, ammo, minimap) over it; the HUD stays down there on the pause screen too. |
 | Super Castlevania IV | USA (v1.0) | `B64FFB12` | The HUD (score, health bars, the subweapon, hearts, lives, time), in play and paused; the game has no map. |
 
@@ -268,7 +268,7 @@ Its commands (presses, per-layer screenshots, `peek`/`watch`/`expect` on memory,
 
 | Script | Checks |
 |---|---|
-| `new_game.txt` | From power-on to the world map and the item menu: memory values, map capture, HUD split |
+| `new_game.txt` | From power-on to the world map and the item menu: memory values, map capture, the HUD's lines in BG3 |
 | `sanctuary.txt` | A dungeon: its map and the text box at the top and bottom (uses the states left by `new_game.txt`) |
 | `core_check.txt` | Picture, split-picture and RAM hashes, to prove a core change gives the very same results |
 

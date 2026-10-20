@@ -102,7 +102,7 @@ carátula descargada, la app genera una; aquí no se muestra ningún contenido d
 
 | Juego | Región | CRC32 | Segunda pantalla |
 |---|---|---|---|
-| The Legend of Zelda: A Link to the Past | EE. UU. (v1.0) | `777AAC2F` | Mapas del mundo y de las mazmorras en vivo, con el HUD encima; el menú de objetos, mientras el mundo sigue a la vista arriba. El HUD sale también de la pantalla de juego en los diálogos y al cruzar puertas. |
+| The Legend of Zelda: A Link to the Past | EE. UU. (v1.0) | `777AAC2F` | Mapas del mundo y de las mazmorras en vivo; el menú de objetos, mientras el mundo sigue a la vista arriba. El HUD se queda en la pantalla de juego. |
 | Super Metroid | Japón y EE. UU. (v1.0) | `D63ED5F8` | El mapa de pausa de la zona en la que está Samus, que se actualiza mientras explora, con el HUD (energía, munición, minimapa) encima; el HUD sigue ahí también en la pantalla de pausa. |
 | Super Castlevania IV | EE. UU. (v1.0) | `B64FFB12` | El HUD (puntos, barras de vida, el arma secundaria, corazones, vidas, tiempo), al jugar y en pausa; el juego no tiene mapa. |
 
@@ -271,7 +271,7 @@ Sus comandos (pulsaciones, capturas por capa, `peek`/`watch`/`expect` sobre la m
 
 | Guion | Comprueba |
 |---|---|
-| `new_game.txt` | Del encendido al mapa del mundo y el menú de objetos: valores de memoria, captura del mapa, separación del HUD |
+| `new_game.txt` | Del encendido al mapa del mundo y el menú de objetos: valores de memoria, captura del mapa, las líneas del HUD en BG3 |
 | `sanctuary.txt` | Una mazmorra: su mapa y el cuadro de texto arriba y abajo (usa los estados que deja `new_game.txt`) |
 | `core_check.txt` | Hashes de la imagen, la imagen separada y la RAM, para demostrar que un cambio en el núcleo da exactamente los mismos resultados |
 

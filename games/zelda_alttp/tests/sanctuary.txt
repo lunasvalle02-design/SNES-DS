@@ -1,7 +1,7 @@
 # A Link to the Past (USA): into a dungeon (the Sanctuary, part of Hyrule
 # Castle) without playing that far, from new_game.txt's `free` state:
 # progress set to "Zelda rescued", save and quit, start from the Sanctuary.
-# Checks the dungeon map capture and the text box against the HUD split.
+# Checks the dungeon map capture and where the text box comes up.
 # Leaves `sanct` (Link in the Sanctuary) in OUTDIR.
 #
 #   harness ROM out games/zelda_alttp/tests/new_game.txt
@@ -35,7 +35,9 @@ save sanct
 map dungeon ok
 
 # text: below Link when he's high on the screen ($1CD2 = $6244), above when
-# he's low ($6125, forced here); either way it starts below the HUD's lines
+# he's low ($6125, forced here); either way it starts below the HUD's lines.
+# The profile has no rule for text: the box and the HUD stay on the game
+# screen
 hold UP 40         # up to the priest
 hold LEFT 10
 hold UP 6
@@ -46,9 +48,5 @@ poke 0x1CD2 0x25   # the box up top instead
 poke 0x1CD3 0x61
 wait 90
 expect 0x10 0E 02
-split 4 0 64       # the profile's split while text is up
-wait 1
-splitbox           # the HUD only: lines 15-59
 shot text_top
-split 0
 sheet sanctuary

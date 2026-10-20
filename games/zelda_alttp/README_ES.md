@@ -12,9 +12,12 @@
 
 ## Segunda pantalla
 
-- **HUD:** BG3, líneas 15-59. Sale de la pantalla de juego en los módulos `07`/`09`, durante el texto (`0E/02`) y al
-  cruzar puertas (`0F`/`10`), y se dibuja sobre el mapa.
+- **HUD:** BG3, líneas 15-59. Se queda en la pantalla de juego, al jugar, durante el texto (`0E/02`) y al cruzar
+  puertas (`0F`/`10`). Hasta la 0.5.0 pasaba a la segunda pantalla en esos módulos y se dibujaba sobre el mapa, lo que
+  quedaba mal sobre el mapa de la mazmorra; el perfil ya no tiene ninguna regla `SPLIT_HUD`.
 - **Menú de objetos** (`0E/01`): todo BG3 pasa a la segunda pantalla y el mundo sigue a la vista en la de juego.
+  El menú es una pantalla entera que sustituye al mapa mientras está abierto (el juego lo dibuja en lugar del HUD),
+  no una franja sobre el mapa, así que se mantiene.
 - **Mapa:** el núcleo oculto pulsa X.
   - En el exterior pulsa X otra vez para ver el mundo entero (`0E/07`).
   - En una mazmorra aparece el mapa de la mazmorra (`0E/03`). No hace falta el objeto mapa: muestra las salas
