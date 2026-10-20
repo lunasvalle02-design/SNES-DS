@@ -27,6 +27,10 @@ void screen2_after_frame(Screen2* s, Core* game);
  * with the HUD over it where the game has it */
 const uint32_t* screen2_picture(Screen2* s);
 
+/* the lines of the game's picture its screen shows now (the profile's
+ * gameShowY0/Y1 while its HUD is down here, else all of them) */
+void screen2_game_lines(Screen2* s, int* y0, int* y1);
+
 /* map captures so far and their times (ms); false without a map core */
 bool screen2_map_stats(Screen2* s, int* count, double* avgMs, double* maxMs);
 

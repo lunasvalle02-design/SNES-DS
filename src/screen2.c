@@ -17,6 +17,7 @@ struct Screen2 {
 	uint32_t hud[CORE_W * CORE_H];
 	bool haveHud;
 	int hudY0, hudY1;
+	int cropHold; /* frames the game screen keeps gameShowY0/Y1 */
 	uint32_t menu[CORE_W * CORE_H];
 	bool menuUp;
 	/* capture scheduling */
@@ -47,6 +48,7 @@ void screen2_free(Screen2* s) {
 
 void screen2_reset(Screen2* s) {
 	s->haveHud = false;
+	s->cropHold = 0;
 	s->menuUp = false;
 	s->roomChanged = true;
 	s->sinceCapture = 1000000;
@@ -109,6 +111,11 @@ void screen2_after_frame(Screen2* s, Core* game) {
 	s->ticks++;
 	const SplitRule* r = s->rule;
 	s->menuUp = false;
+	/* the crop stays through a few frames of no rule (a game's screen-off
+	 * frames between two HUD screens), so the picture doesn't jump */
+	if (r && r->kind == SPLIT_HUD) s->cropHold = 30;
+	else if (r || !s->splitOn) s->cropHold = 0;
+	else if (s->cropHold > 0) s->cropHold--;
 	if (r) {
 		const uint32_t* f = core_split_frame(game);
 		if (r->kind == SPLIT_FULL) {
@@ -139,6 +146,19 @@ void screen2_after_frame(Screen2* s, Core* game) {
 }
 
 const uint32_t* screen2_picture(Screen2* s) { return s->picture; }
+
+void screen2_game_lines(Screen2* s, int* y0, int* y1) {
+	*y0 = 0;
+	*y1 = CORE_H;
+	const Profile* p = s->p;
+	if (!p || s->cropHold <= 0 || p->gameShowY1 <= p->gameShowY0) return;
+	*y0 = p->gameShowY0 < 0 ? 0 : p->gameShowY0;
+	*y1 = p->gameShowY1 > CORE_H ? CORE_H : p->gameShowY1;
+	if (*y1 <= *y0) {
+		*y0 = 0;
+		*y1 = CORE_H;
+	}
+}
 
 bool screen2_map_stats(Screen2* s, int* count, double* avgMs, double* maxMs) {
 	if (!s->worker) return false;
