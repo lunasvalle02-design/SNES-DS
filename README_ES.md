@@ -9,7 +9,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/licencia-GPL--3.0--or--later-FF8A1F" alt="Licencia: GPL-3.0-or-later"></a>
-  <a href="https://github.com/lunasvalle02-design/SNES-DS/releases/latest"><img src="https://img.shields.io/badge/versi%C3%B3n-1.1.0-FF8A1F" alt="Versión 1.1.0"></a>
+  <a href="https://github.com/lunasvalle02-design/SNES-DS/releases/latest"><img src="https://img.shields.io/badge/versi%C3%B3n-1.1.1-FF8A1F" alt="Versión 1.1.1"></a>
   <a href="https://github.com/lunasvalle02-design/SNES-DS/actions/workflows/build.yml"><img src="https://github.com/lunasvalle02-design/SNES-DS/actions/workflows/build.yml/badge.svg" alt="Compilación"></a>
   <img src="https://img.shields.io/badge/plataforma-ROCKNIX%20%7C%20Windows%20%7C%20Linux-3B3129" alt="Plataformas: ROCKNIX, Windows, Linux">
   <img src="https://img.shields.io/badge/lenguaje-C11-3B3129" alt="Lenguaje: C11">
@@ -26,8 +26,9 @@ compatible, un pequeño **perfil** le dice al emulador qué partes de la imagen 
 pasan a la segunda pantalla, y un segundo núcleo oculto mantiene allí abierto el **mapa** del propio juego, en vivo.
 
 > [!NOTE]
-> **Ya ha salido la versión 1.0**, con tres juegos: A Link to the Past, Super Metroid y Super Castlevania IV. Van a
-> velocidad completa en la RG DS Plus (unos 9,5 ms por fotograma, con el mapa capturándose en segundo plano).
+> **Ya ha salido la versión 1.1.1**, con cuatro juegos: A Link to the Past, Super Metroid, Super Castlevania IV y,
+> nuevo, Super Mario World. Los tres primeros van a velocidad completa en la RG DS Plus (unos 9,5 ms por fotograma,
+> con el mapa capturándose en segundo plano).
 > [Descárgala desde la página de releases](https://github.com/lunasvalle02-design/SNES-DS/releases/latest).
 
 ## Contenido
@@ -118,10 +119,12 @@ juegos.
 | The Legend of Zelda: A Link to the Past | EE. UU. (v1.0) | `777AAC2F` | Mapas del mundo y de las mazmorras en vivo; el menú de objetos, mientras el mundo sigue a la vista arriba. El HUD se queda en la pantalla de juego. |
 | Super Metroid | Japón y EE. UU. (v1.0) | `D63ED5F8` | El mapa de pausa de la zona en la que está Samus, que se actualiza mientras explora, con el HUD (energía, munición, minimapa) encima; el HUD sigue ahí también en la pantalla de pausa. |
 | Super Castlevania IV | EE. UU. (v1.0) | `B64FFB12` | El HUD (puntos, barras de vida, el arma secundaria, corazones, vidas, tiempo), al jugar y en pausa; el juego no tiene mapa. |
+| Super Mario World | EE. UU. (v1.0) | `B19ED489` | El mapa del mundo tal como Mario lo dejó, con la barra de estado (vidas, tiempo, monedas, puntos) encima en los niveles; el objeto de reserva se queda en la pantalla de juego. |
 
 Cada juego vive en su propio módulo dentro de [`games/`](games), con un README sobre lo averiguado de él:
 [A Link to the Past](games/zelda_alttp/README_ES.md), [Super Metroid](games/super_metroid/README_ES.md),
-[Super Castlevania IV](games/super_castlevania_iv/README_ES.md). Vendrán más, cada uno en su rama (ver la
+[Super Castlevania IV](games/super_castlevania_iv/README_ES.md),
+[Super Mario World](games/super_mario_world/README_ES.md). Vendrán más, cada uno en su rama (ver la
 [hoja de ruta](ROADMAP_ES.md#fase-6-más-juegos-)); la lista solo muestra los juegos que tienen perfil.
 
 ## Instalación (ROCKNIX)

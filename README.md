@@ -9,7 +9,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-FF8A1F" alt="License: GPL-3.0-or-later"></a>
-  <a href="https://github.com/lunasvalle02-design/SNES-DS/releases/latest"><img src="https://img.shields.io/badge/version-1.1.0-FF8A1F" alt="Version 1.1.0"></a>
+  <a href="https://github.com/lunasvalle02-design/SNES-DS/releases/latest"><img src="https://img.shields.io/badge/version-1.1.1-FF8A1F" alt="Version 1.1.1"></a>
   <a href="https://github.com/lunasvalle02-design/SNES-DS/actions/workflows/build.yml"><img src="https://github.com/lunasvalle02-design/SNES-DS/actions/workflows/build.yml/badge.svg" alt="Build"></a>
   <img src="https://img.shields.io/badge/platform-ROCKNIX%20%7C%20Windows%20%7C%20Linux-3B3129" alt="Platforms: ROCKNIX, Windows, Linux">
   <img src="https://img.shields.io/badge/language-C11-3B3129" alt="Language: C11">
@@ -26,8 +26,9 @@ game, a small **profile** tells the emulator which parts of the picture belong e
 move to the second screen, and a hidden second emulator core keeps the game's own **map** open there, live.
 
 > [!NOTE]
-> **Version 1.0 is out**, with three games: A Link to the Past, Super Metroid and Super Castlevania IV. They run at
-> full speed on the RG DS Plus (about 9.5 ms per frame, with the map captured in the background).
+> **Version 1.1.1 is out**, with four games: A Link to the Past, Super Metroid, Super Castlevania IV and, new,
+> Super Mario World. The first three run at full speed on the RG DS Plus (about 9.5 ms per frame, with the map
+> captured in the background).
 > [Download it from the releases page](https://github.com/lunasvalle02-design/SNES-DS/releases/latest).
 
 ## Contents
@@ -116,11 +117,13 @@ when no cover has been scraped; no game content is shown here.
 | The Legend of Zelda: A Link to the Past | USA (v1.0) | `777AAC2F` | Live world and dungeon maps; the item menu, while the world stays visible above. The HUD stays on the game screen. |
 | Super Metroid | Japan and USA (v1.0) | `D63ED5F8` | The pause map of the area Samus is in, refreshed as she explores, with the HUD (energy, ammo, minimap) over it; the HUD stays down there on the pause screen too. |
 | Super Castlevania IV | USA (v1.0) | `B64FFB12` | The HUD (score, health bars, the subweapon, hearts, lives, time), in play and paused; the game has no map. |
+| Super Mario World | USA (v1.0) | `B19ED489` | The world map as Mario last stood on it, with the status bar (lives, time, coins, score) over it in levels; the item in reserve stays on the game screen. |
 
 Each game lives in its own module under [`games/`](games), with a README on what was found about it:
 [A Link to the Past](games/zelda_alttp/README.md), [Super Metroid](games/super_metroid/README.md),
-[Super Castlevania IV](games/super_castlevania_iv/README.md). More are on the way, each on its own branch
-(see the [roadmap](ROADMAP.md#phase-6-more-games-)); the game list only shows the games that have a profile.
+[Super Castlevania IV](games/super_castlevania_iv/README.md), [Super Mario World](games/super_mario_world/README.md).
+More are on the way, each on its own branch (see the [roadmap](ROADMAP.md#phase-6-more-games-)); the game list
+only shows the games that have a profile.
 
 ## Installation (ROCKNIX)
 

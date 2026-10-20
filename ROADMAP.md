@@ -33,6 +33,7 @@ Legend: ✅ done · 🔶 in progress · ⬜ to do
 | 0.6.0 | The release candidate. Controls remapped in the settings; an icon for each game in the list; A Link to the Past keeps its HUD on the game screen. CI on GitHub Actions, `CHANGELOG.md`, the device instructions in English. Sleep and resume checked on the console |
 | 1.0.0 | The first stable version: the release candidate, used on the console for some days without problems |
 | 1.1.0 | A picture of the game (its cover, its icon or one of your own) behind the HUD when the second screen has no map or menu, as in Super Castlevania IV or a game with no profile |
+| 1.1.1 | Super Mario World: the world map on the second screen, with the status bar over it in levels. The map capture can leave layers out under the HUD |
 
 ## The road to 1.0
 
@@ -207,7 +208,7 @@ Then the same path for each game: harness → `layershot` for the layers → `wa
 tests → test on the device. One branch each:
 
 1. ✅ **Super Metroid** (`game/super_metroid`): the pause map and the HUD's minimap.
-2. ⬜ Super Mario World (`game/super_mario_world`): the world map and the HUD.
+2. ✅ **Super Mario World** (`game/super_mario_world`): the world map and the HUD.
 3. ⬜ Secret of Mana, Chrono Trigger and Final Fantasy VI (`game/secret_of_mana`, `game/chrono_trigger`,
    `game/final_fantasy_vi`): menus and the Mode 7 world map.
 4. 🔶 Super Castlevania IV ✅ and Dracula X ⬜ (`game/super_castlevania_iv`, `game/castlevania_dracula_x`): the HUD.
