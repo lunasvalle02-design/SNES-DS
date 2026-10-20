@@ -1064,10 +1064,6 @@ int ui_capturing(Ui* ui) {
 	return ui->page == PAGE_CONTROLS ? ui->capture : -1;
 }
 
-static UiAction controls_changed(Ui* ui) {
-	return act(UIA_CONTROLS, 0);
-}
-
 void ui_captured(Ui* ui, const char* bind) {
 	int i = ui->capture;
 	ui->capture = -1;
@@ -1094,7 +1090,7 @@ static void start_capture(Ui* ui, int i) {
 static UiAction reset_controls(Ui* ui) {
 	for (int k = 0; k < BINDS; k++) ui->set->binds[k][0] = 0;
 	ui_toast(ui, T("Controls reset", "Controles restablecidos"));
-	return controls_changed(ui);
+	return act(UIA_CONTROLS, 0);
 }
 
 static UiAction nav_controls(Ui* ui, uint32_t nav) {
@@ -1183,7 +1179,7 @@ static UiAction draw_controls(Ui* ui) {
 	draw_focus(ui, fx, fy, cw, rh - 6, 10);
 	if (ui->pendingControls) {
 		ui->pendingControls = false;
-		a = controls_changed(ui);
+		a = act(UIA_CONTROLS, 0);
 	}
 	static const char* const b[] = { "A", "B" };
 	const char* l[] = { T("Change", "Cambiar"), T("Back", "Atrás") };

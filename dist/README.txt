@@ -1,95 +1,100 @@
-snes-ds para ROCKNIX (Anbernic RG DS Plus / RG DS)
-==================================================
+SNES DS for ROCKNIX (Anbernic RG DS Plus / RG DS)
+=================================================
+(En español: README_ES.txt)
 
-Instalar
---------
-Descomprime el zip en /storage/roms/ports/. Quedará:
-  /storage/roms/ports/SNES DS.sh       la entrada en Ports
-  /storage/roms/ports/snes-ds/         el programa
+Installing
+----------
+Unzip the zip into /storage/roms/ports/. You'll get:
+  /storage/roms/ports/SNES DS.sh       the entry in Ports
+  /storage/roms/ports/snes-ds/         the program
 
-Las ROMs van donde siempre: /storage/roms/snes/ (.sfc, .smc o .zip, también
-en subcarpetas). "SNES DS" en Ports abre la lista de juegos de esa carpeta
-que tienen perfil de doble pantalla (por ahora, The Legend of Zelda: A Link
-to the Past, USA; Super Metroid, Japón/USA; Super Castlevania IV, USA). Si EmulationStation ya tiene carátulas descargadas
-(gamelist.xml, images/), la lista las usa.
-Si hace falta reiniciar EmulationStation para que salga en Ports, hazlo.
+ROMs go where they always do: /storage/roms/snes/ (.sfc, .smc or .zip,
+subfolders too). "SNES DS" in Ports opens the list of the games in that
+folder that have a dual-screen profile (for now The Legend of Zelda: A Link
+to the Past, USA; Super Metroid, Japan/USA; Super Castlevania IV, USA). If
+EmulationStation has downloaded covers (gamelist.xml, images/), the list
+uses them; otherwise each game shows its own icon.
+If it doesn't show up in Ports, restart EmulationStation.
 
-Desde una terminal (SSH) también se puede abrir un juego directamente:
-  /storage/roms/ports/snes-ds/launch.sh "/storage/roms/snes/Juego.sfc" [opciones]
+From a terminal (SSH) a game can be started directly too:
+  /storage/roms/ports/snes-ds/launch.sh "/storage/roms/snes/Game.sfc" [options]
 
-La lista de juegos
-------------------
-En la pantalla de abajo (táctil): toca un juego para jugarlo. Con los
-botones: la cruceta elige, A juega, X abre los ajustes; arriba del todo
-están los ajustes y el botón de salir.
+The game list
+-------------
+On the bottom (touch) screen: tap a game to play it. With the buttons: the
+d-pad chooses, A plays, X opens the settings; the settings and the quit
+button are at the top.
 
-El menú (en partida)
+The menu (in a game)
 --------------------
-Pulsar el stick izquierdo (L3) durante la partida pausa el juego y abre
-el menú en la pantalla de abajo: continuar, guardar y cargar estado (4
-ranuras, con su captura), ajustes, salir del juego (a la lista) o salir de
-SNES DS. También lo abren el botón R (el de inicio), tocar la pantalla de
-abajo, R3 y Select + Start. B, L3 o R vuelven al juego.
+Clicking the left stick (L3) during a game pauses it and opens the menu on
+the bottom screen: resume, save and load a state (4 slots, each with its
+picture), settings, quit the game (back to the list) or quit SNES DS. The
+R button (home), a tap on the bottom screen, R3 and Select + Start open it
+too. B, L3 or R go back to the game.
 
-Si el botón de menú no hace nada, snes-ds.log apunta los dispositivos de
-entrada y las primeras pulsaciones ("input: ..."): pásamelo y lo ajusto (o
-pruébalo tú con --menu-button=NOMBRE en launch.sh).
+If no menu button works, snes-ds.log lists the input devices and the first
+presses ("input: ..."): open an issue on GitHub with it (or try
+--menu-button=NAME in launch.sh yourself).
 
-Ajustes
--------
-Formato de imagen (original / 4:3), intercambiar pantallas, HUD y menús
-abajo, mapa en la pantalla de abajo, volumen, mostrar FPS, idioma y
-controles. Se guardan en snes-ds/snes-ds.cfg y valen para todos los juegos.
-
-Controles: elige un botón de la SNES (B, A, Y, X, L, R, Start, Select o el
-menú), pulsa A y luego el botón de la consola que quieras para él (vale un
-gatillo). Si otro botón ya lo tenía, se intercambian. Si un botón no hace
-lo que debe (Select, por ejemplo), asígnalo aquí. "Restablecer" lo deja
-todo como venía.
-
-La interfaz arranca en inglés. Para ponerla en español: Settings, la
-última fila (Language), Español.
-
-Controles en partida
---------------------
-Los del SNES, por posición: abajo = B, derecha = A, arriba = X, izquierda = Y.
-Atajos (Select mantenido + otro botón):
-  Select + Start      el menú        Select + X   intercambiar pantallas
-  L1 + Start + Select salir          Select + Y   aspecto: original / 4:3
-  Select + R          guardar estado Select + A   HUD en la 2ª pantalla sí/no
-  Select + L          cargar estado  Select + Derecha  avance rápido sí/no
-Guardar y cargar estado con atajo usan la ranura 1, y ocurren al soltar R
-o L. Select solo sigue llegando al juego al soltarlo (o si lo mantienes
-medio segundo).
-
-Opciones útiles (en launch.sh, después de la ROM si la hay)
------------------------------------------------------------
-  --no-map           sin el núcleo oculto del mapa, diga lo que diga el ajuste
-  --no-threads       dibujar en el mismo hilo que la emulación (por defecto
-                     se dibuja en otro núcleo de la CPU, que es más rápido)
-  --layout=stack     si el juego y la 2ª pantalla salen mal colocados
-  --menu-button=X    el botón del menú (nombre de SDL, o joy:N)
-
-Partidas
+Settings
 --------
-La partida del juego (.srm) se guarda junto a la ROM, en el mismo formato
-que RetroArch. Los estados guardados van a snes-ds/states/.
+Aspect ratio (original / 4:3), swap screens, HUD and menus below, map on
+the bottom screen, volume, show FPS, language and controls. They're kept in
+snes-ds/snes-ds.cfg and apply to every game.
 
-Rendimiento: qué mirar
+Controls: choose a SNES button (B, A, Y, X, L, R, Start, Select or the
+menu), press A, then the console's button you want for it (a trigger
+works too). If another button had it, they swap. If a button doesn't do
+what it should (Select, say), give it one here. "Reset" puts everything
+back as it came.
+
+The interface starts in English. For Spanish: Settings, the Language row,
+Español.
+
+In-game controls
+----------------
+The SNES buttons, by position: bottom = B, right = A, top = X, left = Y
+(unless moved in Settings > Controls).
+Shortcuts (Select held + another button):
+  Select + Start      the menu        Select + X   swap the screens
+  L1 + Start + Select quit            Select + Y   aspect: original / 4:3
+  Select + R          save a state    Select + A   HUD on the 2nd screen on/off
+  Select + L          load a state    Select + Right  fast forward on/off
+The shortcuts' save and load use slot 1, and happen when R or L is let go.
+Select on its own still reaches the game when it's let go (or when held
+for half a second).
+
+Useful options (in launch.sh, after the ROM if there is one)
+------------------------------------------------------------
+  --no-map           no hidden map core, whatever the setting says
+  --no-threads       draw on the emulation's thread (by default drawing
+                     runs on another CPU core, which is faster)
+  --layout=stack     if the game and the 2nd screen are placed wrong
+  --menu-button=X    the menu's button (an SDL name, or joy:N)
+
+Saves
+-----
+The game's battery save (.srm) is kept beside the ROM, in RetroArch's
+format. Save states go in snes-ds/states/.
+
+Speed: what to look at
 ----------------------
-1. snes-ds/snes-ds.log: cada 10 segundos una línea como
+1. snes-ds/snes-ds.log: every 10 seconds a line like
      stats: 60.0 fps, emulation 9.80 ms/frame (max 14.20), drawing 1.10 ms,
             audio underruns 0, map captures 12 (850 ms avg, 1200 max)
-   - fps: 60 es velocidad completa.
-   - emulation: tiene que estar por debajo de 16,6 ms.
-   - audio underruns: cortes de sonido (deberían ser 0).
-   - map captures: cuánto tarda el núcleo oculto en sacar el mapa.
-2. snes-ds/bench.sh: mide la velocidad del emulador sin ventana y la deja en
-   snes-ds/bench.log. Ejecútalo por SSH:
+   - fps: 60 is full speed.
+   - emulation: has to stay under 16.6 ms.
+   - audio underruns: sound dropouts (should be 0).
+   - map captures: how long the hidden core takes to get the map.
+2. snes-ds/bench.sh: measures the emulator's speed without a window, into
+   snes-ds/bench.log. Run it over SSH:
      /storage/roms/ports/snes-ds/bench.sh
-Pásame los dos ficheros (snes-ds.log y bench.log).
+For a speed problem, attach both files (snes-ds.log and bench.log) to an
+issue on GitHub.
 
-Si no arranca, snes-ds.log dice por qué (y qué hizo screens.sh con las
-pantallas).
+If it doesn't start, snes-ds.log says why (and what screens.sh did with the
+screens).
 
-Licencia: GPL-3.0 o posterior (LICENSE). Licencias de terceros en licenses/.
+License: GPL-3.0 or later (LICENSE). Third-party licenses in licenses/.
+https://github.com/lunasvalle02-design/SNES-DS

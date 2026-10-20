@@ -1,0 +1,62 @@
+# Every push and pull request: the PC build (Linux, with SDL2) must compile
+# with no warnings, and the ROCKNIX package must build. A tag v* also puts
+# that package on the tag's GitHub release (made then if there isn't one).
+#
+# The games' tests (scripts/check.sh) need ROMs, which never go in the
+# repository: they're run locally, before a merge (AGENTS.md).
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - name: Dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake ninja-build libsdl2-dev
+      - name: Build
+        run: |
+          cmake -S . -B build -G Ninja
+          cmake --build build 2>&1 | tee build.log
+      - name: No warnings
+        run: |
+          if grep -E "warning:" build.log | grep -v "lto-wrapper"; then
+            echo "::error::the build has warnings"
+            exit 1
+          fi
+      - name: The programs start
+        run: |
+          build/harness 2>&1 | head -3 || true
+          test -x build/snes-ds && test -x build/harness
+
+  rocknix:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - name: Build the package
+        run: scripts/build-rocknix-docker.sh
+      - uses: actions/upload-artifact@v5
+        with:
+          name: snes-ds-rocknix-aarch64
+          path: dist/snes-ds-v*-rocknix-aarch64.zip
+      - name: Onto the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          gh release view "$tag" >/dev/null 2>&1 ||
+            gh release create "$tag" --title "SNES DS ${tag#v}" --notes "See CHANGELOG.md." --prerelease
+          gh release upload "$tag" dist/snes-ds-v*-rocknix-aarch64.zip --clobber

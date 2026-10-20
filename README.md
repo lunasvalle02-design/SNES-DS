@@ -9,7 +9,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-FF8A1F" alt="License: GPL-3.0-or-later"></a>
-  <img src="https://img.shields.io/badge/version-0.5.0-FF8A1F" alt="Version 0.5.0">
+  <img src="https://img.shields.io/badge/version-0.6.0-FF8A1F" alt="Version 0.6.0">
   <img src="https://img.shields.io/badge/platform-ROCKNIX%20%7C%20Windows%20%7C%20Linux-3B3129" alt="Platforms: ROCKNIX, Windows, Linux">
   <img src="https://img.shields.io/badge/language-C11-3B3129" alt="Language: C11">
 </p>
@@ -121,8 +121,8 @@ Each game lives in its own module under [`games/`](games); see
 
 The game list shows the games in that folder that have a profile. Battery saves go beside the ROM; save states go
 to `snes-ds/states/`. Everything SNES DS prints goes to `snes-ds/snes-ds.log`, which also records the input devices
-and the speed every 10 seconds. Device-side instructions (in Spanish) ship as
-[dist/README.txt](dist/README.txt).
+and the speed every 10 seconds. The device-side instructions ship in the zip as
+[dist/README.txt](dist/README.txt) (in Spanish, [README_ES.txt](dist/README_ES.txt)).
 
 ## Controls
 
@@ -304,6 +304,7 @@ scripts/check.sh ROMDIR
 | Document | |
 |---|---|
 | [AGENTS.md](AGENTS.md) | For contributors and coding agents: rules, branches, how to add a game |
+| [CHANGELOG.md](CHANGELOG.md) | What each version brought |
 | [ROADMAP.md](ROADMAP.md) | Phases, status, measurements and risks |
 | [RESEARCH.md](RESEARCH.md) | The original feasibility study: gba-ds, the hardware, choosing a core |
 | [third_party/lakesnes/PATCHES.md](third_party/lakesnes/PATCHES.md) | Every change made to LakeSnes |

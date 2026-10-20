@@ -9,7 +9,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/licencia-GPL--3.0--or--later-FF8A1F" alt="Licencia: GPL-3.0-or-later"></a>
-  <img src="https://img.shields.io/badge/versi%C3%B3n-0.5.0-FF8A1F" alt="Versión 0.5.0">
+  <img src="https://img.shields.io/badge/versi%C3%B3n-0.6.0-FF8A1F" alt="Versión 0.6.0">
   <img src="https://img.shields.io/badge/plataforma-ROCKNIX%20%7C%20Windows%20%7C%20Linux-3B3129" alt="Plataformas: ROCKNIX, Windows, Linux">
   <img src="https://img.shields.io/badge/lenguaje-C11-3B3129" alt="Lenguaje: C11">
 </p>
@@ -123,7 +123,7 @@ Cada juego vive en su propio módulo dentro de [`games/`](games). Lo averiguado 
 La lista muestra los juegos de esa carpeta que tienen perfil. Las partidas se guardan junto a la ROM y los estados
 en `snes-ds/states/`. Todo lo que escribe SNES DS va a `snes-ds/snes-ds.log`, que también apunta los dispositivos de
 entrada y la velocidad cada 10 segundos. Las instrucciones para la consola van en
-[dist/README.txt](dist/README.txt), dentro del zip.
+[dist/README_ES.txt](dist/README_ES.txt), dentro del zip (en inglés, [README.txt](dist/README.txt)).
 
 ## Controles
 
@@ -307,6 +307,7 @@ scripts/check.sh CARPETA_DE_ROMS
 | Documento | |
 |---|---|
 | [AGENTS_ES.md](AGENTS_ES.md) | Para colaboradores y agentes: reglas, ramas, cómo añadir un juego |
+| [CHANGELOG_ES.md](CHANGELOG_ES.md) | Lo que trajo cada versión |
 | [ROADMAP_ES.md](ROADMAP_ES.md) | Fases, estado, medidas y riesgos |
 | [INVESTIGACION_ES.md](INVESTIGACION_ES.md) | El estudio de viabilidad inicial: gba-ds, el hardware, la elección del núcleo |
 | [third_party/lakesnes/PATCHES.md](third_party/lakesnes/PATCHES.md) | Todos los cambios hechos a LakeSnes (en inglés) |
