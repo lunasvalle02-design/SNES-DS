@@ -9,7 +9,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/licencia-GPL--3.0--or--later-FF8A1F" alt="Licencia: GPL-3.0-or-later"></a>
-  <a href="https://github.com/lunasvalle02-design/SNES-DS/releases/latest"><img src="https://img.shields.io/badge/versi%C3%B3n-1.1.0-FF8A1F" alt="Versión 1.1.0"></a>
+  <a href="https://github.com/lunasvalle02-design/SNES-DS/releases/latest"><img src="https://img.shields.io/badge/versi%C3%B3n-1.1.1-FF8A1F" alt="Versión 1.1.1"></a>
   <a href="https://github.com/lunasvalle02-design/SNES-DS/actions/workflows/build.yml"><img src="https://github.com/lunasvalle02-design/SNES-DS/actions/workflows/build.yml/badge.svg" alt="Compilación"></a>
   <img src="https://img.shields.io/badge/plataforma-ROCKNIX%20%7C%20Windows%20%7C%20Linux-3B3129" alt="Plataformas: ROCKNIX, Windows, Linux">
   <img src="https://img.shields.io/badge/lenguaje-C11-3B3129" alt="Lenguaje: C11">
@@ -26,8 +26,9 @@ compatible, un pequeño **perfil** le dice al emulador qué partes de la imagen 
 pasan a la segunda pantalla, y un segundo núcleo oculto mantiene allí abierto el **mapa** del propio juego, en vivo.
 
 > [!NOTE]
-> **Ya ha salido la versión 1.0**, con tres juegos: A Link to the Past, Super Metroid y Super Castlevania IV. Van a
-> velocidad completa en la RG DS Plus (unos 9,5 ms por fotograma, con el mapa capturándose en segundo plano).
+> **Ya ha salido la versión 1.1.1**, con cuatro juegos: A Link to the Past, Super Metroid, Super Castlevania IV y,
+> nuevo, Super Mario World. Los tres primeros van a velocidad completa en la RG DS Plus (unos 9,5 ms por fotograma,
+> con el mapa capturándose en segundo plano).
 > [Descárgala desde la página de releases](https://github.com/lunasvalle02-design/SNES-DS/releases/latest).
 
 ## Contenido

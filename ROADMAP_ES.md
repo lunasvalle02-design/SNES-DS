@@ -34,6 +34,7 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente
 | 0.6.0 | La candidata a 1.0. Controles remapeables en los ajustes; un icono para cada juego en la lista; A Link to the Past deja su HUD en la pantalla del juego. CI en GitHub Actions, `CHANGELOG.md`, las instrucciones de la consola en inglés. Suspender y reanudar, comprobado en la consola |
 | 1.0.0 | La primera versión estable: la candidata, usada en la consola varios días sin problemas |
 | 1.1.0 | Una imagen del juego (su carátula, su icono o una tuya) tras el HUD cuando la segunda pantalla no tiene mapa ni menú, como en Super Castlevania IV o un juego sin perfil |
+| 1.1.1 | Super Mario World: el mapa del mundo en la segunda pantalla, con la barra de estado encima en los niveles. La captura del mapa puede dejar capas fuera bajo el HUD |
 
 ## Camino a la 1.0
 

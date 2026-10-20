@@ -6,6 +6,16 @@ What each version of SNES DS brought. Versions follow [semantic versioning](http
 may still change (see [what 1.0 promises](ROADMAP.md#the-road-to-10)). Downloads are on the
 [releases page](https://github.com/lunasvalle02-design/SNES-DS/releases).
 
+## 1.1.1
+
+### Added
+- **Super Mario World** (USA): the second screen shows the world map as Mario last stood on it, captured in the
+  background, and in levels the status bar (lives, time, coins, score) over it; the item in reserve stays on the game
+  screen. Its own icon in the game list.
+- For profiles: the map capture can leave layers out on some lines (`hideLayers`, `hideY0`/`hideY1` in `MapSpec`),
+  for a map screen with text of its own where the HUD is drawn over it, such as Super Mario World's lives and level
+  name.
+
 ## 1.1.0
 
 ### Added
