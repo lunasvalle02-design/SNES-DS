@@ -78,6 +78,11 @@ typedef struct {
 	/* the lines of a SPLIT_HUD worth showing (its strip on the second
 	 * screen); 0, 0: the rule's lines */
 	int hudShowY0, hudShowY1;
+	/* while a SPLIT_HUD is on the second screen, the game screen's lines
+	 * worth showing: for a game whose HUD has a strip of its own, with
+	 * nothing of the game under it, so the game fills its screen instead of
+	 * leaving that strip black (0, 0: all of them) */
+	int gameShowY0, gameShowY1;
 	/* after power-on, the sound stays off for this many frames: for a game
 	 * that makes a noise while it starts up, before anything is shown
 	 * (0: none) */

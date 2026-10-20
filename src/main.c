@@ -757,8 +757,10 @@ int main(int argc, char** argv) {
 			if (drew) {
 				uint64_t t1 = SDL_GetPerformanceCounter();
 				SDL_Rect gameRect = a->set.swapped ? bottom : top, secondRect = a->set.swapped ? top : bottom;
-				video_present(a->ren, &a->texGame, core_frame(a->game->core), gameRect, a->set.wide);
-				video_present(a->ren, &a->texSecond, screen2_picture(a->game->s2), secondRect, a->set.wide);
+				int y0, y1;
+				screen2_game_lines(a->game->s2, &y0, &y1);
+				video_present(a->ren, &a->texGame, core_frame(a->game->core), y0, y1, gameRect, a->set.wide);
+				video_present(a->ren, &a->texSecond, screen2_picture(a->game->s2), 0, CORE_H, secondRect, a->set.wide);
 				ui_draw_overlay(a->ui, gameRect, fps);
 				st.drawMs += ms_since(t1);
 			}

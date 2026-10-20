@@ -17,12 +17,12 @@ void video_layout(Layout l, int w, int h, SDL_Rect* game, SDL_Rect* second) {
 	}
 }
 
-/* the largest whole-number scale of the picture inside r, centred */
-static SDL_Rect fit(SDL_Rect r) {
+/* the largest whole-number scale of a picture CORE_W x h inside r, centred */
+static SDL_Rect fit(SDL_Rect r, int h) {
 	int k = r.w / CORE_W;
-	if (r.h / CORE_H < k) k = r.h / CORE_H;
+	if (r.h / h < k) k = r.h / h;
 	if (k < 1) k = 1;
-	SDL_Rect o = { r.x + (r.w - CORE_W * k) / 2, r.y + (r.h - CORE_H * k) / 2, CORE_W * k, CORE_H * k };
+	SDL_Rect o = { r.x + (r.w - CORE_W * k) / 2, r.y + (r.h - h * k) / 2, CORE_W * k, h * k };
 	return o;
 }
 
@@ -42,11 +42,12 @@ void screen_tex_free(ScreenTex* t) {
  * down), so the picture first goes up to whole-number scales at or above
  * that size, sharp, and only that is smoothed down to it: every pixel stays
  * the same size, with soft edges no wider than one line */
-void video_present(SDL_Renderer* ren, ScreenTex* t, const uint32_t* pixels, SDL_Rect r, bool wide) {
+void video_present(SDL_Renderer* ren, ScreenTex* t, const uint32_t* pixels, int y0, int y1, SDL_Rect r, bool wide) {
 	SDL_UpdateTexture(t->pic, NULL, pixels, CORE_W * 4);
+	SDL_Rect src = { 0, y0, CORE_W, y1 - y0 };
 	if (!wide) {
-		SDL_Rect d = fit(r);
-		SDL_RenderCopy(ren, t->pic, NULL, &d);
+		SDL_Rect d = fit(r, src.h);
+		SDL_RenderCopy(ren, t->pic, &src, &d);
 		return;
 	}
 	int w = r.w, h = w * 3 / 4;
@@ -55,21 +56,21 @@ void video_present(SDL_Renderer* ren, ScreenTex* t, const uint32_t* pixels, SDL_
 		w = h * 4 / 3;
 	}
 	SDL_Rect d = { r.x + (r.w - w) / 2, r.y + (r.h - h) / 2, w, h };
-	int kx = (w + CORE_W - 1) / CORE_W, ky = (h + CORE_H - 1) / CORE_H;
-	if (!t->up || t->upW != CORE_W * kx || t->upH != CORE_H * ky) {
+	int kx = (w + CORE_W - 1) / CORE_W, ky = (h + src.h - 1) / src.h;
+	if (!t->up || t->upW != CORE_W * kx || t->upH != src.h * ky) {
 		if (t->up) SDL_DestroyTexture(t->up);
 		t->upW = CORE_W * kx;
-		t->upH = CORE_H * ky;
+		t->upH = src.h * ky;
 		t->up = SDL_CreateTexture(ren, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_TARGET, t->upW, t->upH);
 		if (t->up) SDL_SetTextureScaleMode(t->up, SDL_ScaleModeLinear);
 	}
 	if (!t->up) {
-		SDL_RenderCopy(ren, t->pic, NULL, &d);
+		SDL_RenderCopy(ren, t->pic, &src, &d);
 		return;
 	}
 	SDL_Texture* prev = SDL_GetRenderTarget(ren);
 	SDL_SetRenderTarget(ren, t->up);
-	SDL_RenderCopy(ren, t->pic, NULL, NULL);
+	SDL_RenderCopy(ren, t->pic, &src, NULL);
 	SDL_SetRenderTarget(ren, prev);
 	SDL_RenderCopy(ren, t->up, NULL, &d);
 }
