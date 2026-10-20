@@ -1,0 +1,57 @@
+# Registro de cambios
+
+[English](CHANGELOG.md) · **Español**
+
+Lo que trajo cada versión de SNES DS. Las versiones siguen el [versionado semántico](https://semver.org/lang/es/);
+antes de la 1.0 todo puede cambiar todavía (ver [lo que promete la 1.0](ROADMAP_ES.md#camino-a-la-10)). Las
+descargas están en la [página de releases](https://github.com/lunasvalle02-design/SNES-DS/releases).
+
+## 0.6.0 — la candidata a 1.0
+
+### Añadido
+- **Controles en los ajustes** (Ajustes → Controles): cada botón de la SNES (B, A, Y, X, L, R, Start, Select) y un
+  botón extra para el menú pueden pasar a cualquier botón de la consola, un gatillo o una tecla, pulsándolo. Si otro
+  ya lo tenía, se intercambian; Restablecer los deja todos como venían. En la RG DS Plus, así Select tiene un botón que
+  llega al juego.
+- **Un icono para cada juego** en la lista de juegos, un dibujo original por juego (la carátula que haya descargado
+  EmulationStation sigue yendo primero). `tools/icon.py` los dibuja a partir de una descripción corta; los juegos
+  nuevos traen el suyo (AGENTS.md).
+- **CI en GitHub Actions**: cada pull request compila para PC (sin avisos) y para ROCKNIX; una etiqueta `v*` sube el
+  paquete de ROCKNIX a su release.
+- Las instrucciones de la consola en inglés (`README.txt` en el zip), con las españolas al lado (`README_ES.txt`).
+- Este registro de cambios.
+
+### Cambiado
+- **A Link to the Past: el HUD se queda en la pantalla del juego**; la de abajo muestra solo el mapa en vivo, que se
+  lee mejor sobre los mapas de las mazmorras.
+
+### Comprobado en la consola
+- Suspender y reanudar durante una partida.
+- La página de controles nueva y los iconos.
+
+## 0.5.0
+
+### Añadido
+- **Super Metroid** (Japón y EE. UU., v1.0): el mapa de pausa de la zona en la que está Samus, que se actualiza
+  mientras explora, con el HUD (energía, munición, minimapa) encima, en la pantalla de abajo.
+- **Super Castlevania IV** (EE. UU., v1.0): el HUD en la pantalla de abajo, al jugar y en pausa.
+- Los perfiles pueden recortar la pantalla del juego mientras su HUD está en la segunda (`gameShowY0/Y1`), así la sala
+  de Super Metroid llena la pantalla de arriba.
+
+## 0.4.0-dev
+- Comprobada en la consola: 60 fps sin cortes de audio; el menú se abre con L3 o el botón R (inicio).
+- Partidas, estados y ajustes escritos de forma segura: un apagado no puede corromperlos.
+- El log de velocidad ya no cuenta el tiempo en el menú.
+
+## 0.3.0-dev
+- La interfaz táctil, en inglés y español: la lista de juegos, el menú de pausa, cuatro ranuras de estado con su
+  captura, los ajustes. El menú también se abre tocando la pantalla de abajo o con cualquier botón libre.
+- Corregido: un ruido breve al arrancar un juego.
+
+## 0.2.0-dev
+- El núcleo unas 3,7 veces más rápido (idéntico bit a bit); captura del mapa más barata; L1 + Start + Select para
+  salir.
+
+## 0.1.0-dev
+- La primera versión para ROCKNIX, con A Link to the Past. Medido en la consola: 18–39 ms por fotograma emulado
+  (25–50 fps), cortes de audio.

@@ -18,7 +18,7 @@ Legend: ✅ done · 🔶 in progress · ⬜ to do
 | 3 | Second screen for A Link to the Past | 🔶 A fallback screen is missing |
 | 4 | The device (ROCKNIX) | ✅ Full speed on the RG DS Plus; input and touch confirmed |
 | 5 | Touch and comfort | ✅ Closed for now |
-| 6 | More games | 🔶 Super Metroid and Super Castlevania IV added |
+| 6 | More games | 🔶 Super Metroid and Super Castlevania IV added; each game has an icon |
 | 7 | Integration (EmulationStation, RetroAchievements) | ⬜ |
 
 ## Versions
@@ -30,6 +30,7 @@ Legend: ✅ done · 🔶 in progress · ⬜ to do
 | 0.3.0-dev | The touch interface, in English and Spanish: game list, pause menu, four save-state slots with screenshots, settings. The menu also opens with a tap on the bottom screen or any spare button. Fixed: a burst of noise when a game started |
 | 0.4.0-dev | Checked on the console: 60 fps with no audio dropouts; the menu opens with L3 or the R (home) button. Saves, states and settings written safely (a power cut can't corrupt them); the speed log no longer counts time in the menu |
 | 0.5.0 | Two more games, each on its own branch: Super Metroid (the pause map, with the HUD over it) and Super Castlevania IV (the HUD). A profile can crop the game screen while its HUD is below, so Super Metroid's room fills the top screen. Both checked on the console |
+| 0.6.0 | The release candidate. Controls remapped in the settings; an icon for each game in the list; A Link to the Past keeps its HUD on the game screen. CI on GitHub Actions, `CHANGELOG.md`, the device instructions in English. Sleep and resume checked on the console |
 
 ## The road to 1.0
 
@@ -37,7 +38,7 @@ Legend: ✅ done · 🔶 in progress · ⬜ to do
 |---|---|---|
 | 0.4 | Checked on the console: speed, input, touch; saves that a power cut can't corrupt | ✅ |
 | 0.5 | A second and third game, on `game/…` branches (Super Metroid, Super Castlevania IV), with whatever engine hooks they need; the profile format settles | ✅ |
-| 0.6 (release candidate) | Sleep and resume, long sessions, CI on GitHub Actions, `CHANGELOG.md`, GitHub releases, the device instructions in English | ⬜ |
+| 0.6 (release candidate) | Sleep and resume, long sessions, CI on GitHub Actions, `CHANGELOG.md`, GitHub releases, the device instructions in English | ✅ Long sessions are what the days before 1.0 check |
 | 1.0.0 | The release candidate used on the console for some days without problems | ⬜ |
 
 What 1.0 promises, once out (semantic versioning: breaking any of it means 2.0): the `snes-ds.cfg` format, battery
