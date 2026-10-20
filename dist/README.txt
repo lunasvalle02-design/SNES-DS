@@ -57,3 +57,5 @@ Pásame los dos ficheros (snes-ds.log y bench.log).
 
 Si no arranca, snes-ds.log dice por qué (y qué hizo screens.sh con las
 pantallas).
+
+Licencia: GPL-3.0 o posterior (LICENSE). Licencias de terceros en licenses/.

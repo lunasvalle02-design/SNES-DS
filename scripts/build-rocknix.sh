@@ -42,7 +42,7 @@ rm -rf "$PKG"
 mkdir -p "$PKG/snes-ds/licenses"
 aarch64-linux-gnu-strip -o "$PKG/snes-ds/snes-ds" build/aarch64/snes-ds
 aarch64-linux-gnu-strip -o "$PKG/snes-ds/harness" build/aarch64/harness
-cp dist/launch.sh dist/screens.sh dist/bench.sh dist/README.txt VERSION "$PKG/snes-ds/"
+cp dist/launch.sh dist/screens.sh dist/bench.sh dist/README.txt VERSION LICENSE "$PKG/snes-ds/"
 cp "dist/SNES DS.sh" "$PKG/"
 cp third_party/lakesnes/LICENSE.txt "$PKG/snes-ds/licenses/LakeSnes-LICENSE.txt"
 cp third_party/zip/README.md "$PKG/snes-ds/licenses/zip-miniz.txt"

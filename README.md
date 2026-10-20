@@ -101,3 +101,13 @@ táctil de Zelda), irá en su directorio y el perfil lo enganchará, sin tocar e
 | `tools/harness.c` | Harness sin ventana |
 | `third_party/lakesnes` | [LakeSnes](https://github.com/angelo-wf/LakeSnes) (MIT), parcheado ([PATCHES.md](third_party/lakesnes/PATCHES.md)) |
 | `third_party/stb_image_write.h` | Escritura de PNG (dominio público) |
+| `third_party/zip` | Lectura de `.zip` ([kuba--/zip](https://github.com/kuba--/zip) y miniz, dominio público) |
+
+## Licencia
+
+snes-ds es software libre: puedes redistribuirlo y modificarlo bajo los términos de la
+[GNU General Public License](LICENSE), versión 3 o (a tu elección) cualquier versión posterior
+(`GPL-3.0-or-later`). Se distribuye sin ninguna garantía.
+
+El código de terceros en `third_party/` conserva su propia licencia (LakeSnes: MIT; zip y miniz: dominio
+público; stb_image_write: dominio público), todas compatibles con la GPL-3.
