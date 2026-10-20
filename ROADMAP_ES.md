@@ -211,7 +211,7 @@ perfil → tests → prueba en la consola. Una rama cada uno:
 2. ⬜ Super Mario World (`game/super_mario_world`): el mapa del mundo y el HUD.
 3. ⬜ Secret of Mana, Chrono Trigger y Final Fantasy VI (`game/secret_of_mana`, `game/chrono_trigger`,
    `game/final_fantasy_vi`): menús y el mapa del mundo en Mode 7.
-4. ⬜ Super Castlevania IV y Dracula X (`game/super_castlevania_iv`, `game/castlevania_dracula_x`): el HUD.
+4. 🔶 Super Castlevania IV ✅ y Dracula X ⬜ (`game/super_castlevania_iv`, `game/castlevania_dracula_x`): el HUD.
 
 ## Fase 7: Integración ⬜
 

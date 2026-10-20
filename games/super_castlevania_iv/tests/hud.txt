@@ -1,0 +1,74 @@
+# Super Castlevania IV: the HUD split in play, paused, dying and falling
+# into a pit, from new_game.txt's `play` state (exits 1 if something
+# is off). The subweapon is poked in, to see that its icon (a sprite) goes
+# with the HUD.
+#
+#   scripts/check.sh ROMDIR super_castlevania_iv
+load play
+watch 0x70 1
+
+# the profile's split: BG3 and the sprites, lines 0-31
+split 20 0 32
+wait 1
+splitbox           # the HUD: x 8-247, lines 0-31
+split 0
+
+# the subweapon's icon in the box is a sprite: 1 dagger, 2 axe, 3 holy
+# water, 4 cross, 5 stopwatch
+poke 0x8E 2
+wait 2
+split 16 0 32
+wait 1
+splitbox           # the axe alone, in the box
+split 0
+poke 0x8E 0
+
+# paused: $0066 = 01, the stage state stays 05
+tap START
+until 0x66 0xFF 0x01 30
+wait 10
+expect 0x66 01
+expect 0x70 05
+split 20 0 32
+wait 1
+splitbox           # the HUD is still there
+split 0
+tap START
+until 0x66 0xFF 0x00 30
+expect 0x66 00
+
+# no health (the next hit kills him: walking into the first skeleton): dying (06), the block again with the screen off (03), fading
+# in (04), play, one life fewer
+poke 0x13F4 0
+until 0x70 0xFF 0x06 600 RIGHT
+expect 0x70 06
+split 20 0 32
+wait 1
+splitbox           # the HUD, still drawn while Simon dies
+split 0
+until 0x70 0xFF 0x03 120
+wait 4
+expect 0x70 03
+split 20 0 32
+wait 1
+splitbox           # nothing drawn: no rule for 03, the last HUD stays below
+split 0
+until 0x70 0xFF 0x04 120
+expect 0x70 04
+until 0x70 0xFF 0x05 120
+expect 0x70 05
+expect 0x7C 04
+expect 0x13F4 10
+
+# right into the pit after the stairs: 0C, then 06 and the block again
+until 0x70 0xFF 0x0C 900 RIGHT
+expect 0x70 0C
+split 20 0 32
+wait 1
+splitbox           # the HUD while he falls
+split 0
+until 0x70 0xFF 0x06 600 RIGHT
+expect 0x70 06
+until 0x70 0xFF 0x05 300
+expect 0x70 05
+expect 0x7C 03
