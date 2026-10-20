@@ -103,6 +103,7 @@ carátula descargada, la app genera una; aquí no se muestra ningún contenido d
 | Juego | Región | CRC32 | Segunda pantalla |
 |---|---|---|---|
 | The Legend of Zelda: A Link to the Past | EE. UU. (v1.0) | `777AAC2F` | Mapas del mundo y de las mazmorras en vivo, con el HUD encima; el menú de objetos, mientras el mundo sigue a la vista arriba. El HUD sale también de la pantalla de juego en los diálogos y al cruzar puertas. |
+| Super Metroid | Japón y EE. UU. (v1.0) | `D63ED5F8` | El mapa de pausa de la zona en la que está Samus, que se actualiza mientras explora, con el HUD (energía, munición, minimapa) encima; el HUD sigue ahí también en la pantalla de pausa. |
 
 Cada juego vive en su propio módulo dentro de [`games/`](games). Lo averiguado sobre este está en
 [games/zelda_alttp/README_ES.md](games/zelda_alttp/README_ES.md).
