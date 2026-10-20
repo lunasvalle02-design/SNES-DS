@@ -9,7 +9,8 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/licencia-GPL--3.0--or--later-FF8A1F" alt="Licencia: GPL-3.0-or-later"></a>
-  <img src="https://img.shields.io/badge/versi%C3%B3n-1.0.0-FF8A1F" alt="Versión 1.0.0">
+  <a href="https://github.com/lunasvalle02-design/SNES-DS/releases/latest"><img src="https://img.shields.io/badge/versi%C3%B3n-1.0.0-FF8A1F" alt="Versión 1.0.0"></a>
+  <a href="https://github.com/lunasvalle02-design/SNES-DS/actions/workflows/build.yml"><img src="https://github.com/lunasvalle02-design/SNES-DS/actions/workflows/build.yml/badge.svg" alt="Compilación"></a>
   <img src="https://img.shields.io/badge/plataforma-ROCKNIX%20%7C%20Windows%20%7C%20Linux-3B3129" alt="Plataformas: ROCKNIX, Windows, Linux">
   <img src="https://img.shields.io/badge/lenguaje-C11-3B3129" alt="Lenguaje: C11">
 </p>
@@ -25,8 +26,9 @@ compatible, un pequeño **perfil** le dice al emulador qué partes de la imagen 
 pasan a la segunda pantalla, y un segundo núcleo oculto mantiene allí abierto el **mapa** del propio juego, en vivo.
 
 > [!NOTE]
-> SNES DS está en una fase temprana de desarrollo. De momento es compatible con un juego, que va a velocidad
-> completa en la RG DS Plus (unos 9,5 ms por fotograma, con el mapa capturándose en segundo plano).
+> **Ya ha salido la versión 1.0**, con tres juegos: A Link to the Past, Super Metroid y Super Castlevania IV. Van a
+> velocidad completa en la RG DS Plus (unos 9,5 ms por fotograma, con el mapa capturándose en segundo plano).
+> [Descárgala desde la página de releases](https://github.com/lunasvalle02-design/SNES-DS/releases/latest).
 
 ## Contenido
 
@@ -51,9 +53,11 @@ pasan a la segunda pantalla, y un segundo núcleo oculto mantiene allí abierto 
   scanline: la unidad de imagen del emulador puede dibujar las capas elegidas en una imagen aparte.
 - **Mapa en vivo.** Un núcleo oculto copia el estado del juego, abre el mapa del juego, espera a que se estabilice y
   graba unos fotogramas de animación, en un hilo aparte, cada ~1,5 s y en cada cambio de sala.
-- **Interfaz táctil.** Una lista de juegos en la pantalla de abajo (la táctil), con las carátulas de
-  EmulationStation si las ha descargado, y un menú de pausa: cuatro ranuras de estado con captura, ajustes y salir
-  del juego o de la app. Todo funciona también con los botones.
+- **Interfaz táctil.** Una lista de juegos en la pantalla de abajo (la táctil), con un icono para cada juego (o las
+  carátulas que haya descargado EmulationStation), y un menú de pausa: cuatro ranuras de estado con captura, ajustes
+  y salir del juego o de la app. Todo funciona también con los botones.
+- **Los controles a tu manera.** Cualquier botón de la SNES, y uno más para el menú, se puede llevar a otro botón de
+  la consola, un gatillo o una tecla, desde los ajustes.
 - **La imagen a tu gusto.** La relación de aspecto original de la SNES a escala entera, o 4:3 como en un televisor,
   llenando los paneles de 1024×768 de la RG DS Plus sin píxeles desiguales.
 - **Ajustes que se recuerdan.** Formato, intercambio de pantallas, separación del HUD, mapa, volumen, contador de
@@ -112,13 +116,15 @@ juegos.
 | Super Metroid | Japón y EE. UU. (v1.0) | `D63ED5F8` | El mapa de pausa de la zona en la que está Samus, que se actualiza mientras explora, con el HUD (energía, munición, minimapa) encima; el HUD sigue ahí también en la pantalla de pausa. |
 | Super Castlevania IV | EE. UU. (v1.0) | `B64FFB12` | El HUD (puntos, barras de vida, el arma secundaria, corazones, vidas, tiempo), al jugar y en pausa; el juego no tiene mapa. |
 
-Cada juego vive en su propio módulo dentro de [`games/`](games). Lo averiguado sobre este está en
-[games/zelda_alttp/README_ES.md](games/zelda_alttp/README_ES.md).
+Cada juego vive en su propio módulo dentro de [`games/`](games), con un README sobre lo averiguado de él:
+[A Link to the Past](games/zelda_alttp/README_ES.md), [Super Metroid](games/super_metroid/README_ES.md),
+[Super Castlevania IV](games/super_castlevania_iv/README_ES.md). Vendrán más, cada uno en su rama (ver la
+[hoja de ruta](ROADMAP_ES.md#fase-6-más-juegos-)); la lista solo muestra los juegos que tienen perfil.
 
 ## Instalación (ROCKNIX)
 
-1. Descarga `snes-ds-v<versión>-rocknix-aarch64.zip` (o [compílalo](#compilación-cruzada-para-rocknix)) y
-   descomprímelo en `/storage/roms/ports/`:
+1. Descarga `snes-ds-v<versión>-rocknix-aarch64.zip` de la [última release](https://github.com/lunasvalle02-design/SNES-DS/releases/latest) (o
+   [compílalo](#compilación-cruzada-para-rocknix)) y descomprímelo en `/storage/roms/ports/`:
    ```
    /storage/roms/ports/SNES DS.sh     la entrada en Ports
    /storage/roms/ports/snes-ds/       el programa
@@ -251,6 +257,7 @@ games/
     profile.c             su perfil: lo único que ve el motor
     README.md             su mapa de memoria, capas y hallazgos
     tests/*.txt           sus guiones del harness
+    icon.py, icon.png     su icono para la lista de juegos (un dibujo original)
 ```
 
 El procedimiento completo, con la rama que usar (`game/<id>`) y lo que necesita un pull request, está en
@@ -261,6 +268,8 @@ El procedimiento completo, con la rama que usar (`game/<id>`) y lo que necesita 
 2. **Escribe `games/<id>/profile.c`** con `const Profile game_<id> = { .id = "<id>", ... }`, junto con su
    `README.md` y sus `tests/`.
 3. **Regístralo** en [`games/games.c`](games/games.c): `extern const Profile game_<id>;` y `&game_<id>,`.
+4. **Dibuja su icono** con `python tools/icon.py games/<id>/icon.py`: formas sencillas, nunca el arte del propio
+   juego.
 
 CMake recoge `games/*/*.c` por sí solo. Si algún día un juego necesita código propio (una segunda pantalla dibujada a su manera, por
 ejemplo), irá en su directorio y su perfil lo enganchará, mediante un hook genérico que el motor gane antes (ver
@@ -275,7 +284,8 @@ El harness ejecuta un juego fotograma a fotograma desde un guion, sin ventana:
 ```
 
 Sus comandos (pulsaciones, capturas por capa, `peek`/`watch`/`expect` sobre la memoria, estados, capturas del mapa,
-`bench`, `hash`, `audio`) están al principio de [tools/harness.c](tools/harness.c). Para A Link to the Past:
+`bench`, `hash`, `audio`) están al principio de [tools/harness.c](tools/harness.c). Cada juego tiene sus guiones
+en `games/<id>/tests/`; los de A Link to the Past, por ejemplo:
 
 | Guion | Comprueba |
 |---|---|
@@ -289,6 +299,11 @@ Para pasar los tests de todos los juegos en orden, encontrando cada ROM por su p
 ```bash
 scripts/check.sh CARPETA_DE_ROMS
 ```
+
+También maneja la propia app sin ventana ([`tools/app_tests/`](tools/app_tests): el menú, la página de controles)
+con un mando virtual. En GitHub, [la CI](.github/workflows/build.yml) compila cada pull request para PC y para
+ROCKNIX, sin permitir avisos del compilador, y adjunta el paquete de ROCKNIX a cada release etiquetada; los tests de
+los juegos necesitan ROMs, así que se pasan en local antes de fusionar.
 
 ## Estructura del proyecto
 
@@ -304,6 +319,8 @@ scripts/check.sh CARPETA_DE_ROMS
 | `src/video.c`, `src/pad.c` | Colocar las dos pantallas en la ventana; entrada y atajos |
 | `games/` | Un directorio por juego |
 | `tools/harness.c` | El harness sin ventana |
+| `tools/app_tests/`, `tools/icon.py` | Los tests de la propia app; la herramienta que dibuja los iconos de los juegos |
+| `.github/workflows/` | La CI: las compilaciones y el paquete de cada release |
 | `dist/`, `scripts/`, `cmake/` | Scripts de la consola, de compilación y de toolchain |
 | `assets/fonts/` | Nunito (SIL OFL 1.1) |
 | `third_party/` | LakeSnes (MIT, parcheado), kuba--/zip y miniz, stb (dominio público) |
@@ -318,6 +335,8 @@ scripts/check.sh CARPETA_DE_ROMS
 | [INVESTIGACION_ES.md](INVESTIGACION_ES.md) | El estudio de viabilidad inicial: gba-ds, el hardware, la elección del núcleo |
 | [third_party/lakesnes/PATCHES.md](third_party/lakesnes/PATCHES.md) | Todos los cambios hechos a LakeSnes (en inglés) |
 | [games/zelda_alttp/README_ES.md](games/zelda_alttp/README_ES.md) | A Link to the Past: mapa de memoria, capas y tests |
+| [games/super_metroid/README_ES.md](games/super_metroid/README_ES.md) | Super Metroid: mapa de memoria, capas y tests |
+| [games/super_castlevania_iv/README_ES.md](games/super_castlevania_iv/README_ES.md) | Super Castlevania IV: mapa de memoria, capas y tests |
 
 ## Créditos
 
