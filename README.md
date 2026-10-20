@@ -9,7 +9,7 @@ el mapa, el HUD o el menú de cada juego. Sigue el modelo de [gba-ds](https://gi
 ## Qué hace ahora (A Link to the Past, USA)
 
 - **Pantalla de juego:** el juego sin el HUD.
-- **Segunda pantalla:** el HUD (corazones, objeto, magia, rupias) y, debajo, el mapa en vivo: el del mundo en el
+- **Segunda pantalla:** el mapa en vivo con el HUD (corazones, objeto, magia, rupias) superpuesto: el del mundo en el
   exterior y el de la mazmorra dentro de ellas. Un núcleo oculto lo abre y lo captura en un hilo aparte cada
   ~1,5 s y al cambiar de zona, con los marcadores animados. El HUD sale de la pantalla de juego también durante los
   diálogos.
@@ -33,9 +33,10 @@ estática, así que funcionan desde cualquier terminal (PowerShell, cmd) sin las
 ```
 
 Teclas: flechas · X = A · Z = B · S = X · A = Y · Q/W = L/R · Enter = Start · Mayús dcha = Select.
-F2 intercambia las pantallas · F3 activa o desactiva la separación del HUD · F5/F7 guardan y cargan estado ·
+F2 intercambia las pantallas · F3 activa o desactiva la separación del HUD · F4 cambia entre aspecto original y 4:3 ·
+F5/F7 guardan y cargan estado ·
 Tab avance rápido · F11 pantalla completa · Esc salir.
-Opciones (`--layout=side`, `--screen=1024x768`, `--save-dir`, `--no-map`…): ver la cabecera de
+Opciones (`--aspect=4:3`, `--layout=side`, `--screen=1024x768`, `--save-dir`, `--no-map`…): ver la cabecera de
 [src/main.c](src/main.c).
 
 ## Harness (investigar juegos sin la consola)

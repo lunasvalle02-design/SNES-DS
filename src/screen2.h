@@ -23,17 +23,9 @@ void screen2_free(Screen2* s);
 void screen2_before_frame(Screen2* s, Core* game);
 void screen2_after_frame(Screen2* s, Core* game);
 
-/* everything in one 256x224 0x00RRGGBB picture, the HUD over the map */
+/* the picture, 256x224 0x00RRGGBB: the menu while it's up, else the map
+ * with the HUD over it where the game has it */
 const uint32_t* screen2_picture(Screen2* s);
-
-/* the parts, for a layout with room to show them apart (all 256x224):
- * the menu (0xAARRGGBB) while it's up, else NULL; the map's frame to show
- * (0x00RRGGBB; *dim when the game has none where the player is) or NULL;
- * the HUD (0xAARRGGBB, lines [*y0, *y1) worth showing) or NULL */
-const uint32_t* screen2_menu(Screen2* s);
-const uint32_t* screen2_map(Screen2* s, bool* dim);
-const uint32_t* screen2_hud(Screen2* s, int* y0, int* y1);
-uint32_t screen2_backdrop(void);
 
 /* the state was swapped under it (a save state was loaded) */
 void screen2_reset(Screen2* s);

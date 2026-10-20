@@ -56,6 +56,9 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente · ❓ decisión abierta
 - ✅ Audio a 48 kHz con cola SDL y sincronización por audio (por reloj si no hay audio).
 - ✅ SRAM persistente (`.srm` junto a la ROM o en `--save-dir`; se escribe al cambiar y al salir).
 - ✅ Estado rápido (F5/F7) y avance rápido (Tab). ⬜ Varias ranuras.
+- ✅ Relación de aspecto: la original (256×224 a escala entera, por defecto) o 4:3 (`--aspect=4:3`, F4), que llena
+  los paneles de 1024×768. Para 4:3 se escala primero a enteros con píxeles exactos y luego se suaviza solo el último
+  tramo, así que todos los píxeles miden lo mismo.
 - ⬜ Menú de pausa básico (continuar, guardar o cargar estado, cambiar de pantalla, salir).
 
 ## Fase 3: Segunda pantalla para Zelda 🔶 (falta la pantalla de reserva)
@@ -71,9 +74,8 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente · ❓ decisión abierta
   del marcador, validar y publicar. Se dispara cada ~1,5 s y al cambiar `$A0`/`$8A`.
 - ✅ Mapa de mazmorra (`0E/03`). No hace falta tener el objeto mapa (muestra las salas visitadas; el objeto revela el
   resto). El mapa aparece tras unos frames en negro, que la captura ya no da por buenos.
-- ✅ Composición: el HUD en su propia franja (líneas 12-60) encima del mapa, cada uno a la mayor escala entera que
-  quepa (en 1024×768: HUD a 2× y mapa a 3×, exactamente 768 px). Si no caben los dos, el HUD va sobre el mapa. El
-  mapa se atenúa donde no hay mapa. ⬜ Diseño configurable (mapa ampliado o mundo entero…).
+- ✅ Composición: el HUD superpuesto sobre el mapa, en sus mismas líneas; las dos pantallas tienen el mismo tamaño.
+  El mapa se atenúa donde no hay mapa. ⬜ Diseño configurable (mapa ampliado o mundo entero…).
 - ⬜ Pantalla de reserva cuando no hay nada que mostrar: logo o título del juego.
 
 ## Fase 4: Dispositivo (RG DS Plus / RG DS, ROCKNIX) ⬜
