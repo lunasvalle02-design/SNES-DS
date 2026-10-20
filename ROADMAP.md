@@ -89,7 +89,7 @@ in.
 
 - ✅ `src/main.c`: an SDL2 window with both screens, stacked (the game above, the second screen below) or side by side
   (`--layout=side --screen=1024x768`, as on the device), at whole-number scales.
-- ✅ Keyboard and controller input (SDL GameController, by button position). ⬜ Configurable mapping.
+- ✅ Keyboard and controller input (SDL GameController, by button position). ✅ Configurable mapping (Settings → Controls).
 - ✅ 48 kHz audio through an SDL queue, paced by the audio (by the clock without audio).
 - ✅ Battery saves (`.srm` beside the ROM or in `--save-dir`; written when they change and on exit).
 - ✅ Quick state (F5/F7), fast forward (Tab) and four save-state slots with screenshots (from the menu).

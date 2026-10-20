@@ -249,6 +249,17 @@ static void save_settings(App* a) {
 	if (!settings_save(&a->set, a->configPath)) fprintf(stderr, "can't save %s\n", a->configPath);
 }
 
+/* the controls from the settings into the pad (and the log, the ones that
+ * aren't the default) */
+static void apply_binds(App* a, bool log) {
+	static const char* const names[BINDS] = { "b", "a", "y", "x", "l", "r", "start", "select", "menu" };
+	for (int i = 0; i < BINDS; i++) {
+		if (!pad_set_bind(&a->pad, i, a->set.binds[i])) fprintf(stderr, "controls: can't use %s for %s\n", a->set.binds[i], names[i]);
+		if (log && a->set.binds[i][0]) printf("controls: %s = %s\n", names[i], a->set.binds[i]);
+	}
+	fflush(stdout);
+}
+
 /* the settings as they are now, onto the game */
 static void apply_settings(App* a) {
 	if (!a->game) return;
@@ -342,6 +353,7 @@ int main(int argc, char** argv) {
 	if (opt.aspect >= 0) a->set.wide = opt.aspect;
 	if (opt.lang >= 0) a->set.lang = opt.lang;
 	i18n_lang = a->set.lang;
+	apply_binds(a, true);
 	if (opt.script) script_load(opt.script);
 
 #ifndef _WIN32
@@ -482,7 +494,19 @@ int main(int argc, char** argv) {
 		SDL_GetRendererOutputSize(a->ren, &ow, &oh);
 		SDL_GetWindowSize(a->win, &ww, &wh);
 		SDL_Event e;
+		bool captured = false; /* an input went to the controls page this frame */
 		while (SDL_PollEvent(&e)) {
+			if (a->mode == MODE_UI && ui_capturing(a->ui) >= 0) {
+				char b[SETTINGS_BIND_LEN];
+				if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) {
+					ui_captured(a->ui, NULL);
+					captured = true;
+				} else if (pad_capture(a->gc, &e, b, sizeof(b))) {
+					printf("controls: pressed %s\n", b);
+					ui_captured(a->ui, b);
+					captured = true;
+				}
+			}
 			switch (e.type) {
 			case SDL_QUIT: quit = true; break;
 			case SDL_CONTROLLERDEVICEADDED:
@@ -643,6 +667,8 @@ int main(int argc, char** argv) {
 
 		if (a->mode == MODE_UI) {
 			uint32_t nav = pad_nav(&a->pad, a->gc) | scriptNav;
+			/* what's pressed for a binding moves nothing */
+			if (captured || ui_capturing(a->ui) >= 0) nav = 0;
 			if (quit) nav |= NAV_QUIT;
 			UiAction act = ui_frame(a->ui, nav, &touch, top, bottom);
 			switch (act.kind) {
@@ -680,6 +706,11 @@ int main(int argc, char** argv) {
 			case UIA_SETTINGS:
 				save_settings(a);
 				apply_settings(a);
+				break;
+			case UIA_CONTROLS:
+				save_settings(a);
+				apply_binds(a, true);
+				pad_swallow(&a->pad, a->gc);
 				break;
 			case UIA_NONE: break;
 			}

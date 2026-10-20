@@ -38,8 +38,14 @@ pruébalo tú con --menu-button=NOMBRE en launch.sh).
 Ajustes
 -------
 Formato de imagen (original / 4:3), intercambiar pantallas, HUD y menús
-abajo, mapa en la pantalla de abajo, volumen, mostrar FPS e idioma. Se
-guardan en snes-ds/snes-ds.cfg y valen para todos los juegos.
+abajo, mapa en la pantalla de abajo, volumen, mostrar FPS, idioma y
+controles. Se guardan en snes-ds/snes-ds.cfg y valen para todos los juegos.
+
+Controles: elige un botón de la SNES (B, A, Y, X, L, R, Start, Select o el
+menú), pulsa A y luego el botón de la consola que quieras para él (vale un
+gatillo). Si otro botón ya lo tenía, se intercambian. Si un botón no hace
+lo que debe (Select, por ejemplo), asígnalo aquí. "Restablecer" lo deja
+todo como venía.
 
 La interfaz arranca en inglés. Para ponerla en español: Settings, la
 última fila (Language), Español.

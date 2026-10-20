@@ -1,0 +1,3 @@
+controls: pressed button:x
+controls: y = button:back
+controls: select = button:x
