@@ -70,11 +70,17 @@ typedef struct {
 typedef struct {
 	const char* id;    /* its directory under games/ */
 	const char* title;
+	const char* shortTitle; /* for the game list's cards; NULL: title */
+	const char* about;      /* what its second screen shows, for the game list */
 	uint32_t crc32[4]; /* of the ROM without a copier header */
 	SplitRule split[SPLITS]; /* first match wins */
 	/* the lines of a SPLIT_HUD worth showing (its strip on the second
 	 * screen); 0, 0: the rule's lines */
 	int hudShowY0, hudShowY1;
+	/* after power-on, the sound stays off for this many frames: for a game
+	 * that makes a noise while it starts up, before anything is shown
+	 * (0: none) */
+	int bootMuteFrames;
 	MapSpec map;
 } Profile;
 

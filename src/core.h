@@ -53,6 +53,11 @@ uint8_t* core_wram(Core* c);
 const uint16_t* core_vram(Core* c);  /* 32K words */
 const uint16_t* core_cgram(Core* c); /* 256 BGR555 colours */
 const uint8_t* core_oam(Core* c);    /* 544 bytes: 512 low + 32 high */
+const uint8_t* core_aram(Core* c);   /* the sound CPU's 64 KB */
+const uint8_t* core_dsp(Core* c);    /* the sound DSP's 128 registers */
+/* the four ports between the CPU and the sound CPU ($2140-$2143), as each
+ * side last wrote them */
+void core_apu_ports(Core* c, uint8_t toApu[4], uint8_t fromApu[4]);
 /* any CPU address (bus read with no side effects is not guaranteed for I/O;
  * use it for WRAM, ROM and SRAM) */
 uint8_t core_peek(Core* c, uint32_t addr);

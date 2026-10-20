@@ -1,52 +1,63 @@
 # The Legend of Zelda: A Link to the Past
 
+**English** · [Español](README_ES.md)
+
 | | |
 |---|---|
-| Módulo | `zelda_alttp` ([profile.c](profile.c)) |
-| ROM | USA v1.0, LoROM, 1 MB, SRAM 8 KB |
+| Module | `zelda_alttp` ([profile.c](profile.c)) |
+| ROM | USA v1.0, LoROM, 1 MB, 8 KB SRAM |
 | CRC32 | `777AAC2F` |
 | SHA-1 | `6D4F10A8B10E10DBE624CB23CF03B88BB8252973` |
-| Fuente de las direcciones | [snesrev/zelda3](https://github.com/snesrev/zelda3) (`src/variables.h`, `hud.c`, `messaging.c`, `dungeon.c`) |
+| Address source | [snesrev/zelda3](https://github.com/snesrev/zelda3) (`src/variables.h`, `hud.c`, `messaging.c`, `dungeon.c`) |
 
-## Segunda pantalla
+## Second screen
 
-- **HUD:** BG3, líneas 15-59. Sale de la pantalla de juego en los módulos `07`/`09`, durante el texto (`0E/02`) y al
-  cruzar puertas (`0F`/`10`), y va superpuesto sobre el mapa.
-- **Menú de objetos** (`0E/01`): todo BG3 pasa a la segunda pantalla y el mundo sigue visible en la de juego.
-- **Mapa:** el núcleo oculto pulsa X.
-  - En el exterior pulsa X otra vez para ver el mundo entero (`0E/07`).
-  - En una mazmorra sale el mapa de mazmorra (`0E/03`). No hace falta el objeto mapa: muestra las salas visitadas y el
-    objeto revela el resto. Antes hay unos 30 frames en negro tras el fundido.
-  - En casas y cuevas X no hace nada y el último mapa se atenúa.
+- **HUD:** BG3, lines 15-59. It leaves the game screen in modules `07`/`09`, during text (`0E/02`) and through doors
+  (`0F`/`10`), and is drawn over the map.
+- **Item menu** (`0E/01`): all of BG3 moves to the second screen, and the world stays visible on the game screen.
+- **Map:** the hidden core presses X.
+  - Outdoors it presses X again for the whole world (`0E/07`).
+  - In a dungeon the dungeon map comes up (`0E/03`). The map item isn't needed: it shows the rooms visited, and the
+    item reveals the rest. About 30 black frames come first, after the fade.
+  - In houses and caves X does nothing, and the last map is dimmed.
 
-## Memoria (WRAM, verificada con el harness)
+## Memory (WRAM, checked with the harness)
 
-| Dirección | Qué es | Valores comprobados |
+| Address | What it is | Values seen |
 |---|---|---|
-| `$7E0010` | Módulo principal | `00` intro, `01` selección de archivo, `04` nombre, `05` carga, `07` interior, `08`/`0F`/`10` transiciones, `09` exterior, `0E` menús, `17` guardar y salir, `1B` menú de inicio |
-| `$7E0011` | Submódulo | Con `0E`: `01` objetos, `02` texto, `03` mapa de mazmorra, `07` mapa del mundo. Con `09`: `20-22` cierre del mapa |
-| `$7E001B` | Interior | `01` en casa, `00` fuera |
-| `$7E0020` / `$7E0022` | Y / X de Link (16 bits) | |
-| `$7E008A` | Área del mundo | `2C` frente a la casa de Link |
-| `$7E00A0` | Sala de mazmorra (16 bits) | `12` Santuario |
-| `$7E040C` | Mazmorra ×2 | `FF` fuera de mazmorras, `00` Castillo de Hyrule (incluye el Santuario) |
-| `$7E1CD2` | Esquina del cuadro de texto (VRAM) | `$6125` arriba (fila 9 de BG3, línea 72), `$6244` abajo (fila 18) |
-| `$7EF3C5` | Progreso | `02` = Zelda rescatada; permite empezar en el Santuario |
-| `$7E0202` | Objeto Y equipado | Pendiente de usar (inventario táctil) |
-| `$7E0016` | Actualizar el HUD en el próximo NMI | Pendiente de usar |
+| `$7E0010` | Main module | `00` intro, `01` file select, `04` name entry, `05` loading, `07` indoors, `08`/`0F`/`10` transitions, `09` outdoors, `0E` menus, `17` save and quit, `1B` start menu |
+| `$7E0011` | Submodule | With `0E`: `01` items, `02` text, `03` dungeon map, `07` world map. With `09`: `20-22` the map closing |
+| `$7E001B` | Indoors | `01` in a house, `00` outside |
+| `$7E0020` / `$7E0022` | Link's Y / X (16-bit) | |
+| `$7E008A` | Overworld area | `2C` outside Link's house |
+| `$7E00A0` | Dungeon room (16-bit) | `12` the Sanctuary |
+| `$7E040C` | Dungeon ×2 | `FF` outside dungeons, `00` Hyrule Castle (the Sanctuary included) |
+| `$7E1CD2` | The text box's corner (VRAM) | `$6125` at the top (BG3 row 9, line 72), `$6244` at the bottom (row 18) |
+| `$7EF3C5` | Progress | `02` = Zelda rescued; lets a game start at the Sanctuary |
+| `$7E0202` | Equipped Y item | Not used yet (touch inventory) |
+| `$7E0016` | Update the HUD at the next NMI | Not used yet |
 
-En el modo 1, BG1 es la lluvia o la capa superior, BG2 el terreno o la sala, y BG3 el HUD, el texto y el menú.
+In Mode 1, BG1 is the rain or the top layer, BG2 the terrain or the room, and BG3 the HUD, the text and the menu.
+
+## Sound at power-on
+
+At frame 82 after power-on, right after uploading its sound driver to ARAM, the game writes `$0A` to `$2143` (sound
+effects): the driver plays sample 3 on voice 7 at a very high pitch (`$3D0A`), about 0.3 s that sound like a hiss
+over the black screen. It isn't an emulation artefact: the sample is valid BRR, and the game's own code asks for it
+(harness: `audio 200` prints the ports and the DSP). Nothing else plays before frame 110, so the profile mutes those
+frames (`bootMuteFrames`).
 
 ## Tests
 
-Hace falta tu ROM. Las partidas no hacen falta: los scripts las crean.
+Your own ROM is needed; saves are not, the scripts make them.
 
 ```bash
-./build/harness.exe ROM out games/zelda_alttp/tests/new_game.txt   # del encendido al mapa y el menú
-./build/harness.exe ROM out games/zelda_alttp/tests/sanctuary.txt  # mazmorra (usa los estados del anterior)
+./build/harness ROM out games/zelda_alttp/tests/new_game.txt     # power-on to the map and the menu
+./build/harness ROM out games/zelda_alttp/tests/sanctuary.txt    # a dungeon (uses the states the first leaves)
+./build/harness ROM out games/zelda_alttp/tests/core_check.txt   # core hashes, against a run before a change
 ```
 
-## Pendiente
+## To do
 
-- Inventario táctil (`$7E0202` + `$7E0016`).
-- Otras regiones (Europa y Japón): CRC32 y comprobar si sus direcciones cambian.
+- Touch inventory (`$7E0202` + `$7E0016`).
+- Other regions (Europe, Japan): their CRC32s, and whether their addresses differ.

@@ -46,6 +46,8 @@ cp dist/launch.sh dist/screens.sh dist/bench.sh dist/README.txt VERSION LICENSE 
 cp "dist/SNES DS.sh" "$PKG/"
 cp third_party/lakesnes/LICENSE.txt "$PKG/snes-ds/licenses/LakeSnes-LICENSE.txt"
 cp third_party/zip/README.md "$PKG/snes-ds/licenses/zip-miniz.txt"
+cp -r assets "$PKG/snes-ds/"
+cp assets/fonts/OFL.txt "$PKG/snes-ds/licenses/Nunito-OFL.txt"
 chmod +x "$PKG/snes-ds/"*.sh "$PKG/snes-ds/snes-ds" "$PKG/snes-ds/harness" "$PKG/SNES DS.sh"
 mkdir -p dist
 ZIP="snes-ds-v$VERSION-rocknix-aarch64.zip"

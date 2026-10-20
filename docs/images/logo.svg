@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 140" width="520" height="140" role="img" aria-label="SNES DS">
+  <title>SNES DS</title>
+  <!-- the SNES pad's face buttons as a diamond: X blue, A red, B yellow, Y green -->
+  <g transform="translate(70 70)">
+    <circle cx="0" cy="-30" r="17" fill="#3F7BDB"/>
+    <circle cx="30" cy="0" r="17" fill="#E23D3D"/>
+    <circle cx="0" cy="30" r="17" fill="#F2BE2C"/>
+    <circle cx="-30" cy="0" r="17" fill="#3A9E5A"/>
+  </g>
+  <text x="140" y="94" font-family="Nunito, 'Segoe UI', Helvetica, Arial, sans-serif" font-weight="800" font-size="72" letter-spacing="1">
+    <tspan fill="#8C786A">SNES </tspan><tspan fill="#FF8A1F">DS</tspan>
+  </text>
+</svg>

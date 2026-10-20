@@ -28,7 +28,7 @@ void screen_tex_free(ScreenTex* t);
 /* a 256x224 picture (0x00RRGGBB) inside r, at the SNES' aspect or 4:3 */
 void video_present(SDL_Renderer* ren, ScreenTex* t, const uint32_t* pixels, SDL_Rect r, bool wide);
 
-/* what's on the window into a PNG */
-bool video_shot(SDL_Renderer* ren, const char* path);
+/* what's on the window (or part of it; NULL: all) into a PNG */
+bool video_shot(SDL_Renderer* ren, const char* path, const SDL_Rect* part);
 
 #endif

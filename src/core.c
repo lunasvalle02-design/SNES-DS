@@ -5,6 +5,8 @@
 #include <string.h>
 
 #include "snes.h"
+#include "apu.h"
+#include "dsp.h"
 
 #define SAMPLES_PER_FRAME 800 /* 48000 / 60 */
 
@@ -103,6 +105,14 @@ int core_audio(Core* c, int16_t* out, int frames) {
 uint8_t* core_wram(Core* c) { return c->snes->ram; }
 const uint16_t* core_vram(Core* c) { return c->snes->ppu->vram; }
 const uint16_t* core_cgram(Core* c) { return c->snes->ppu->cgram; }
+
+const uint8_t* core_aram(Core* c) { return c->snes->apu->ram; }
+const uint8_t* core_dsp(Core* c) { return c->snes->apu->dsp->ram; }
+
+void core_apu_ports(Core* c, uint8_t toApu[4], uint8_t fromApu[4]) {
+	memcpy(toApu, c->snes->apu->inPorts, 4);
+	memcpy(fromApu, c->snes->apu->outPorts, 4);
+}
 
 const uint8_t* core_oam(Core* c) {
 	/* LakeSnes keeps the low table as words and the high table apart */

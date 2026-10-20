@@ -7,34 +7,60 @@ Descomprime el zip en /storage/roms/ports/. Quedará:
   /storage/roms/ports/SNES DS.sh       la entrada en Ports
   /storage/roms/ports/snes-ds/         el programa
 
-Las ROMs van donde siempre: /storage/roms/snes/ (.sfc, .smc o .zip).
-"SNES DS" en Ports abre el primer juego de esa carpeta que tenga perfil de
-segunda pantalla (por ahora, The Legend of Zelda: A Link to the Past, USA).
+Las ROMs van donde siempre: /storage/roms/snes/ (.sfc, .smc o .zip, también
+en subcarpetas). "SNES DS" en Ports abre la lista de juegos de esa carpeta
+que tienen perfil de doble pantalla (por ahora, The Legend of Zelda: A Link
+to the Past, USA). Si EmulationStation ya tiene carátulas descargadas
+(gamelist.xml, images/), la lista las usa.
 Si hace falta reiniciar EmulationStation para que salga en Ports, hazlo.
 
-Desde una terminal (SSH) también se puede abrir un juego concreto:
+Desde una terminal (SSH) también se puede abrir un juego directamente:
   /storage/roms/ports/snes-ds/launch.sh "/storage/roms/snes/Juego.sfc" [opciones]
 
-Controles
----------
+La lista de juegos
+------------------
+En la pantalla de abajo (táctil): toca un juego para jugarlo. Con los
+botones: la cruceta elige, A juega, X abre los ajustes; arriba del todo
+están los ajustes y el botón de salir.
+
+El menú (en partida)
+--------------------
+Tocar la pantalla de abajo durante la partida pausa el juego y abre el
+menú en ella: continuar, guardar y cargar estado (4 ranuras, con su
+captura), ajustes, salir del juego (a la lista) o salir de SNES DS.
+También lo abren el botón de menú de la consola (cualquier botón que el
+SNES no usa: el de inicio/RG, L3, R3...) y Select + Start. B o el botón de
+menú vuelven al juego.
+
+Si el botón de menú no hace nada, snes-ds.log apunta los dispositivos de
+entrada y las primeras pulsaciones ("input: ..."): pásamelo y lo ajusto (o
+pruébalo tú con --menu-button=NOMBRE en launch.sh).
+
+Ajustes
+-------
+Formato de imagen (original / 4:3), intercambiar pantallas, HUD y menús
+abajo, mapa en la pantalla de abajo, volumen y mostrar FPS. Se guardan en
+snes-ds/snes-ds.cfg y valen para todos los juegos.
+
+Controles en partida
+--------------------
 Los del SNES, por posición: abajo = B, derecha = A, arriba = X, izquierda = Y.
-Atajos (Select, o el botón de función/home si lo hay, mantenido + otro):
-  Select + Start      salir          Select + X   intercambiar pantallas
+Atajos (Select mantenido + otro botón):
+  Select + Start      el menú        Select + X   intercambiar pantallas
   L1 + Start + Select salir          Select + Y   aspecto: original / 4:3
   Select + R          guardar estado Select + A   HUD en la 2ª pantalla sí/no
   Select + L          cargar estado  Select + Derecha  avance rápido sí/no
-Guardar y cargar estado ocurren al soltar R o L.
-Select solo sigue llegando al juego al soltarlo (o si lo mantienes medio
-segundo).
+Guardar y cargar estado con atajo usan la ranura 1, y ocurren al soltar R
+o L. Select solo sigue llegando al juego al soltarlo (o si lo mantienes
+medio segundo).
 
-Opciones útiles (después de la ROM en launch.sh)
-------------------------------------------------
-  --aspect=4:3       llenar los paneles (por defecto, la imagen original a
-                     escala entera: 3x, con bordes)
-  --no-map           sin el núcleo oculto del mapa (si va lento)
+Opciones útiles (en launch.sh, después de la ROM si la hay)
+-----------------------------------------------------------
+  --no-map           sin el núcleo oculto del mapa, diga lo que diga el ajuste
   --no-threads       dibujar en el mismo hilo que la emulación (por defecto
                      se dibuja en otro núcleo de la CPU, que es más rápido)
   --layout=stack     si el juego y la 2ª pantalla salen mal colocados
+  --menu-button=X    el botón del menú (nombre de SDL, o joy:N)
 
 Partidas
 --------

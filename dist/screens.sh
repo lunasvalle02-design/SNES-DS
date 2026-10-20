@@ -52,6 +52,9 @@ on)
 	run "output $FIRST pos 0 0"
 	run "output $SECOND pos ${W:-0} 0"
 	say "after: $(outputs | tr '\t\n' ' ;')"
+	# the touch panels and the output each is tied to (for the log: snes-ds
+	# takes taps on the bottom screen)
+	say "touch: $(swaymsg -r -t get_inputs | jq -r '[.[] | select(.type == "touch") | "\(.identifier) -> \(.libinput.map_to_output // .map_to_output // "all")"] | join("; ")' 2>/dev/null)"
 	;;
 off)
 	[ -f "$STATE" ] || exit 0

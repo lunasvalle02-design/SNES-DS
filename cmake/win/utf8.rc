@@ -1,0 +1,2 @@
+/* paths are UTF-8 everywhere (SDL hands them over so, fopen takes them so) */
+1 24 "utf8.manifest"

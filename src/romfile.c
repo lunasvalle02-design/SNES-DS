@@ -63,31 +63,38 @@ uint8_t* romfile_read(const char* path, size_t* size) {
 	return buf;
 }
 
-/* has a profile? Zips say their files' CRC32 without unpacking them (unless
- * a copier header has to come off first) */
-static bool has_profile(const char* path) {
+bool romfile_crc(const char* path, uint32_t* crc) {
 	if (ends_with(path, ".zip")) {
+		/* zips say their files' CRC32 without unpacking them (unless a
+		 * copier header has to come off first) */
 		struct zip_t* z = open_zip_rom(path);
 		if (!z) return false;
 		bool header = zip_entry_size(z) % 0x8000 == 512;
-		uint32_t crc = zip_entry_crc32(z);
+		*crc = zip_entry_crc32(z);
 		zip_entry_close(z);
 		zip_close(z);
-		if (!header) return profile_find_crc(crc) != NULL;
+		if (!header) return true;
 	} else if (!is_rom_name(path)) {
 		return false;
 	}
 	size_t n;
 	uint8_t* d = romfile_read(path, &n);
-	bool found = d && profile_find(d, n);
+	if (d) *crc = rom_crc32(d, n);
 	free(d);
-	return found;
+	return d != NULL;
+}
+
+bool romfile_is_rom(const char* path) { return is_rom_name(path) || ends_with(path, ".zip"); }
+
+static bool has_profile(const char* path) {
+	uint32_t crc;
+	return romfile_crc(path, &crc) && profile_find_crc(crc);
 }
 
 static int cmp_names(const void* a, const void* b) { return strcmp(*(char* const*)a, *(char* const*)b); }
 
 /* the entries of a folder, sorted */
-static int list_dir(const char* dir, char*** out) {
+int romfile_list_dir(const char* dir, char*** out) {
 	DIR* d = opendir(dir);
 	if (!d) return 0;
 	int n = 0, cap = 0;
@@ -108,7 +115,7 @@ static int list_dir(const char* dir, char*** out) {
 
 static bool find_in(const char* dir, char* out, size_t n, int depth) {
 	char** names = NULL;
-	int count = list_dir(dir, &names);
+	int count = romfile_list_dir(dir, &names);
 	bool found = false;
 	for (int i = 0; i < count; i++) {
 		char p[1024];
@@ -117,7 +124,7 @@ static bool find_in(const char* dir, char* out, size_t n, int depth) {
 		if (!found && stat(p, &st) == 0) {
 			if (S_ISDIR(st.st_mode)) {
 				if (depth > 0) found = find_in(p, out, n, depth - 1);
-			} else if ((is_rom_name(p) || ends_with(p, ".zip")) && has_profile(p)) {
+			} else if (romfile_is_rom(p) && has_profile(p)) {
 				snprintf(out, n, "%s", p);
 				found = true;
 			}

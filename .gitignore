@@ -7,3 +7,5 @@ out/
 deps/
 dist/*.zip
 *.log
+snes-ds.cfg
+library-cache.txt

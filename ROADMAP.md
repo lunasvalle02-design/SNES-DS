@@ -1,165 +1,188 @@
-# snes-ds: roadmap
+# SNES DS roadmap
 
-Objetivo: un emulador de SNES para consolas de doble pantalla (Anbernic RG DS Plus, RG DS) que use la segunda
-pantalla para el mapa, el menú o la interfaz de cada juego, siguiendo el modelo de
-[gba-ds](https://github.com/kyannon/gba-ds). La investigación previa está en [INVESTIGACION.md](INVESTIGACION.md).
+**English** · [Español](ROADMAP_ES.md)
 
-Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente · ❓ decisión abierta
+The goal is a SNES emulator for dual-screen handhelds (Anbernic RG DS Plus, RG DS) that uses the second screen for
+each game's map, menus or HUD, after the model of [gba-ds](https://github.com/kyannon/gba-ds). The feasibility study
+that started it is in [RESEARCH.md](RESEARCH.md).
 
----
+Legend: ✅ done · 🔶 in progress · ⬜ to do
 
-## Decisiones tomadas
+## Status at a glance
 
-| Tema | Decisión | Motivo |
+| Phase | | Status |
 |---|---|---|
-| Núcleo inicial | **LakeSnes** (MIT, C, vendorizado en `third_party/lakesnes`) | Su licencia permite reutilizar código de gba-ds (GPL-3). Es pequeño y legible (~7700 líneas), así que se puede parchear para separar capas, y zelda3 lo usa para verificar ALttP |
-| Aislamiento del núcleo | Todo el código pasa por [`src/core.h`](src/core.h) | Si LakeSnes resulta lento en el dispositivo, se cambia por otro núcleo (bsnes-jg, Snes9x…) sin tocar nada más |
-| Separación de capas | Parche en el PPU: `hideMask` (ocultar capas por línea) y `splitMask` (dibujar capas en una segunda imagen por línea) | Es el equivalente al `emu_hud_split` de gba-ds, pero exacto por scanline y casi gratis (~3 %) |
-| Identificación de juegos | CRC32 de la ROM sin header | Los headers de SNES no tienen un código de juego fiable |
-| Compilación | CMake + Ninja; GCC de MSYS2 (UCRT64) en PC, toolchain aarch64 para el dispositivo | |
-| Licencia del proyecto | ❓ GPL-3 recomendada (permite reutilizar gba-ds) | Pendiente de que lo confirmes |
+| 0 | Research | ✅ |
+| 1 | Core and harness on PC | ✅ |
+| 2 | Desktop app with two screens, game list and pause menu | ✅ |
+| 3 | Second screen for A Link to the Past | 🔶 A fallback screen is missing |
+| 4 | The device (ROCKNIX) | 🔶 The speed of v0.2+ is still to be measured on the console |
+| 5 | Touch and comfort | 🔶 |
+| 6 | More games | ⬜ |
+| 7 | Integration (EmulationStation, RetroAchievements) | ⬜ |
 
-## Fase 0: Investigación ✅
-- ✅ Análisis de gba-ds (arquitectura, perfiles, captura de mapa, separación del HUD, despliegue en ROCKNIX).
-- ✅ Verificación de la ROM: ALttP USA v1.0, CRC32 `777AAC2F`, SHA-1 `6D4F10A8…`.
-- ✅ Mapa de RAM de ALttP sacado de zelda3.
+## Versions
 
-## Fase 1: Núcleo y harness en PC ✅
-- ✅ LakeSnes vendorizado y parcheado ([PATCHES.md](third_party/lakesnes/PATCHES.md)).
-- ✅ `src/core.h/.c`: ROM, frame, mando, WRAM/VRAM/CGRAM/OAM, peek/poke, estados en memoria, copia de estado
-  entre núcleos, SRAM, ocultar y separar capas.
+| Version | What it brought |
+|---|---|
+| 0.1.0-dev | The first build for ROCKNIX. Measured on the console: 18-39 ms per emulated frame (25-50 fps), audio dropouts |
+| 0.2.0-dev | The core about 3.7× faster (bit-identical); a cheaper map capture; L1 + Start + Select to quit |
+| 0.3.0-dev | The touch interface: game list, pause menu, four save-state slots with screenshots, settings. The menu also opens with a tap on the bottom screen or any spare button. Fixed: a burst of noise when a game started |
+
+## Decisions
+
+| Topic | Decision | Why |
+|---|---|---|
+| Core | **LakeSnes** (MIT, C, vendored in `third_party/lakesnes`) | Its license allows reusing gba-ds code (GPL-3). It's small and readable (~7,700 lines), so it can be patched to split layers, and zelda3 uses it to verify A Link to the Past |
+| Isolating the core | All code goes through [`src/core.h`](src/core.h) | Should LakeSnes fall short on the device, another core (bsnes-jg, Snes9x…) can replace it without touching anything else |
+| Layer split | A picture-unit patch: `hideMask` (hide layers per line) and `splitMask` (draw layers into a second picture per line) | The counterpart of gba-ds's `emu_hud_split`, but exact to the scanline and almost free (~3 %) |
+| Telling games apart | The CRC32 of the ROM without a copier header | SNES headers carry no reliable game code |
+| Per-game code | Only in `games/<id>/`; the engine holds no game data | Games never mix; aspect, layout and the interface are generic app features |
+| Build | CMake + Ninja; MSYS2 GCC (UCRT64) on PC, an aarch64 toolchain in Docker for the device | |
+| License | GPL-3.0-or-later | Allows reusing gba-ds code |
+
+## Phase 0: Research ✅
+
+- ✅ Analysis of gba-ds: architecture, profiles, map capture, HUD split, ROCKNIX deployment.
+- ✅ The reference ROM checked: A Link to the Past USA v1.0, CRC32 `777AAC2F`, SHA-1 `6D4F10A8…`.
+- ✅ A Link to the Past's RAM map, from zelda3.
+
+## Phase 1: Core and harness on PC ✅
+
+- ✅ LakeSnes vendored and patched ([PATCHES.md](third_party/lakesnes/PATCHES.md)).
+- ✅ `src/core.h/.c`: ROM, frames, pad, WRAM/VRAM/CGRAM/OAM/ARAM/DSP access, peek/poke, in-memory states, state copy
+  between cores, SRAM, hiding and splitting layers.
 - ✅ `tools/harness.c`: `wait/hold/tap/until`, `shot/layershot/splitshot/splitbox/sheet`, `peek/poke/watch/expect`,
-  `dumpram`, `save/load`, `savesram/loadsram`, `hide/split`, `map`, `bench`.
-- ✅ Scripts para llegar al juego desde cero en [`games/zelda_alttp/tests/`](games/zelda_alttp/tests/).
-- ✅ **Comprobado en vivo con tu ROM:**
-  - `$7E0010/11`: `07/00` es control libre en interior, `09/00` en exterior, `0E/02` diálogo, `0E/01` menú de
-    objetos, `0E/07` mapa del mundo, y `09/20-22` el cierre del mapa.
-  - Mapa del mundo: X abre la vista ampliada, X otra vez el mundo entero y X otra vez lo cierra. El marcador de Link
-    parpadea en rojo y blanco.
-  - Capas: BG1 es la lluvia o la capa superior, BG2 el terreno y la sala, y **BG3 lleva el HUD, el texto de diálogo y
-    el menú de objetos completo**.
-  - El HUD ocupa BG3, líneas 15-59 (se separan las líneas 0-64), y separarlo cuesta un ~3 % de rendimiento.
-  - Captura del mapa en el núcleo oculto: el mundo entero con 8 frames de animación, 86 frames de juego y unos
-    220 ms en PC. En la casa de Link responde correctamente "no hay mapa aquí".
-  - Velocidad de LakeSnes en PC: unos 240 fps (4× tiempo real).
-- ⬜ `tools/ramdiff.py`: comparar volcados de RAM, como en gba-ds.
-- ✅ Tests de regresión: `games/zelda_alttp/tests/new_game.txt` (del encendido al mapa y el menú) y
-  `sanctuary.txt` (mazmorra: mapa de mazmorra y cuadro de texto arriba y abajo). Usan `expect`,
-  `map … ok` y `untiltap`, salen con 1 si algo cambia y no necesitan partidas guardadas.
+  `dumpram`, `save/load`, `savesram/loadsram`, `hide/split`, `map`, `bench`, `hash`, `audio`.
+- ✅ Scripts that reach the game from power-on, in [`games/zelda_alttp/tests/`](games/zelda_alttp/tests/).
+- ✅ **Checked live against the ROM:**
+  - `$7E0010/11`: `07/00` is free movement indoors, `09/00` outdoors, `0E/02` dialogue, `0E/01` the item menu,
+    `0E/07` the world map, and `09/20-22` the map closing.
+  - World map: X opens the close-up, X again the whole world, and X once more closes it. Link's marker blinks red
+    and white.
+  - Layers: BG1 is the rain or the top layer, BG2 the terrain and the room, and **BG3 holds the HUD, the dialogue
+    text and the whole item menu**.
+  - The HUD is BG3, lines 15-59 (lines 0-64 are split off); splitting it costs ~3 % of the speed.
+  - Map capture on the hidden core: the whole world with 8 animation frames, 86 game frames and about 220 ms on PC.
+    In Link's house it correctly answers "no map here".
+- ⬜ `tools/ramdiff.py`: compare RAM dumps, as in gba-ds.
+- ✅ Regression tests: `new_game.txt` (power-on to the map and the menu) and `sanctuary.txt` (a dungeon: its map and
+  the text box at the top and the bottom). They use `expect`, `map … ok` and `untiltap`, exit with 1 if anything
+  changes and need no saves.
 
-## Fase 2: App de escritorio con dos pantallas 🔶 (falta el menú de pausa)
-- ✅ `src/main.c`: ventana SDL2 con las dos pantallas apiladas (arriba el juego, abajo la segunda pantalla), escala
-  entera, modo lado a lado (`--layout=side --screen=1024x768`, el del dispositivo), F2 para intercambiarlas y
-  `--frames/--shot` para probar sin ventana.
-- ✅ Entrada por teclado y mando (SDL GameController, por posición). ⬜ Mapeo configurable (el RG DS da los botones
-  por etiqueta, ver gba-ds).
-- ✅ Audio a 48 kHz con cola SDL y sincronización por audio (por reloj si no hay audio).
-- ✅ SRAM persistente (`.srm` junto a la ROM o en `--save-dir`; se escribe al cambiar y al salir).
-- ✅ Estado rápido (F5/F7) y avance rápido (Tab). ⬜ Varias ranuras.
-- ✅ Relación de aspecto: la original (256×224 a escala entera, por defecto) o 4:3 (`--aspect=4:3`, F4), que llena
-  los paneles de 1024×768. Para 4:3 se escala primero a enteros con píxeles exactos y luego se suaviza solo el último
-  tramo, así que todos los píxeles miden lo mismo.
-- ⬜ Menú de pausa básico (continuar, guardar o cargar estado, cambiar de pantalla, salir).
+## Phase 2: Desktop app with two screens ✅
 
-## Fase 3: Segunda pantalla para Zelda 🔶 (falta la pantalla de reserva)
-- ✅ Perfiles por juego basados en datos (sondas de memoria con máscara y valor, reglas de separación de capas, cómo
-  abrir el mapa). Hay un módulo por juego en `games/<id>/` (perfil, `README.md` con su mapa de memoria, tests)
-  registrado en `games/games.c`; el motor (`src/profiles.c`) no contiene datos de ningún juego.
-- ✅ **HUD abajo:** en los módulos `07`/`09` (incluido el paso entre salas), BG3 de las líneas 0-64 va a la
-  pantalla inferior. También durante los diálogos (`0E/02`) y al cruzar puertas (`0F`/`10`): el cuadro de texto
-  empieza en la fila 9 de BG3 (línea 72) si está arriba y en la 18 si está abajo (`$7E1CD2`), así que nunca toca el HUD.
-- ✅ **Menú de objetos abajo:** con `0E/01`, todo BG3 va abajo y el mundo sigue visible arriba.
-- ⬜ **Diálogos abajo** (opcional): llevar también el cuadro de texto a la segunda pantalla. Opción del perfil.
-- ✅ **Mapa en vivo con núcleo oculto** (`src/mapcap.c`, en un hilo): copiar el estado, pulsar X (y X otra vez para
-  el mundo entero), esperar a que se estabilice (`$10/$11 = 0E/07` o `0E/03`), capturar 8 frames para la animación
-  del marcador, validar y publicar. Se dispara cada ~1,5 s y al cambiar `$A0`/`$8A`.
-- ✅ Mapa de mazmorra (`0E/03`). No hace falta tener el objeto mapa (muestra las salas visitadas; el objeto revela el
-  resto). El mapa aparece tras unos frames en negro, que la captura ya no da por buenos.
-- ✅ Composición: el HUD superpuesto sobre el mapa, en sus mismas líneas; las dos pantallas tienen el mismo tamaño.
-  El mapa se atenúa donde no hay mapa. ⬜ Diseño configurable (mapa ampliado o mundo entero…).
-- ⬜ Pantalla de reserva cuando no hay nada que mostrar: logo o título del juego.
+- ✅ `src/main.c`: an SDL2 window with both screens, stacked (the game above, the second screen below) or side by side
+  (`--layout=side --screen=1024x768`, as on the device), at whole-number scales.
+- ✅ Keyboard and controller input (SDL GameController, by button position). ⬜ Configurable mapping.
+- ✅ 48 kHz audio through an SDL queue, paced by the audio (by the clock without audio).
+- ✅ Battery saves (`.srm` beside the ROM or in `--save-dir`; written when they change and on exit).
+- ✅ Quick state (F5/F7), fast forward (Tab) and four save-state slots with screenshots (from the menu).
+- ✅ Aspect: the original (256×224 at whole-number scales, the default) or 4:3, which fills the 1024×768 panels.
+  For 4:3 the picture is first scaled up by whole numbers, sharp, and only the last step is smoothed, so every pixel
+  is the same size.
+- ✅ **Game list** at startup (touch and buttons), with a CRC cache (`library-cache.txt`) for fast startup with many
+  ROMs, and EmulationStation's covers (`gamelist.xml`, `images/`).
+- ✅ **Pause menu** on the touch screen: continue, save or load a state, settings, leave the game or the app.
+- ✅ **Settings** (aspect, screen swap, HUD split, map, volume, FPS) kept in `snes-ds.cfg`.
+- ✅ The interface ([`src/ui/`](src/ui)): resolution-independent layout, anti-aliased shapes, Nunito through
+  stb_truetype, an orange theme with the SNES face-button colours for the button hints.
 
-## Fase 4: Dispositivo (RG DS Plus / RG DS, ROCKNIX) 🔶 (pendiente de la segunda medida en la consola)
-- ✅ Compilación cruzada aarch64: `scripts/build-rocknix.sh` (en cualquier Linux x86_64) o
-  `scripts/build-rocknix-docker.sh` (Debian 12 en Docker, desde Windows). El binario solo necesita la `libSDL2` de
-  ROCKNIX y glibc ≥ 2.34.
-- ✅ Probado en aarch64 con QEMU (Docker `--platform linux/arm64`): pasan los dos tests de Zelda, y la app funciona con
-  SDL2, layout lado a lado sobre 2048×768 y capturas del mapa. La velocidad bajo QEMU no es representativa.
-- ✅ App preparada para el dispositivo:
-  - Pantalla completa y `swaymsg '[pid=…] fullscreen enable global'` para ocupar los dos paneles.
-  - Layout automático según el tamaño real de salida (lado a lado si es ancho).
-  - Atajos con Select o el botón home (`src/pad.c`), y L1+Start+Select para salir.
-  - Cierre limpio con SIGTERM (guarda la SRAM).
-  - ROMs en `.zip`, `--find-in` y estadísticas de rendimiento en el log.
-- ✅ `dist/launch.sh`, `dist/screens.sh` (encender el segundo panel y colocarlo a la derecha; al salir, restaurarlo),
-  `dist/SNES DS.sh` (entrada de Ports) y `dist/bench.sh`. Son scripts propios, no copias de los de gba-ds.
-- ✅ Zip para `/storage/roms/ports/`: `dist/snes-ds-v<VERSION>-rocknix-aarch64.zip`.
-- ✅ **Primera medida en la consola (v0.1.0):** 18-39 ms por frame de emulación, 25-50 fps, con cortes de audio.
-  Insuficiente.
-- ✅ **Optimización de LakeSnes** ([PATCHES.md](third_party/lakesnes/PATCHES.md)). Sin cambiar lo que emula: los hashes
-  de imagen y WRAM de `games/zelda_alttp/tests/core_check.txt` son idénticos antes y después, con hilo y sin él, en
-  x86-64 y en aarch64. Exterior con lluvia en PC, frames por segundo de emulación:
+## Phase 3: Second screen for A Link to the Past 🔶
 
-  | Paso | fps | × |
+- ✅ Data-driven per-game profiles (memory probes with a mask and a value, layer-split rules, how to open the map).
+  One module per game in `games/<id>/` (profile, `README.md` with its memory map, tests), registered in
+  `games/games.c`; the engine (`src/profiles.c`) holds no game data.
+- ✅ **HUD below:** in modules `07`/`09` (including the scroll between rooms), BG3 lines 0-64 go to the bottom
+  screen; also during dialogue (`0E/02`) and through doors (`0F`/`10`). The text box starts at BG3 row 9 (line 72)
+  when at the top and row 18 when at the bottom (`$7E1CD2`), so it never reaches the HUD.
+- ✅ **Item menu below:** with `0E/01`, all of BG3 goes down and the world stays visible above.
+- ⬜ **Dialogue below** (optional): move the text box to the second screen too. A profile option.
+- ✅ **Live map on a hidden core** (`src/mapcap.c`, on a thread): copy the state, press X (and X again for the whole
+  world), wait for it to settle (`$10/$11 = 0E/07` or `0E/03`), record 8 frames for the marker's animation, check
+  and publish. Every ~1.5 s and whenever `$A0`/`$8A` change.
+- ✅ The dungeon map (`0E/03`). The map item isn't needed (it shows the rooms visited; the item reveals the rest).
+  The map comes up after some black frames, which the capture no longer accepts.
+- ✅ Composition: the HUD over the map, on its own lines; both screens the same size. The map is dimmed where there
+  is none. ⬜ Configurable layout (close-up or whole world…).
+- ✅ The start-up hiss (a sound effect the game asks for before anything is shown) muted from the profile.
+- ⬜ A fallback screen when there is nothing to show: the game's logo or title.
+
+## Phase 4: The device (RG DS Plus / RG DS, ROCKNIX) 🔶
+
+- ✅ aarch64 cross-build: `scripts/build-rocknix.sh` (on any x86-64 Linux) or `scripts/build-rocknix-docker.sh`
+  (Debian 12 in Docker, from Windows). The binary only needs ROCKNIX's `libSDL2` and glibc ≥ 2.34.
+- ✅ Tested on aarch64 under QEMU (Docker `--platform linux/arm64`): both Zelda tests pass, and the app runs with
+  SDL2, side by side on 2048×768, with map captures and the interface. Speed under QEMU means nothing.
+- ✅ The app ready for the device:
+  - Fullscreen, and `swaymsg '[pid=…] fullscreen enable global'` to cover both panels.
+  - The layout follows the real output size (side by side when wide).
+  - Clean exit on SIGTERM (the battery save is written).
+  - The log records the input devices, the controller mapping, the first presses and touches, and the speed.
+- ✅ `dist/launch.sh`, `dist/screens.sh` (turn the second panel on and place it to the right; put it back on exit),
+  `dist/SNES DS.sh` (the Ports entry) and `dist/bench.sh`. Written for this project, not copied from gba-ds.
+- ✅ A zip for `/storage/roms/ports/`: `dist/snes-ds-v<VERSION>-rocknix-aarch64.zip`.
+- ✅ **First measurement on the console (v0.1.0):** 18-39 ms per emulated frame, 25-50 fps, with audio dropouts.
+  Not enough.
+- ✅ **LakeSnes optimised** ([PATCHES.md](third_party/lakesnes/PATCHES.md)) without changing what it emulates: the
+  picture and WRAM hashes of `games/zelda_alttp/tests/core_check.txt` are identical before and after, with and
+  without the render thread, on x86-64 and aarch64. Emulated frames per second on PC, outdoors in the rain:
+
+  | Step | fps | × |
   |---|---|---|
-  | Original | 245 | 1,0 |
-  | PPU por línea: capas decodificadas una vez, ventanas y brillo precalculados | 293 | 1,2 |
-  | Reloj por tramos entre eventos | 321 | 1,3 |
-  | Composición por capas en vez de por píxel | 439 | 1,8 |
-  | Paso completo solo tras cambiar la IRQ (`irqDirty`) | 460 | 1,9 |
-  | `-O3` + LTO | 486 | 2,0 |
-  | Saltarse las capas y prioridades sin píxeles en la línea | 504 | 2,1 |
-  | Fondos decodificados tile a tile | 589 | 2,4 |
-  | **Dibujo en un hilo propio** (otro núcleo de la CPU) | **~900** | **~3,7** |
+  | Original | 245 | 1.0 |
+  | Per-line picture unit: layers decoded once, windows and brightness worked out ahead | 293 | 1.2 |
+  | Timing in stretches between events | 321 | 1.3 |
+  | Composition by layer instead of by pixel | 439 | 1.8 |
+  | A full step only after the IRQ setup changes (`irqDirty`) | 460 | 1.9 |
+  | `-O3` + LTO | 486 | 2.0 |
+  | Skipping layer and priority pairs with no pixels on the line | 504 | 2.1 |
+  | Backgrounds decoded tile by tile | 589 | 2.4 |
+  | **Drawing on a thread of its own** (another CPU core) | **~900** | **~3.7** |
 
-- ✅ Núcleo oculto del mapa más barato: no dibuja mientras abre el mapa, prioridad baja en Linux, y la espera entre
-  capturas cuenta desde que termina la anterior. Una captura del mundo pasa de 271 a 108 ms en PC.
-- ⬜ **Segunda medida en la consola (v0.2.0)** con `snes-ds.log` y `bench.log`. Por la proporción de la primera,
-  deberían salir unos 10 ms por frame. Si aún no basta:
-  1. Seguir con el PPU, que es lo que limita con el hilo: colores empaquetados, sprites, ventanas.
-  2. Bucles de composición sin saltos: en PC son algo más lentos, pero en el A55 (in-order) podrían ganar. Hay que
-     medirlo allí.
-  3. CPU y APU (el hilo principal): accesos a memoria, DMA, DSP.
-  4. Cambiar de núcleo detrás de `core.h`: bsnes-jg (GPL-3) o Snes9x (licencia no comercial).
-- ⬜ Táctil sobre el layout entero (para la fase 5).
-- ⬜ BananaOS (KMSDRM, una ventana por panel).
-- ⬜ Selector de juegos o integración con EmulationStation; ahora se abre el primer juego con perfil.
+- ✅ A cheaper hidden map core: it doesn't draw while opening the map, runs at low priority on Linux, and the wait
+  between captures counts from the end of the last one. A world capture went from 271 to 108 ms on PC.
+- ⬜ **Second measurement on the console** with `snes-ds.log` and `bench.log`. By the proportions of the first, it
+  should come to about 10 ms per frame. If that's still not enough:
+  1. Keep on with the picture unit, the limit with the thread: packed colours, sprites, windows.
+  2. Branch-free composition loops: slightly slower on PC, but the in-order A55 might gain. To be measured there.
+  3. The CPU and the APU (the main thread): memory access, DMA, the DSP.
+  4. Swap the core behind `core.h`: bsnes-jg (GPL-3) or Snes9x (non-commercial license).
+- ⬜ Confirm on the console which button arrives as the menu button and how sway ties each touch panel to its
+  output (the log records both).
+- ⬜ BananaOS (KMSDRM, one window per panel).
 
-## Fase 5: Táctil y comodidad ⬜
-- ⬜ **Inventario táctil en Zelda:** tocar un objeto escribe `$7E0202` y pone `$7E0016` a 1, solo en `07|09/00` y solo
-  con objetos que se tienen (`$7EF340…`).
-- ⬜ Intercambiar pantallas, ocultar la segunda, ajustes por juego.
-- ⬜ Lista de juegos con logos y una marca para los que tienen perfil.
+## Phase 5: Touch and comfort 🔶
 
-## Fase 6: Más juegos ⬜
-Mismo flujo para cada uno: harness → `layershot` para ver qué capa usa → `watch`/`ramdiff` para los indicadores →
-perfil → prueba en el dispositivo.
-1. **Super Metroid**: mapa de pausa y minimapa del HUD.
-2. Super Mario World: mapa del mundo y HUD.
-3. Secret of Mana, Chrono Trigger y FF6: menús y mapa del mundo en Mode 7.
-4. Super Castlevania IV y Dracula X: HUD.
+- ✅ The game list and the menu by touch; a tap on the bottom screen pauses the game into the menu.
+- ✅ Swap the screens (settings). ⬜ Hide the second screen, per-game settings.
+- ✅ Covers in the game list. ⬜ Also list the games without a profile (playable on one screen).
+- ⬜ **Touch inventory in A Link to the Past:** tapping an item writes `$7E0202` and sets `$7E0016` to 1, only in
+  `07|09/00` and only for items the player has (`$7EF340…`).
+- ⬜ The interface in English as well as Spanish.
 
-## Fase 7: Integración ⬜
-- ⬜ EmulationStation y BananaOS, como `esinteg.c` de gba-ds.
-- ⬜ RetroAchievements con rcheevos (modo casual).
-- ⬜ Android (GammaOS), más adelante.
+## Phase 6: More games ⬜
 
----
+The same path for each: harness → `layershot` for the layers → `watch`/`ramdiff` for the indicators → profile →
+test on the device.
 
-## Riesgos
+1. **Super Metroid**: the pause map and the HUD's minimap.
+2. Super Mario World: the world map and the HUD.
+3. Secret of Mana, Chrono Trigger and Final Fantasy VI: menus and the Mode 7 world map.
+4. Super Castlevania IV and Dracula X: the HUD.
 
-| Riesgo | Impacto | Mitigación |
+## Phase 7: Integration ⬜
+
+- ⬜ EmulationStation and BananaOS, like gba-ds's `esinteg.c`.
+- ⬜ RetroAchievements through rcheevos (casual mode).
+- ⬜ Android (GammaOS), later on.
+
+## Risks
+
+| Risk | Impact | Mitigation |
 |---|---|---|
-| LakeSnes no llega a 60 fps en el Cortex-A55 | Alto | Primera medida: 18-39 ms/frame. Optimizado unas 3,7 veces (fase 4); falta la segunda medida. `core.h` permite cambiar de núcleo |
-| Fallos de precisión de LakeSnes (`bugs.md`: bloqueos en subidas al SPC en algunos juegos) | Medio | ALttP está verificado por zelda3; probar cada juego nuevo |
-| Un juego cambia los registros de BG3 a mitad de frame | Bajo | La separación se hace en el propio PPU, scanline a scanline, así que ya lo contempla |
-| Licencia (Snes9x no es compatible con la GPL) | Medio | Seguir con LakeSnes o bsnes; decidirlo antes de copiar código de gba-ds |
-
-## Cómo compilar y probar (PC, Windows)
-
-```bash
-export PATH=/c/msys64/ucrt64/bin:$PATH
-cmake -S . -B build -G Ninja && cmake --build build
-./build/harness.exe "ROM.sfc" out games/zelda_alttp/tests/new_game.txt
-./build/snes-ds.exe "ROM.sfc"
-```
+| LakeSnes doesn't reach 60 fps on the Cortex-A55 | High | First measurement: 18-39 ms/frame. Optimised about 3.7× (phase 4); the second measurement is pending. `core.h` allows swapping the core |
+| LakeSnes accuracy bugs (its `bugs.md`: hangs on SPC uploads in some games) | Medium | A Link to the Past is verified by zelda3; test every new game |
+| A game changes BG3's registers mid-frame | Low | The split happens in the picture unit itself, scanline by scanline, so it's already covered |
+| Licensing (Snes9x isn't GPL-compatible) | Medium | Stay with LakeSnes or bsnes |
+| The handheld's menu button or touch panels reach the app differently than expected | Medium | Many ways to open the menu (a tap, any spare button, Select + Start); the log records the input devices |

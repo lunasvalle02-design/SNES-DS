@@ -6,6 +6,8 @@
 const Profile game_zelda_alttp = {
 	.id = "zelda_alttp",
 	.title = "The Legend of Zelda: A Link to the Past",
+	.shortTitle = "A Link to the Past",
+	.about = "Mapa del mundo y de cada mazmorra, el HUD y el menú de objetos en la pantalla de abajo.",
 	.crc32 = { 0x777AAC2F }, /* USA */
 	/* $7E0010 is the main module, $7E0011 the sub-module: 07 indoors,
 	 * 09 outdoors, 0E the menus (01 items, 02 text, 03 dungeon map,
@@ -25,6 +27,11 @@ const Profile game_zelda_alttp = {
 	},
 	/* the HUD is lines 15-59; a little room around it */
 	.hudShowY0 = 12, .hudShowY1 = 60,
+	/* at power-on, right after the sound driver is uploaded (frame 82),
+	 * the game asks for sound effect $0A on $2143: a very high-pitched
+	 * sample on voice 7, 0.3 s of hiss over the black screen. Nothing else
+	 * plays before frame 110 (the intro starts later); see README.md */
+	.bootMuteFrames = 110,
 	.map = {
 		.enabled = true,
 		.open = { { PAD_X, 4 } },

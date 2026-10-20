@@ -1,7 +1,7 @@
 #!/bin/bash
 # snes-ds on ROCKNIX (RG DS Plus / RG DS).
-#   launch.sh                  the first game in the SNES folder with a profile
-#   launch.sh /path/Game.sfc   that game (.sfc, .smc or .zip)
+#   launch.sh                  the game list (the SNES folder's games with a profile)
+#   launch.sh /path/Game.sfc   straight into that game (.sfc, .smc or .zip)
 #   any --option of snes-ds can follow (see README.txt)
 # Everything snes-ds prints goes to snes-ds.log next to this script.
 
@@ -40,9 +40,5 @@ fi
 trap '"$DIR/screens.sh" off >> "$LOG" 2>&1' EXIT
 trap 'exit 143' TERM INT HUP
 
-if [ $# -gt 0 ] && [ "${1#--}" = "$1" ]; then
-	./snes-ds --state-dir="$DIR/states" "$@" >> "$LOG" 2>&1
-else
-	./snes-ds --state-dir="$DIR/states" --find-in="$ROMS" "$@" >> "$LOG" 2>&1
-fi
+./snes-ds --state-dir="$DIR/states" --rom-dir="$ROMS" "$@" >> "$LOG" 2>&1
 echo "exit $?" >> "$LOG"

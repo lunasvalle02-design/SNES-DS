@@ -457,6 +457,67 @@ static void command(char* line) {
 				memcpy(sheetFrames[sheetCount++], img.pixels[k], sizeof(img.pixels[k]));
 			}
 		}
+	} else if (!strcmp(cmd, "audio")) {
+		/* N frames of sound into OUTDIR/NAME.wav (48 kHz stereo), and per
+		 * frame its loudest sample and how much it jumps between samples
+		 * (noise jumps a lot) */
+		long n = parse_num(argv[1]);
+		char p[1024];
+		path(p, sizeof(p), argv[2] ? argv[2] : "audio", ".wav");
+		FILE* f = fopen(p, "wb");
+		if (!f) fail("can't write", p);
+		uint32_t bytes = (uint32_t)(n * 800 * 4);
+		uint8_t hdr[44] = "RIFF____WAVEfmt \x10\0\0\0\x01\0\x02\0\x80\xbb\0\0\0\xee\x02\0\x04\0\x10\0data____";
+		uint32_t riff = bytes + 36;
+		memcpy(hdr + 4, &riff, 4);
+		memcpy(hdr + 40, &bytes, 4);
+		fwrite(hdr, 1, 44, f);
+		int16_t s[800 * 2];
+		for (long i = 0; i < n; i++) {
+			step(0);
+			core_audio(core, s, 800);
+			/* what the CPU tells the sound CPU, when it changes */
+			static uint8_t lastIn[4] = { 0xAA, 0xAA, 0xAA, 0xAA };
+			uint8_t in[4], out[4];
+			core_apu_ports(core, in, out);
+			if (memcmp(in, lastIn, 4))
+				printf("frame %u: ports to apu %02X %02X %02X %02X, from apu %02X %02X %02X %02X\n", core_frame_count(core),
+				       in[0], in[1], in[2], in[3], out[0], out[1], out[2], out[3]);
+			memcpy(lastIn, in, 4);
+			fwrite(s, sizeof(s), 1, f);
+			int peak = 0;
+			long jump = 0;
+			for (int k = 0; k < 800 * 2; k++) {
+				if (abs(s[k]) > peak) peak = abs(s[k]);
+				if (k >= 2) jump += abs(s[k] - s[k - 2]);
+			}
+			if (peak) printf("audio frame %u: peak %d, jump %ld\n", core_frame_count(core), peak, jump / 1600);
+			/* the DSP's echo and voice setup when a sound starts or every 30
+			 * frames while there is one */
+			static bool was;
+			if (peak && (!was || i % 30 == 0)) {
+				const uint8_t* d = core_dsp(core);
+				printf("  dsp: MVOL %d/%d EVOL %d/%d EFB %d ESA $%02X00 EDL %d FLG $%02X KON-ish ENDX $%02X NON $%02X EON $%02X\n",
+				       (int8_t)d[0x0c], (int8_t)d[0x1c], (int8_t)d[0x2c], (int8_t)d[0x3c], (int8_t)d[0x0d], d[0x6d],
+				       d[0x7d] & 15, d[0x6c], d[0x7c], d[0x3d], d[0x4d]);
+				for (int v = 0; v < 8; v++) {
+					const uint8_t* r = d + v * 16;
+					if (!(r[8] || r[9])) continue;
+					printf("  voice %d: vol %d/%d srcn %d envx %d outx %d pitch $%04X adsr $%02X%02X\n", v, (int8_t)r[0],
+					       (int8_t)r[1], r[4], r[8], (int8_t)r[9], r[2] | r[3] << 8, r[5], r[6]);
+					/* where its sample is, and how it starts */
+					const uint8_t* aram = core_aram(core);
+					int dir = d[0x5d] << 8, e = (dir + r[4] * 4) & 0xffff;
+					int start = aram[e] | aram[(e + 1) & 0xffff] << 8, loop = aram[(e + 2) & 0xffff] | aram[(e + 3) & 0xffff] << 8;
+					printf("    DIR $%04X: sample $%04X loop $%04X:", dir, start, loop);
+					for (int k = 0; k < 18; k++) printf(" %02X", aram[(start + k) & 0xffff]);
+					printf("\n");
+				}
+			}
+			was = peak != 0;
+		}
+		fclose(f);
+		core_set_pad(core, 0, 0);
 	} else if (!strcmp(cmd, "threads")) {
 		core_set_threaded(core, argv[1] && !strcmp(argv[1], "on"));
 	} else if (!strcmp(cmd, "hash")) {

@@ -74,12 +74,16 @@ void video_present(SDL_Renderer* ren, ScreenTex* t, const uint32_t* pixels, SDL_
 	SDL_RenderCopy(ren, t->up, NULL, &d);
 }
 
-bool video_shot(SDL_Renderer* ren, const char* path) {
+bool video_shot(SDL_Renderer* ren, const char* path, const SDL_Rect* part) {
 	int w, h;
 	if (SDL_GetRendererOutputSize(ren, &w, &h) != 0) return false;
+	if (part) {
+		w = part->w;
+		h = part->h;
+	}
 	uint32_t* px = malloc((size_t)w * h * 4);
 	uint8_t* rgb = malloc((size_t)w * h * 3);
-	bool ok = px && rgb && SDL_RenderReadPixels(ren, NULL, SDL_PIXELFORMAT_XRGB8888, px, w * 4) == 0;
+	bool ok = px && rgb && SDL_RenderReadPixels(ren, part, SDL_PIXELFORMAT_XRGB8888, px, w * 4) == 0;
 	if (ok) {
 		for (int i = 0; i < w * h; i++) {
 			rgb[i * 3] = px[i] >> 16;
