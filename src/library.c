@@ -155,7 +155,26 @@ static char* find_cover(const char* dir, const char* file, const char* name) {
 	return NULL;
 }
 
-/* --- the scan ------------------------------------------------------------ */
+char* library_cover(const char* romPath) {
+	const char* file = strrchr(romPath, '/');
+	const char* bs = strrchr(romPath, '\\');
+	if (!file || (bs && bs > file)) file = bs;
+	char dir[1024];
+	if (file) {
+		snprintf(dir, sizeof(dir), "%.*s", (int)(file - romPath), romPath);
+		file++;
+	} else {
+		snprintf(dir, sizeof(dir), ".");
+		file = romPath;
+	}
+	char name[512];
+	snprintf(name, sizeof(name), "%s", file);
+	char* dot = strrchr(name, '.');
+	if (dot) *dot = 0;
+	return find_cover(dir, file, name);
+}
+
+/* --- the scan------------------------------------------------------------ */
 
 static void add_game(Library* lib, const char* dir, const char* file, const char* path, const Profile* p) {
 	lib->games = realloc(lib->games, (lib->count + 1) * sizeof(LibGame));

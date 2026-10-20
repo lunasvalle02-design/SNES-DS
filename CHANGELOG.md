@@ -6,6 +6,14 @@ What each version of SNES DS brought. Versions follow [semantic versioning](http
 may still change (see [what 1.0 promises](ROADMAP.md#the-road-to-10)). Downloads are on the
 [releases page](https://github.com/lunasvalle02-design/SNES-DS/releases).
 
+## Unreleased
+
+### Added
+- **A picture behind the HUD**: when the second screen has only the HUD, or nothing (a game with no map, such as Super
+  Castlevania IV, a game with no profile, or before the first map capture), the game's cover or icon fills the rest,
+  darkened so the HUD reads. A picture of the player's own goes in `snes-ds/backgrounds/<id or ROM name>.png` (or
+  `.jpg`). On by default; Settings → Picture behind the HUD turns it off.
+
 ## 1.0.0
 
 The first stable version: 0.6.0, used on the console for some days without problems. From here on, what

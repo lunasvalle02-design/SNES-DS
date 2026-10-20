@@ -56,12 +56,15 @@ move to the second screen, and a hidden second emulator core keeps the game's ow
 - **Touch interface.** A game list on the bottom (touch) screen, with an icon for each game (or the covers
   EmulationStation has scraped), and a pause menu: four save-state slots with screenshots, settings, and leaving the
   game or the app. Everything works with the buttons too.
+- **A picture behind the HUD.** When the second screen has only the HUD (a game with no map, such as Super
+  Castlevania IV, or one with no profile), the game's cover or icon fills the rest, darkened; or a picture of your
+  own, in `snes-ds/backgrounds/`.
 - **Controls your way.** Any SNES button, and one more for the menu, can be moved to another of the console's
   buttons, a trigger or a key, from the settings.
 - **Picture as you like it.** The SNES' own aspect at whole-number scales, or 4:3 like a TV, filling the
   RG DS Plus' 1024×768 panels without uneven pixels.
-- **Settings that stick.** Aspect, screen swap, HUD split, map, volume, an FPS counter, the language and the
-  controls, kept in `snes-ds.cfg`.
+- **Settings that stick.** Aspect, screen swap, HUD split, map, the picture behind the HUD, volume, an FPS counter,
+  the language and the controls, kept in `snes-ds.cfg`.
 - **In English and Spanish.** The interface starts in English; the language can be changed from the settings, and
   the change shows at once.
 - **Battery saves** in the same `.srm` format as RetroArch, written a few seconds after they change. Saves, states

@@ -26,6 +26,9 @@ void library_scan(Library* lib, const char* dir, const char* cachePath);
  * DIR/<id>.png, when it's there (games/<id>/icon.png, copied beside the
  * program) */
 void library_add_icons(Library* lib, const char* dir);
+/* the cover of any ROM, listed or not (one with no profile, say), found as
+ * the scan finds them; NULL when there's none. Free it */
+char* library_cover(const char* romPath);
 void library_free(Library* lib);
 
 #endif

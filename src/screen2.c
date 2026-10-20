@@ -4,10 +4,14 @@
 #include <string.h>
 
 #define BACKDROP 0x101418
+#define OPAQUE 0xFF000000u
+/* see-through: the HUD's lines, over the background, so it reads */
+#define HUD_SHADE 0xC0101418u
 
 struct Screen2 {
 	const Profile* p;
 	bool splitOn;
+	bool seeThrough;
 	MapWorker* worker;
 	/* the map: the last good capture, dimmed when the game has none here */
 	MapImage* map;
@@ -83,25 +87,30 @@ static void schedule_capture(Screen2* s, Core* game) {
 static void compose(Screen2* s) {
 	uint32_t* out = s->picture;
 	if (s->menuUp) {
-		for (int i = 0; i < CORE_W * CORE_H; i++) out[i] = s->menu[i] >> 24 ? s->menu[i] & 0xFFFFFF : BACKDROP;
+		for (int i = 0; i < CORE_W * CORE_H; i++) out[i] = OPAQUE | (s->menu[i] >> 24 ? s->menu[i] & 0xFFFFFF : BACKDROP);
 		return;
 	}
 	if (s->haveMap && s->map->frames) {
 		int k = (s->ticks / s->map->step) % s->map->frames;
 		const uint32_t* src = s->map->pixels[k];
 		if (s->mapDim) {
-			for (int i = 0; i < CORE_W * CORE_H; i++) out[i] = (src[i] >> 2) & 0x3F3F3F;
+			for (int i = 0; i < CORE_W * CORE_H; i++) out[i] = OPAQUE | ((src[i] >> 2) & 0x3F3F3F);
 		} else {
-			memcpy(out, src, sizeof(s->picture));
+			for (int i = 0; i < CORE_W * CORE_H; i++) out[i] = OPAQUE | src[i];
+		}
+	} else if (s->seeThrough) {
+		memset(out, 0, sizeof(s->picture));
+		if (s->haveHud) {
+			for (int i = s->hudY0 * CORE_W; i < s->hudY1 * CORE_W; i++) out[i] = HUD_SHADE;
 		}
 	} else {
-		for (int i = 0; i < CORE_W * CORE_H; i++) out[i] = BACKDROP;
+		for (int i = 0; i < CORE_W * CORE_H; i++) out[i] = OPAQUE | BACKDROP;
 	}
 	if (s->haveHud) {
 		for (int y = s->hudY0; y < s->hudY1; y++) {
 			for (int x = 0; x < CORE_W; x++) {
 				uint32_t c = s->hud[y * CORE_W + x];
-				if (c >> 24) out[y * CORE_W + x] = c & 0xFFFFFF;
+				if (c >> 24) out[y * CORE_W + x] = OPAQUE | (c & 0xFFFFFF);
 			}
 		}
 	}
@@ -146,6 +155,14 @@ void screen2_after_frame(Screen2* s, Core* game) {
 }
 
 const uint32_t* screen2_picture(Screen2* s) { return s->picture; }
+
+bool screen2_empty(Screen2* s) { return !s->menuUp && !(s->haveMap && s->map->frames); }
+
+void screen2_set_see_through(Screen2* s, bool on) {
+	if (s->seeThrough == on) return;
+	s->seeThrough = on;
+	compose(s);
+}
 
 void screen2_game_lines(Screen2* s, int* y0, int* y1) {
 	*y0 = 0;

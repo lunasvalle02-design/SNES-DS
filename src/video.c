@@ -26,9 +26,12 @@ static SDL_Rect fit(SDL_Rect r, int h) {
 	return o;
 }
 
-void screen_tex_init(SDL_Renderer* ren, ScreenTex* t) {
-	t->pic = SDL_CreateTexture(ren, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_STREAMING, CORE_W, CORE_H);
+void screen_tex_init(SDL_Renderer* ren, ScreenTex* t, bool alpha) {
+	t->alpha = alpha;
+	t->pic = SDL_CreateTexture(ren, alpha ? SDL_PIXELFORMAT_ARGB8888 : SDL_PIXELFORMAT_XRGB8888,
+	                           SDL_TEXTUREACCESS_STREAMING, CORE_W, CORE_H);
 	SDL_SetTextureScaleMode(t->pic, SDL_ScaleModeNearest);
+	if (alpha) SDL_SetTextureBlendMode(t->pic, SDL_BLENDMODE_BLEND);
 	t->up = NULL;
 	t->upW = t->upH = 0;
 }
@@ -61,8 +64,10 @@ void video_present(SDL_Renderer* ren, ScreenTex* t, const uint32_t* pixels, int 
 		if (t->up) SDL_DestroyTexture(t->up);
 		t->upW = CORE_W * kx;
 		t->upH = src.h * ky;
-		t->up = SDL_CreateTexture(ren, SDL_PIXELFORMAT_XRGB8888, SDL_TEXTUREACCESS_TARGET, t->upW, t->upH);
+		t->up = SDL_CreateTexture(ren, t->alpha ? SDL_PIXELFORMAT_ARGB8888 : SDL_PIXELFORMAT_XRGB8888,
+		                          SDL_TEXTUREACCESS_TARGET, t->upW, t->upH);
 		if (t->up) SDL_SetTextureScaleMode(t->up, SDL_ScaleModeLinear);
+		if (t->up && t->alpha) SDL_SetTextureBlendMode(t->up, SDL_BLENDMODE_BLEND);
 	}
 	if (!t->up) {
 		SDL_RenderCopy(ren, t->pic, &src, &d);
@@ -70,7 +75,14 @@ void video_present(SDL_Renderer* ren, ScreenTex* t, const uint32_t* pixels, int 
 	}
 	SDL_Texture* prev = SDL_GetRenderTarget(ren);
 	SDL_SetRenderTarget(ren, t->up);
+	if (t->alpha) {
+		/* copied as it is, clear parts included */
+		SDL_SetRenderDrawColor(ren, 0, 0, 0, 0);
+		SDL_RenderClear(ren);
+		SDL_SetTextureBlendMode(t->pic, SDL_BLENDMODE_NONE);
+	}
 	SDL_RenderCopy(ren, t->pic, &src, NULL);
+	if (t->alpha) SDL_SetTextureBlendMode(t->pic, SDL_BLENDMODE_BLEND);
 	SDL_SetRenderTarget(ren, prev);
 	SDL_RenderCopy(ren, t->up, NULL, &d);
 }

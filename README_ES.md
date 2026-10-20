@@ -56,12 +56,15 @@ pasan a la segunda pantalla, y un segundo núcleo oculto mantiene allí abierto 
 - **Interfaz táctil.** Una lista de juegos en la pantalla de abajo (la táctil), con un icono para cada juego (o las
   carátulas que haya descargado EmulationStation), y un menú de pausa: cuatro ranuras de estado con captura, ajustes
   y salir del juego o de la app. Todo funciona también con los botones.
+- **Una imagen tras el HUD.** Cuando la segunda pantalla solo tiene el HUD (un juego sin mapa, como Super
+  Castlevania IV, o uno sin perfil), la carátula o el icono del juego llena el resto, oscurecido; o una imagen tuya,
+  en `snes-ds/backgrounds/`.
 - **Los controles a tu manera.** Cualquier botón de la SNES, y uno más para el menú, se puede llevar a otro botón de
   la consola, un gatillo o una tecla, desde los ajustes.
 - **La imagen a tu gusto.** La relación de aspecto original de la SNES a escala entera, o 4:3 como en un televisor,
   llenando los paneles de 1024×768 de la RG DS Plus sin píxeles desiguales.
-- **Ajustes que se recuerdan.** Formato, intercambio de pantallas, separación del HUD, mapa, volumen, contador de
-  FPS, idioma y controles, guardados en `snes-ds.cfg`.
+- **Ajustes que se recuerdan.** Formato, intercambio de pantallas, separación del HUD, mapa, imagen tras el HUD,
+  volumen, contador de FPS, idioma y controles, guardados en `snes-ds.cfg`.
 - **En inglés y en español.** La interfaz arranca en inglés; el idioma se cambia en los ajustes, y el cambio se ve al
   momento.
 - **Partidas** (`.srm`) en el mismo formato que RetroArch, escritas unos segundos después de cambiar. Las partidas,

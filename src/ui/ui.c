@@ -42,7 +42,7 @@ typedef enum { DLG_QUIT, DLG_CLOSE_GAME, DLG_OVERWRITE } DialogKind;
 #define FOCUS_SETTINGS (-1)
 #define FOCUS_QUIT (-2)
 
-enum { SET_ASPECT, SET_SWAP, SET_SPLIT, SET_MAP, SET_VOLUME, SET_FPS, SET_LANG, SET_CONTROLS, SETTINGS_N };
+enum { SET_ASPECT, SET_SWAP, SET_SPLIT, SET_MAP, SET_BACKGROUND, SET_VOLUME, SET_FPS, SET_LANG, SET_CONTROLS, SETTINGS_N };
 
 /* the controls page: the bindings, then "reset", two columns */
 #define CONTROLS_N (BINDS + 1)
@@ -422,6 +422,7 @@ static const char* const setting_names[SETTINGS_N][LANGS] = {
 	{ "Swap screens", "Intercambiar pantallas" },
 	{ "HUD and menus below", "HUD y menús abajo" },
 	{ "Map on the bottom screen", "Mapa en la pantalla de abajo" },
+	{ "Picture behind the HUD", "Imagen tras el HUD" },
 	{ "Volume", "Volumen" },
 	{ "Show FPS", "Mostrar FPS" },
 	{ "Language", "Idioma" },
@@ -440,6 +441,10 @@ static const char* const setting_help[SETTINGS_N][LANGS] = {
 	  "stutter.",
 	  "Un segundo núcleo abre el mapa del juego en segundo plano para tenerlo siempre a la vista. Desactívalo "
 	  "si notas tirones." },
+	{ "When the second screen has only the HUD (a game with no map or no profile), the game's cover or icon fills the rest. "
+	  "Your own picture: snes-ds/backgrounds/<id or ROM name>.png.",
+	  "Cuando la segunda pantalla solo tiene el HUD (un juego sin mapa o sin perfil), la carátula o el icono del juego llena el "
+	  "resto. Una imagen tuya: snes-ds/backgrounds/<id o nombre de la ROM>.png." },
 	{ "The volume of the game's sound.", "El volumen del sonido del juego." },
 	{ "Frames per second, in a corner of the game screen.",
 	  "Los fotogramas por segundo, en una esquina de la pantalla del juego." },
@@ -910,7 +915,7 @@ static UiAction draw_slots(Ui* ui) {
 static bool setting_bool(Ui* ui, int i, bool** out) {
 	Settings* s = ui->set;
 	bool* p = i == SET_ASPECT ? &s->wide : i == SET_SWAP ? &s->swapped : i == SET_SPLIT ? &s->split
-	        : i == SET_MAP ? &s->map : i == SET_FPS ? &s->showFps : NULL;
+	        : i == SET_MAP ? &s->map : i == SET_BACKGROUND ? &s->background : i == SET_FPS ? &s->showFps : NULL;
 	*out = p;
 	return p != NULL;
 }

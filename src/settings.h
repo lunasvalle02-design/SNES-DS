@@ -15,6 +15,7 @@ typedef struct {
 	bool swapped;  /* the game on the bottom screen */
 	bool split;    /* the game's HUD and menus on the second screen */
 	bool map;      /* the hidden core that captures the game's map */
+	bool background; /* the game's picture behind a second screen that has only the HUD */
 	bool showFps;
 	int volume;    /* 0-10 */
 	int lang;      /* the interface's language, LANG_* (i18n.h) */
