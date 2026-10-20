@@ -21,8 +21,9 @@ uint32_t rom_crc32(const uint8_t* rom, size_t size) {
 	return ~crc;
 }
 
-const Profile* profile_find(const uint8_t* rom, size_t size) {
-	uint32_t crc = rom_crc32(rom, size);
+const Profile* profile_find(const uint8_t* rom, size_t size) { return profile_find_crc(rom_crc32(rom, size)); }
+
+const Profile* profile_find_crc(uint32_t crc) {
 	for (int i = 0; games[i]; i++) {
 		for (int j = 0; j < 4 && games[i]->crc32[j]; j++) {
 			if (games[i]->crc32[j] == crc) return games[i];

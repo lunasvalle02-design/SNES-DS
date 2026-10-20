@@ -126,6 +126,7 @@ void screen2_after_frame(Screen2* s, Core* game) {
 		schedule_capture(s, game);
 		MapResult res;
 		if (mapworker_poll(s->worker, &res, s->map)) {
+			s->sinceCapture = 0; /* the next one counts from now */
 			if (res == MAPCAP_OK) {
 				s->haveMap = true;
 				s->mapDim = false;
@@ -138,3 +139,9 @@ void screen2_after_frame(Screen2* s, Core* game) {
 }
 
 const uint32_t* screen2_picture(Screen2* s) { return s->picture; }
+
+bool screen2_map_stats(Screen2* s, int* count, double* avgMs, double* maxMs) {
+	if (!s->worker) return false;
+	mapworker_stats(s->worker, count, avgMs, maxMs);
+	return true;
+}

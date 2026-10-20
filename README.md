@@ -39,6 +39,17 @@ Tab avance rápido · F11 pantalla completa · Esc salir.
 Opciones (`--aspect=4:3`, `--layout=side`, `--screen=1024x768`, `--save-dir`, `--no-map`…): ver la cabecera de
 [src/main.c](src/main.c).
 
+## En la consola (ROCKNIX: RG DS Plus / RG DS)
+
+```bash
+scripts/build-rocknix-docker.sh      # desde Windows, con Docker Desktop
+scripts/build-rocknix.sh             # desde Linux x86_64 con aarch64-linux-gnu-gcc
+```
+
+Deja `dist/snes-ds-v<VERSION>-rocknix-aarch64.zip`, que se descomprime en `/storage/roms/ports/`. Las instrucciones
+para la consola (controles, opciones, qué mirar del rendimiento) están en [dist/README.txt](dist/README.txt), que va
+dentro del zip.
+
 ## Harness (investigar juegos sin la consola)
 
 ```bash

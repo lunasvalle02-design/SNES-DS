@@ -1,0 +1,86 @@
+# A Link to the Past: hashes of what the core draws and does, to check that
+# a change to the core (an optimisation) gives the very same results. Uses
+# the states new_game.txt and sanctuary.txt leave in OUTDIR:
+#   harness ROM out games/zelda_alttp/tests/core_check.txt > after.txt
+# and compare with the same run before the change (diff: no output).
+# Covers the intro (from power-on), outdoors in the rain (BG1 over BG2),
+# indoors, the item menu with the HUD split, the world map (mode 7) and the
+# dungeon map.
+echo power-on, title, intro
+wait 120
+hash
+wait 300
+hash
+wait 300
+hash
+wait 600
+hash
+
+echo outdoors, rain, walking
+load outside
+hash
+hold LEFT 30
+hash
+hold UP 60
+hash
+hold RIGHT 90
+hash
+wait 120
+hash
+
+echo the HUD split in play
+load outside
+split 4 0 64
+wait 2
+hash
+hold DOWN 40
+hash
+split 0
+
+echo indoors
+load free
+wait 2
+hash
+hold DOWN 40
+hash
+hold RIGHT 40
+hash
+
+echo the item menu, split
+load menu
+split 4
+wait 2
+hash
+wait 30
+hash
+split 0
+
+echo the world map (mode 7), zooming out
+load map
+wait 2
+hash
+tap X
+hash
+wait 10
+hash
+wait 30
+hash
+wait 60
+hash
+
+echo the dungeon map
+load sanct
+tap X
+wait 20
+hash
+wait 40
+hash
+wait 60
+hash
+
+echo the Sanctuary
+load sanct
+hold UP 30
+hash
+hold LEFT 20
+hash

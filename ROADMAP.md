@@ -79,16 +79,51 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente · ❓ decisión abierta
   El mapa se atenúa donde no hay mapa. ⬜ Diseño configurable (mapa ampliado o mundo entero…).
 - ⬜ Pantalla de reserva cuando no hay nada que mostrar: logo o título del juego.
 
-## Fase 4: Dispositivo (RG DS Plus / RG DS, ROCKNIX) ⬜
-- ⬜ Compilación cruzada aarch64 (toolchain como `scripts/build-rocknix.sh` de gba-ds, o WSL).
-- ⬜ **Medir LakeSnes en el dispositivo.** Hacen falta ≥60 fps para el juego más una reserva para el núcleo oculto. Si
-  no llega:
-  1. Optimizar el PPU de LakeSnes (ahora calcula píxel a píxel; pasarlo a renderizado por línea y por capa).
-  2. Cambiar de núcleo detrás de `core.h`: bsnes-jg (GPL-3) o Snes9x (licencia no comercial, ver INVESTIGACION §4).
-- ⬜ `dist/launch.sh` y `dist/screens.sh` adaptados de gba-ds (encender DSI-1, colocarlo a la derecha, el táctil
-  sobre todo el layout).
-- ⬜ Ventana global sobre las dos pantallas (sway "fullscreen global"); KMSDRM en BananaOS.
-- ⬜ Zip de release para `/storage/roms/ports/snes-ds/`.
+## Fase 4: Dispositivo (RG DS Plus / RG DS, ROCKNIX) 🔶 (pendiente de la segunda medida en la consola)
+- ✅ Compilación cruzada aarch64: `scripts/build-rocknix.sh` (en cualquier Linux x86_64) o
+  `scripts/build-rocknix-docker.sh` (Debian 12 en Docker, desde Windows). El binario solo necesita la `libSDL2` de
+  ROCKNIX y glibc ≥ 2.34.
+- ✅ Probado en aarch64 con QEMU (Docker `--platform linux/arm64`): pasan los dos tests de Zelda, y la app funciona con
+  SDL2, layout lado a lado sobre 2048×768 y capturas del mapa. La velocidad bajo QEMU no es representativa.
+- ✅ App preparada para el dispositivo:
+  - Pantalla completa y `swaymsg '[pid=…] fullscreen enable global'` para ocupar los dos paneles.
+  - Layout automático según el tamaño real de salida (lado a lado si es ancho).
+  - Atajos con Select o el botón home (`src/pad.c`), y L1+Start+Select para salir.
+  - Cierre limpio con SIGTERM (guarda la SRAM).
+  - ROMs en `.zip`, `--find-in` y estadísticas de rendimiento en el log.
+- ✅ `dist/launch.sh`, `dist/screens.sh` (encender el segundo panel y colocarlo a la derecha; al salir, restaurarlo),
+  `dist/SNES DS.sh` (entrada de Ports) y `dist/bench.sh`. Son scripts propios, no copias de los de gba-ds.
+- ✅ Zip para `/storage/roms/ports/`: `dist/snes-ds-v<VERSION>-rocknix-aarch64.zip`.
+- ✅ **Primera medida en la consola (v0.1.0):** 18-39 ms por frame de emulación, 25-50 fps, con cortes de audio.
+  Insuficiente.
+- ✅ **Optimización de LakeSnes** ([PATCHES.md](third_party/lakesnes/PATCHES.md)). Sin cambiar lo que emula: los hashes
+  de imagen y WRAM de `games/zelda_alttp/tests/core_check.txt` son idénticos antes y después, con hilo y sin él, en
+  x86-64 y en aarch64. Exterior con lluvia en PC, frames por segundo de emulación:
+
+  | Paso | fps | × |
+  |---|---|---|
+  | Original | 245 | 1,0 |
+  | PPU por línea: capas decodificadas una vez, ventanas y brillo precalculados | 293 | 1,2 |
+  | Reloj por tramos entre eventos | 321 | 1,3 |
+  | Composición por capas en vez de por píxel | 439 | 1,8 |
+  | Paso completo solo tras cambiar la IRQ (`irqDirty`) | 460 | 1,9 |
+  | `-O3` + LTO | 486 | 2,0 |
+  | Saltarse las capas y prioridades sin píxeles en la línea | 504 | 2,1 |
+  | Fondos decodificados tile a tile | 589 | 2,4 |
+  | **Dibujo en un hilo propio** (otro núcleo de la CPU) | **~900** | **~3,7** |
+
+- ✅ Núcleo oculto del mapa más barato: no dibuja mientras abre el mapa, prioridad baja en Linux, y la espera entre
+  capturas cuenta desde que termina la anterior. Una captura del mundo pasa de 271 a 108 ms en PC.
+- ⬜ **Segunda medida en la consola (v0.2.0)** con `snes-ds.log` y `bench.log`. Por la proporción de la primera,
+  deberían salir unos 10 ms por frame. Si aún no basta:
+  1. Seguir con el PPU, que es lo que limita con el hilo: colores empaquetados, sprites, ventanas.
+  2. Bucles de composición sin saltos: en PC son algo más lentos, pero en el A55 (in-order) podrían ganar. Hay que
+     medirlo allí.
+  3. CPU y APU (el hilo principal): accesos a memoria, DMA, DSP.
+  4. Cambiar de núcleo detrás de `core.h`: bsnes-jg (GPL-3) o Snes9x (licencia no comercial).
+- ⬜ Táctil sobre el layout entero (para la fase 5).
+- ⬜ BananaOS (KMSDRM, una ventana por panel).
+- ⬜ Selector de juegos o integración con EmulationStation; ahora se abre el primer juego con perfil.
 
 ## Fase 5: Táctil y comodidad ⬜
 - ⬜ **Inventario táctil en Zelda:** tocar un objeto escribe `$7E0202` y pone `$7E0016` a 1, solo en `07|09/00` y solo
@@ -115,7 +150,7 @@ perfil → prueba en el dispositivo.
 
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
-| LakeSnes no llega a 60 fps en el Cortex-A55 | Alto | Medirlo pronto (fase 4); el PPU por línea es el cuello de botella conocido; `core.h` permite cambiar de núcleo |
+| LakeSnes no llega a 60 fps en el Cortex-A55 | Alto | Primera medida: 18-39 ms/frame. Optimizado unas 3,7 veces (fase 4); falta la segunda medida. `core.h` permite cambiar de núcleo |
 | Fallos de precisión de LakeSnes (`bugs.md`: bloqueos en subidas al SPC en algunos juegos) | Medio | ALttP está verificado por zelda3; probar cada juego nuevo |
 | Un juego cambia los registros de BG3 a mitad de frame | Bajo | La separación se hace en el propio PPU, scanline a scanline, así que ya lo contempla |
 | Licencia (Snes9x no es compatible con la GPL) | Medio | Seguir con LakeSnes o bsnes; decidirlo antes de copiar código de gba-ds |

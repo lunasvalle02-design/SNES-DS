@@ -4,3 +4,6 @@ out/
 *.smc
 *.srm
 *.state*
+deps/
+dist/*.zip
+*.log

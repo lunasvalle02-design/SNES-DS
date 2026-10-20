@@ -2,7 +2,7 @@
  * find a game's memory flags and check second-screen ideas without the
  * device (like gba-ds' tools/harness.c).
  *
- *   harness ROM OUTDIR SCRIPT        (SCRIPT "-" reads stdin)
+ *   harness ROM OUTDIR SCRIPT        (ROM: .sfc/.smc/.zip; SCRIPT "-" reads stdin)
  *
  * Script commands, one per line (# starts a comment):
  *   wait N                     run N frames, no buttons
@@ -33,6 +33,8 @@
  *   map NAME [RESULT]          run the profile's map capture on a hidden core:
  *                              NAME_0..N.png and the result; fail unless it's
  *                              RESULT (ok, not_live, no_map, unsettled, empty)
+ *   hash                       CRC32s of the picture, the split picture, WRAM
+ *   threads on|off             draw on a thread of its own (core_set_threaded)
  *   echo TEXT / frame / quit
  * ADDR is hex; below 0x20000 it's an offset into WRAM ($7E0000), so 0x10
  * means $7E0010. Full addresses ($7EF36D, 0x00FFC0) work too.
@@ -45,6 +47,7 @@
 #include "core.h"
 #include "mapcap.h"
 #include "profiles.h"
+#include "romfile.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -61,6 +64,13 @@ static int lineNo;
 #define MAX_WATCH 16
 static struct { uint32_t addr; int len; uint8_t last[16]; } watches[MAX_WATCH];
 static int watchCount;
+
+/* wall-clock seconds (clock() adds up every thread's time on Linux) */
+static double now_s(void) {
+	struct timespec t;
+	timespec_get(&t, TIME_UTC);
+	return t.tv_sec + t.tv_nsec / 1e9;
+}
 
 static void fail(const char* msg, const char* arg) {
 	fprintf(stderr, "line %d: %s%s%s\n", lineNo, msg, arg ? ": " : "", arg ? arg : "");
@@ -406,9 +416,9 @@ static void command(char* line) {
 		if (scale < 1) scale = 1;
 	} else if (!strcmp(cmd, "bench")) {
 		long n = parse_num(argv[1]);
-		clock_t t0 = clock();
+		double t0 = now_s();
 		run(0, n);
-		double s = (double)(clock() - t0) / CLOCKS_PER_SEC;
+		double s = now_s() - t0;
 		printf("bench: %ld frames in %.2f s = %.1f fps (%.0f%% of real time)\n", n, s, n / s, n / s / 60.0988 * 100);
 	} else if (!strcmp(cmd, "map")) {
 		const char* n = argv[1] ? argv[1] : "map";
@@ -422,9 +432,9 @@ static void command(char* line) {
 		core_save_state(core, st);
 		static MapImage img;
 		uint32_t f0 = core_frame_count(hidden);
-		clock_t t0 = clock();
+		double t0 = now_s();
 		MapResult r = mapcap_capture(hidden, &profile->map, st, sz, &img);
-		double ms = (double)(clock() - t0) * 1000 / CLOCKS_PER_SEC;
+		double ms = (now_s() - t0) * 1000;
 		free(st);
 		printf("map: %s, %d frames, %u game frames, %.0f ms\n", mapcap_result_name(r), img.frames,
 		       core_frame_count(hidden) - f0, ms);
@@ -447,6 +457,15 @@ static void command(char* line) {
 				memcpy(sheetFrames[sheetCount++], img.pixels[k], sizeof(img.pixels[k]));
 			}
 		}
+	} else if (!strcmp(cmd, "threads")) {
+		core_set_threaded(core, argv[1] && !strcmp(argv[1], "on"));
+	} else if (!strcmp(cmd, "hash")) {
+		/* CRC32s of the picture, the split picture and WRAM: to check that a
+		 * change to the core gives the very same results */
+		printf("hash frame %u: picture %08X split %08X wram %08X\n", core_frame_count(core),
+		       rom_crc32((const uint8_t*)core_frame(core), CORE_W * CORE_H * 4),
+		       rom_crc32((const uint8_t*)core_split_frame(core), CORE_W * CORE_H * 4),
+		       rom_crc32(core_wram(core), 0x20000));
 	} else if (!strcmp(cmd, "echo")) {
 		for (int i = 1; i < argc; i++) printf("%s%s", argv[i], i + 1 < argc ? " " : "\n");
 	} else if (!strcmp(cmd, "frame")) {
@@ -466,7 +485,7 @@ int main(int argc, char** argv) {
 	}
 	outdir = argv[2];
 	size_t size;
-	uint8_t* rom = read_file(argv[1], &size);
+	uint8_t* rom = romfile_read(argv[1], &size);
 	if (!rom) {
 		fprintf(stderr, "can't read %s\n", argv[1]);
 		return 1;

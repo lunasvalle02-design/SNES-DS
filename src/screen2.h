@@ -27,6 +27,9 @@ void screen2_after_frame(Screen2* s, Core* game);
  * with the HUD over it where the game has it */
 const uint32_t* screen2_picture(Screen2* s);
 
+/* map captures so far and their times (ms); false without a map core */
+bool screen2_map_stats(Screen2* s, int* count, double* avgMs, double* maxMs);
+
 /* the state was swapped under it (a save state was loaded) */
 void screen2_reset(Screen2* s);
 

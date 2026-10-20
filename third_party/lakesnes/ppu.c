@@ -4,6 +4,9 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdatomic.h>
+#include <pthread.h>
 
 #include "ppu.h"
 #include "snes.h"
@@ -71,26 +74,41 @@ static int ppu_getPixelForMode7(Ppu* ppu, int x, int layer, bool priority);
 static bool ppu_getWindowState(Ppu* ppu, int layer, int x);
 static void ppu_evaluateSprites(Ppu* ppu, int line);
 static uint16_t ppu_getVramRemap(Ppu* ppu);
+static void ppu_prepareLine(Ppu* ppu, int y);
+static void ppu_renderLine(Ppu* ppu, int line);
+static void ppu_queueLine(Ppu* ppu, int line);
+static void ppu_composeLineFast(Ppu* ppu, int y);
+static inline bool ppu_win(Ppu* ppu, int layer, int x);
 
 Ppu* ppu_init(Snes* snes) {
-  Ppu* ppu = malloc(sizeof(Ppu));
+  Ppu* ppu = calloc(1, sizeof(Ppu));
   ppu->snes = snes;
+  ppu->vram = calloc(0x8000, sizeof(uint16_t));
+  ppu->cgram = calloc(0x100, sizeof(uint16_t));
+  ppu->outBuffer = calloc(256 * 240, sizeof(uint32_t));
+  ppu->splitBuffer = calloc(256 * 240, sizeof(uint32_t));
   ppu_setPixelOutputFormat(ppu, ppu_pixelOutputFormatBGRX);
   return ppu;
 }
 
 void ppu_free(Ppu* ppu) {
+  ppu_setAsync(ppu, false);
+  free(ppu->vram);
+  free(ppu->cgram);
+  free(ppu->outBuffer);
+  free(ppu->splitBuffer);
   free(ppu);
 }
 
 void ppu_reset(Ppu* ppu) {
-  memset(ppu->vram, 0, sizeof(ppu->vram));
+  ppu_sync(ppu);
+  memset(ppu->vram, 0, 0x8000 * sizeof(uint16_t));
   ppu->vramPointer = 0;
   ppu->vramIncrementOnHigh = false;
   ppu->vramIncrement = 1;
   ppu->vramRemapMode = 0;
   ppu->vramReadBuffer = 0;
-  memset(ppu->cgram, 0, sizeof(ppu->cgram));
+  memset(ppu->cgram, 0, 0x100 * sizeof(uint16_t));
   ppu->cgramPointer = 0;
   ppu->cgramSecondWrite = false;
   ppu->cgramBuffer = 0;
@@ -178,10 +196,11 @@ void ppu_reset(Ppu* ppu) {
   ppu->countersLatched = false;
   ppu->ppu1openBus = 0;
   ppu->ppu2openBus = 0;
-  memset(ppu->pixelBuffer, 0, sizeof(ppu->pixelBuffer));
+  memset(ppu->outBuffer, 0, 256 * 240 * sizeof(uint32_t));
 }
 
 void ppu_handleState(Ppu* ppu, StateHandler* sh) {
+  ppu_sync(ppu);
   sh_handleBools(sh,
     &ppu->vramIncrementOnHigh, &ppu->cgramSecondWrite, &ppu->oamInHigh, &ppu->oamInHighWritten, &ppu->oamSecondWrite,
     &ppu->objPriority, &ppu->timeOver, &ppu->rangeOver, &ppu->objInterlace, &ppu->m7largeField, &ppu->m7charFill,
@@ -268,9 +287,450 @@ void ppu_runLine(Ppu* ppu, int line) {
   if(!ppu->forcedBlank) ppu_evaluateSprites(ppu, line - 1);
   // actual line
   if(ppu->mode == 7) ppu_calculateMode7Starts(ppu, line);
+  // snes-ds: the rest only draws (sprite evaluation above sets flags the
+  // game can read, so it stays here); maybe on the render thread
+  if(ppu->skipRender) return;
+  if(ppu->async) ppu_queueLine(ppu, line);
+  else ppu_renderLine(ppu, line);
+}
+
+static void ppu_renderLine(Ppu* ppu, int line) {
+  ppu_prepareLine(ppu, line); // snes-ds
+  if(ppu->lineCached) {
+    ppu_composeLineFast(ppu, line); // snes-ds: the whole line at once
+    return;
+  }
   for(int x = 0; x < 256; x++) {
     ppu_handlePixel(ppu, x, line);
   }
+}
+
+// snes-ds: the render thread. ppu_runLine hands each line over as a copy of
+// what drawing it needs (the registers and the sprite line, everything
+// before snapEnd); vram and cgram are shared, so they may only change once
+// every line handed over is drawn (ppu_sync, in ppu_write). The lines come
+// out exactly as when drawn in place.
+#define PPU_SNAP_SIZE offsetof(Ppu, snapEnd)
+#define PPU_QUEUE 256
+
+#if defined(__aarch64__) || defined(__arm__)
+#define PPU_RELAX() __asm__ volatile("yield")
+#elif defined(__x86_64__) || defined(__i386__)
+#define PPU_RELAX() __asm__ volatile("pause")
+#else
+#define PPU_RELAX() ((void) 0)
+#endif
+
+typedef struct PpuAsync {
+  pthread_t thread;
+  pthread_mutex_t lock;
+  pthread_cond_t wake;
+  atomic_uint head, tail; // lines handed over, lines drawn
+  atomic_bool sleeping;
+  atomic_bool quit;
+  int lines[PPU_QUEUE];
+  uint8_t snaps[PPU_QUEUE][PPU_SNAP_SIZE];
+  Ppu worker; // the thread's own copy (its per-line work lives here)
+} PpuAsync;
+
+static void* ppu_threadMain(void* arg) {
+  PpuAsync* a = arg;
+  int spins = 0;
+  for(;;) {
+    unsigned tail = atomic_load_explicit(&a->tail, memory_order_relaxed);
+    if(tail != atomic_load_explicit(&a->head, memory_order_acquire)) {
+      memcpy(&a->worker, a->snaps[tail % PPU_QUEUE], PPU_SNAP_SIZE);
+      ppu_renderLine(&a->worker, a->lines[tail % PPU_QUEUE]);
+      atomic_store_explicit(&a->tail, tail + 1, memory_order_release);
+      spins = 0;
+      continue;
+    }
+    if(atomic_load(&a->quit)) break;
+    // nothing to draw: spin a little (lines come one after the other during
+    // a frame), then sleep until the next one
+    if(++spins < 4000) {
+      PPU_RELAX();
+      continue;
+    }
+    pthread_mutex_lock(&a->lock);
+    atomic_store(&a->sleeping, true);
+    while(atomic_load(&a->tail) == atomic_load(&a->head) && !atomic_load(&a->quit)) {
+      pthread_cond_wait(&a->wake, &a->lock);
+    }
+    atomic_store(&a->sleeping, false);
+    pthread_mutex_unlock(&a->lock);
+    spins = 0;
+  }
+  return NULL;
+}
+
+static void ppu_queueLine(Ppu* ppu, int line) {
+  PpuAsync* a = ppu->async;
+  unsigned head = atomic_load_explicit(&a->head, memory_order_relaxed);
+  while(head - atomic_load_explicit(&a->tail, memory_order_acquire) >= PPU_QUEUE) PPU_RELAX();
+  memcpy(a->snaps[head % PPU_QUEUE], ppu, PPU_SNAP_SIZE);
+  a->lines[head % PPU_QUEUE] = line;
+  atomic_store(&a->head, head + 1);
+  if(atomic_load(&a->sleeping)) {
+    pthread_mutex_lock(&a->lock);
+    pthread_cond_signal(&a->wake);
+    pthread_mutex_unlock(&a->lock);
+  }
+}
+
+void ppu_sync(Ppu* ppu) {
+  PpuAsync* a = ppu->async;
+  if(!a) return;
+  unsigned head = atomic_load_explicit(&a->head, memory_order_relaxed);
+  while(atomic_load_explicit(&a->tail, memory_order_acquire) != head) PPU_RELAX();
+}
+
+void ppu_setAsync(Ppu* ppu, bool on) {
+  if(on == (ppu->async != NULL)) return;
+  if(on) {
+    PpuAsync* a = calloc(1, sizeof(PpuAsync));
+    if(!a) return;
+    pthread_mutex_init(&a->lock, NULL);
+    pthread_cond_init(&a->wake, NULL);
+    atomic_init(&a->head, 0);
+    atomic_init(&a->tail, 0);
+    atomic_init(&a->sleeping, false);
+    atomic_init(&a->quit, false);
+    if(pthread_create(&a->thread, NULL, ppu_threadMain, a) != 0) {
+      free(a);
+      return;
+    }
+    ppu->async = a;
+  } else {
+    PpuAsync* a = ppu->async;
+    ppu_sync(ppu);
+    atomic_store(&a->quit, true);
+    pthread_mutex_lock(&a->lock);
+    pthread_cond_signal(&a->wake);
+    pthread_mutex_unlock(&a->lock);
+    pthread_join(a->thread, NULL);
+    pthread_mutex_destroy(&a->lock);
+    pthread_cond_destroy(&a->wake);
+    free(a);
+    ppu->async = NULL;
+  }
+}
+
+// snes-ds: ppu_getPixel for a whole line of one screen: for each layer (in
+// priority order) every pixel still empty is filled if the layer has one
+// there. The same rule (the first layer with a pixel wins), done layer by
+// layer instead of pixel by pixel. pix: the colour index (or direct colour),
+// lay: the layer (0-3, 4/6 sprites, 5 backdrop), r/g/b: the 5-bit colour.
+static void ppu_composeScreen(Ppu* ppu, bool sub, uint8_t hide, uint8_t* lay, uint8_t* r, uint8_t* g, uint8_t* b) {
+  int actMode = ppu->mode == 1 && ppu->bg3priority ? 8 : ppu->mode;
+  actMode = ppu->mode == 7 && ppu->m7extBg ? 9 : actMode;
+  uint16_t pix[256];
+  memset(lay, 5, 256);
+  memset(pix, 0, sizeof(pix));
+  int left = 256;
+  for(int i = 0; i < layerCountPerMode[actMode] && left > 0; i++) {
+    int curLayer = layersPerMode[actMode][i];
+    int curPriority = prioritysPerMode[actMode][i];
+    Layer* l = &ppu->layer[curLayer];
+    if(!(sub ? l->subScreenEnabled : l->mainScreenEnabled) || (hide >> curLayer & 1)) continue;
+    if(!ppu->lineHas[curLayer][curPriority]) continue; // nothing of it on this line
+    bool windowed = (sub ? l->subScreenWindowed : l->mainScreenWindowed) && ppu->winAny[curLayer];
+    const bool* win = ppu->winLine[curLayer];
+    if(curLayer == 4) {
+      for(int x = 0; x < 256; x++) {
+        if(lay[x] != 5 || (windowed && win[x])) continue;
+        if(ppu->objPriorityBuffer[x] != curPriority || ppu->objPixelBuffer[x] == 0) continue;
+        pix[x] = ppu->objPixelBuffer[x];
+        lay[x] = 4;
+        left--;
+      }
+    } else if(ppu->mode == 7) {
+      const uint8_t* m7 = ppu->m7LinePixel[curLayer];
+      for(int x = 0; x < 256; x++) {
+        if(lay[x] != 5 || (windowed && win[x])) continue;
+        uint8_t raw = m7[x];
+        int p = curLayer == 1 ? (((bool) (raw & 0x80)) != (bool) curPriority ? 0 : raw & 0x7f) : raw;
+        if(p == 0) continue;
+        pix[x] = p;
+        lay[x] = curLayer;
+        left--;
+      }
+    } else {
+      const uint16_t* bp = ppu->bgLine[curLayer][curPriority];
+      for(int x = 0; x < 256; x++) {
+        uint16_t p = bp[x];
+        if(p == 0 || lay[x] != 5 || (windowed && win[x])) continue;
+        pix[x] = p;
+        lay[x] = curLayer;
+        left--;
+      }
+    }
+  }
+  bool direct8[6] = {false};
+  for(int l = 0; l < 4; l++) direct8[l] = ppu->directColor && bitDepthsPerMode[actMode][l] == 8;
+  for(int x = 0; x < 256; x++) {
+    int layer = lay[x];
+    int pixel = pix[x];
+    if(layer < 4 && direct8[layer]) {
+      r[x] = ((pixel & 0x7) << 2) | ((pixel & 0x100) >> 7);
+      g[x] = ((pixel & 0x38) >> 1) | ((pixel & 0x200) >> 8);
+      b[x] = ((pixel & 0xc0) >> 3) | ((pixel & 0x400) >> 8);
+    } else {
+      uint16_t color = ppu->cgram[pixel & 0xff];
+      r[x] = color & 0x1f;
+      g[x] = (color >> 5) & 0x1f;
+      b[x] = (color >> 10) & 0x1f;
+    }
+    if(layer == 4 && pixel < 0xc0) lay[x] = 6;
+  }
+}
+
+// snes-ds: ppu_handlePixel for a whole (non hi-res, not blanked) line
+static void ppu_composeLineFast(Ppu* ppu, int y) {
+  uint8_t split = y < 240 ? ppu->splitMask[y] : 0;
+  uint8_t mLay[256], mR[256], mG[256], mB[256];
+  uint8_t sLay[256], sR[256], sG[256], sB[256];
+  const uint8_t* bright = ppu->brightLine;
+  if(split && y >= 1) {
+    ppu_composeScreen(ppu, false, ~split & 0x1f, mLay, mR, mG, mB);
+    uint32_t* out = &ppu->splitBuffer[(y - 1) * 256];
+    for(int x = 0; x < 256; x++) {
+      out[x] = mLay[x] == 5 ? 0 : 0xff000000 | (bright[mR[x]] << 16) | (bright[mG[x]] << 8) | bright[mB[x]];
+    }
+  }
+  uint8_t hide = (y < 240 ? ppu->hideMask[y] : 0) | split;
+  ppu_composeScreen(ppu, false, hide, mLay, mR, mG, mB);
+  bool anyMath = false;
+  for(int l = 0; l < 6; l++) anyMath |= ppu->mathEnabled[l];
+  bool needSub = anyMath && ppu->addSubscreen; // hi-res lines don't come here
+  if(needSub) ppu_composeScreen(ppu, true, hide, sLay, sR, sG, sB);
+  uint32_t* out = &ppu->outBuffer[(y - 1) * 256];
+  for(int x = 0; x < 256; x++) {
+    int r = mR[x], g = mG[x], b = mB[x];
+    int mainLayer = mLay[x];
+    bool colorWindowState = ppu_win(ppu, 5, x);
+    if(
+      ppu->clipMode == 3 ||
+      (ppu->clipMode == 2 && colorWindowState) ||
+      (ppu->clipMode == 1 && !colorWindowState)
+    ) {
+      r = 0;
+      g = 0;
+      b = 0;
+    }
+    bool mathEnabled = mainLayer < 6 && ppu->mathEnabled[mainLayer] && !(
+      ppu->preventMathMode == 3 ||
+      (ppu->preventMathMode == 2 && colorWindowState) ||
+      (ppu->preventMathMode == 1 && !colorWindowState)
+    );
+    if(mathEnabled) {
+      int secondLayer = 5, r2 = 0, g2 = 0, b2 = 0;
+      if(ppu->addSubscreen) {
+        secondLayer = sLay[x];
+        r2 = sR[x];
+        g2 = sG[x];
+        b2 = sB[x];
+      }
+      if(ppu->subtractColor) {
+        r -= (ppu->addSubscreen && secondLayer != 5) ? r2 : ppu->fixedColorR;
+        g -= (ppu->addSubscreen && secondLayer != 5) ? g2 : ppu->fixedColorG;
+        b -= (ppu->addSubscreen && secondLayer != 5) ? b2 : ppu->fixedColorB;
+      } else {
+        r += (ppu->addSubscreen && secondLayer != 5) ? r2 : ppu->fixedColorR;
+        g += (ppu->addSubscreen && secondLayer != 5) ? g2 : ppu->fixedColorG;
+        b += (ppu->addSubscreen && secondLayer != 5) ? b2 : ppu->fixedColorB;
+      }
+      if(ppu->halfColor && (secondLayer != 5 || !ppu->addSubscreen)) {
+        r >>= 1;
+        g >>= 1;
+        b >>= 1;
+      }
+      if(r > 31) r = 31;
+      if(g > 31) g = 31;
+      if(b > 31) b = 31;
+      if(r < 0) r = 0;
+      if(g < 0) g = 0;
+      if(b < 0) b = 0;
+    }
+    out[x] = (bright[r] << 16) | (bright[g] << 8) | bright[b];
+  }
+}
+
+// snes-ds: what ppu_getPixel used to work out for every pixel, worked out
+// once per line: the windows, the brightness, and each background layer's
+// pixels (each tile row decoded once instead of once per pixel and
+// priority). Gives the very same pixels.
+// the 8 pixels of a tile row (bitDepth 2, 4 or 8), by bit position
+static inline void ppu_decodeRow(Ppu* ppu, int base, int bitDepth, uint8_t* decoded) {
+  uint16_t p1 = ppu->vram[base & 0x7fff];
+  uint16_t p2 = bitDepth > 2 ? ppu->vram[(base + 8) & 0x7fff] : 0;
+  uint16_t p3 = bitDepth > 4 ? ppu->vram[(base + 16) & 0x7fff] : 0;
+  uint16_t p4 = bitDepth > 4 ? ppu->vram[(base + 24) & 0x7fff] : 0;
+  for(int c = 0; c < 8; c++) {
+    decoded[c] = ((p1 >> c) & 1) | (((p1 >> (8 + c)) & 1) << 1) |
+      (((p2 >> c) & 1) << 2) | (((p2 >> (8 + c)) & 1) << 3) |
+      (((p3 >> c) & 1) << 4) | (((p3 >> (8 + c)) & 1) << 5) |
+      (((p4 >> c) & 1) << 6) | (((p4 >> (8 + c)) & 1) << 7);
+  }
+}
+
+// a layer's line without mosaic or offset-per-tile: tile by tile (one
+// tilemap read and one row decode per 8 pixels)
+static void ppu_fillBgLineTiles(Ppu* ppu, int layer, int y) {
+  BgLayer* bg = &ppu->bgLayer[layer];
+  int bitDepth = bitDepthsPerMode[ppu->mode][layer];
+  int paletteSize = bitDepth == 2 ? 4 : bitDepth == 4 ? 16 : 256;
+  int tileBits = bg->bigTiles ? 4 : 3;
+  int tileHighBit = bg->bigTiles ? 0x200 : 0x100;
+  int ly = (y + bg->vScroll) & 0x3ff;
+  int lx = bg->hScroll & 0x3ff;
+  uint16_t rowAdr = bg->tilemapAdr + (((ly >> tileBits) & 0x1f) << 5);
+  if((ly & tileHighBit) && bg->tilemapHigher) rowAdr += bg->tilemapWider ? 0x800 : 0x400;
+  uint16_t* out0 = ppu->bgLine[layer][0];
+  uint16_t* out1 = ppu->bgLine[layer][1];
+  bool has[2] = {false, false};
+  uint8_t decoded[8];
+  int x = 0;
+  while(x < 256) {
+    uint16_t tilemapAdr = rowAdr + ((lx >> tileBits) & 0x1f);
+    if((lx & tileHighBit) && bg->tilemapWider) tilemapAdr += 0x400;
+    uint16_t tile = ppu->vram[tilemapAdr & 0x7fff];
+    int paletteNum = (tile & 0x1c00) >> 10;
+    int row = (tile & 0x8000) ? 7 - (ly & 0x7) : (ly & 0x7);
+    int tileNum = tile & 0x3ff;
+    if(bg->bigTiles) {
+      if(((bool) (lx & 8)) ^ ((bool) (tile & 0x4000))) tileNum += 1;
+      if(((bool) (ly & 8)) ^ ((bool) (tile & 0x8000))) tileNum += 0x10;
+    }
+    if(ppu->mode == 0) paletteNum += 8 * layer;
+    ppu_decodeRow(ppu, bg->tileAdr + ((tileNum & 0x3ff) * 4 * bitDepth) + row, bitDepth, decoded);
+    int palBase = paletteSize * paletteNum;
+    uint8_t prio = (tile & 0x2000) ? 1 : 0;
+    bool hFlip = tile & 0x4000;
+    int n = 8 - (lx & 7);
+    if(n > 256 - x) n = 256 - x;
+    uint16_t* outHere = prio ? out1 : out0;
+    uint16_t* outOther = prio ? out0 : out1;
+    for(int i = 0; i < n; i++) {
+      int sub = lx & 7;
+      int pixel = decoded[hFlip ? sub : 7 - sub];
+      outHere[x] = pixel == 0 ? 0 : palBase + pixel;
+      outOther[x] = 0;
+      if(pixel) has[prio] = true;
+      x++;
+      lx = (lx + 1) & 0x3ff;
+    }
+  }
+  ppu->lineHas[layer][0] = has[0];
+  ppu->lineHas[layer][1] = has[1];
+}
+
+static void ppu_fillBgLine(Ppu* ppu, int layer, int y) {
+  BgLayer* bg = &ppu->bgLayer[layer];
+  bool mosaic = bg->mosaicEnabled && ppu->mosaicSize > 1;
+  bool opt = ppu->mode == 2 || ppu->mode == 4;
+  if(!mosaic && !opt) {
+    ppu_fillBgLineTiles(ppu, layer, y);
+    return;
+  }
+  int bitDepth = bitDepthsPerMode[ppu->mode][layer];
+  int paletteSize = bitDepth == 2 ? 4 : bitDepth == 4 ? 16 : 256;
+  int tileBits = bg->bigTiles ? 4 : 3;
+  int tileHighBit = bg->bigTiles ? 0x200 : 0x100;
+  int baseY = y;
+  if(mosaic) baseY -= (baseY - ppu->mosaicStartLine) % ppu->mosaicSize;
+  int lastBase = -1;
+  uint8_t decoded[8] = {0};
+  bool has0 = false, has1 = false;
+  for(int x = 0; x < 256; x++) {
+    int lx = x;
+    if(mosaic) lx -= lx % ppu->mosaicSize;
+    lx += bg->hScroll;
+    int ly = baseY + bg->vScroll;
+    if(opt) ppu_handleOPT(ppu, layer, &lx, &ly);
+    lx &= 0x3ff;
+    ly &= 0x3ff;
+    uint16_t tilemapAdr = bg->tilemapAdr + (((ly >> tileBits) & 0x1f) << 5 | ((lx >> tileBits) & 0x1f));
+    if((lx & tileHighBit) && bg->tilemapWider) tilemapAdr += 0x400;
+    if((ly & tileHighBit) && bg->tilemapHigher) tilemapAdr += bg->tilemapWider ? 0x800 : 0x400;
+    uint16_t tile = ppu->vram[tilemapAdr & 0x7fff];
+    int paletteNum = (tile & 0x1c00) >> 10;
+    int row = (tile & 0x8000) ? 7 - (ly & 0x7) : (ly & 0x7);
+    int col = (tile & 0x4000) ? (lx & 0x7) : 7 - (lx & 0x7);
+    int tileNum = tile & 0x3ff;
+    if(bg->bigTiles) {
+      if(((bool) (lx & 8)) ^ ((bool) (tile & 0x4000))) tileNum += 1;
+      if(((bool) (ly & 8)) ^ ((bool) (tile & 0x8000))) tileNum += 0x10;
+    }
+    if(ppu->mode == 0) paletteNum += 8 * layer;
+    int base = bg->tileAdr + ((tileNum & 0x3ff) * 4 * bitDepth) + row;
+    if(base != lastBase) {
+      lastBase = base;
+      ppu_decodeRow(ppu, base, bitDepth, decoded);
+    }
+    int pixel = decoded[col];
+    int prio = (tile & 0x2000) ? 1 : 0;
+    ppu->bgLine[layer][prio][x] = pixel == 0 ? 0 : paletteSize * paletteNum + pixel;
+    ppu->bgLine[layer][!prio][x] = 0;
+    if(pixel) {
+      if(tile & 0x2000) has1 = true;
+      else has0 = true;
+    }
+  }
+  ppu->lineHas[layer][0] = has0;
+  ppu->lineHas[layer][1] = has1;
+}
+
+static uint8_t ppu_mode7Raw(Ppu* ppu, int x) {
+  uint8_t rx = ppu->m7xFlip ? 255 - x : x;
+  int xPos = (ppu->m7startX + ppu->m7matrix[0] * rx) >> 8;
+  int yPos = (ppu->m7startY + ppu->m7matrix[2] * rx) >> 8;
+  bool outsideMap = xPos < 0 || xPos >= 1024 || yPos < 0 || yPos >= 1024;
+  xPos &= 0x3ff;
+  yPos &= 0x3ff;
+  if(!ppu->m7largeField) outsideMap = false;
+  uint8_t tile = outsideMap ? 0 : ppu->vram[(yPos >> 3) * 128 + (xPos >> 3)] & 0xff;
+  return outsideMap && !ppu->m7charFill ? 0 : ppu->vram[tile * 64 + (yPos & 7) * 8 + (xPos & 7)] >> 8;
+}
+
+static void ppu_prepareLine(Ppu* ppu, int y) {
+  for(int c = 0; c < 32; c++) ppu->brightLine[c] = ((c << 3) | (c >> 2)) * ppu->brightness / 15;
+  for(int l = 0; l < 6; l++) {
+    ppu->winAny[l] = ppu->windowLayer[l].window1enabled || ppu->windowLayer[l].window2enabled;
+    if(ppu->winAny[l]) {
+      for(int x = 0; x < 256; x++) ppu->winLine[l][x] = ppu_getWindowState(ppu, l, x);
+    }
+  }
+  ppu->lineCached = false;
+  if(ppu->forcedBlank || ppu->mode == 5 || ppu->mode == 6) return; // hi-res: the per-pixel way
+  memset(ppu->lineHas, 0, sizeof(ppu->lineHas));
+  for(int x = 0; x < 256; x++) {
+    if(ppu->objPixelBuffer[x]) ppu->lineHas[4][ppu->objPriorityBuffer[x]] = true;
+  }
+  if(ppu->mode == 7) {
+    for(int l = 0; l < 2; l++) {
+      if(l == 1 && !ppu->m7extBg) break;
+      bool mosaic = ppu->bgLayer[l].mosaicEnabled && ppu->mosaicSize > 1;
+      for(int x = 0; x < 256; x++) {
+        int lx = mosaic ? x - x % ppu->mosaicSize : x;
+        uint8_t raw = ppu_mode7Raw(ppu, lx);
+        ppu->m7LinePixel[l][x] = raw;
+        if(l == 0 && raw) ppu->lineHas[0][0] = ppu->lineHas[0][1] = true; // layer 1's priority doesn't apply
+        if(l == 1 && (raw & 0x7f)) ppu->lineHas[1][raw >> 7] = true;
+      }
+    }
+  } else {
+    for(int l = 0; l < 4; l++) {
+      if(bitDepthsPerMode[ppu->mode][l] == 5) continue; // not in this mode
+      if(!ppu->layer[l].mainScreenEnabled && !ppu->layer[l].subScreenEnabled) continue;
+      ppu_fillBgLine(ppu, l, y);
+    }
+  }
+  ppu->lineCached = true;
+}
+
+static inline bool ppu_win(Ppu* ppu, int layer, int x) {
+  return ppu->winAny[layer] && ppu->winLine[layer][x];
 }
 
 void ppu_setPixelOutputFormat(Ppu* ppu, int pixelOutputFormat) {
@@ -289,10 +749,7 @@ static void ppu_handlePixel(Ppu* ppu, int x, int y) {
       int sr = 0, sg = 0, sb = 0;
       ppu->curHide = ~split & 0x1f;
       if(ppu_getPixel(ppu, x, y, false, &sr, &sg, &sb) != 5) {
-        sr = ((sr << 3) | (sr >> 2)) * ppu->brightness / 15;
-        sg = ((sg << 3) | (sg >> 2)) * ppu->brightness / 15;
-        sb = ((sb << 3) | (sb >> 2)) * ppu->brightness / 15;
-        px = 0xff000000 | (sr << 16) | (sg << 8) | sb;
+        px = 0xff000000 | (ppu->brightLine[sr] << 16) | (ppu->brightLine[sg] << 8) | ppu->brightLine[sb];
       }
     }
     ppu->splitBuffer[(y - 1) * 256 + x] = px;
@@ -300,7 +757,7 @@ static void ppu_handlePixel(Ppu* ppu, int x, int y) {
   ppu->curHide = (y < 240 ? ppu->hideMask[y] : 0) | split;
   if(!ppu->forcedBlank) {
     int mainLayer = ppu_getPixel(ppu, x, y, false, &r, &g, &b);
-    bool colorWindowState = ppu_getWindowState(ppu, 5, x);
+    bool colorWindowState = ppu_win(ppu, 5, x);
     if(
       ppu->clipMode == 3 ||
       (ppu->clipMode == 2 && colorWindowState) ||
@@ -347,13 +804,10 @@ static void ppu_handlePixel(Ppu* ppu, int x, int y) {
       r2 = r; g2 = g; b2 = b;
     }
   }
-  int row = (y - 1) + (ppu->evenFrame ? 0 : 239);
-  ppu->pixelBuffer[row * 2048 + x * 8 + 0 + ppu->pixelOutputFormat] = ((b2 << 3) | (b2 >> 2)) * ppu->brightness / 15;
-  ppu->pixelBuffer[row * 2048 + x * 8 + 1 + ppu->pixelOutputFormat] = ((g2 << 3) | (g2 >> 2)) * ppu->brightness / 15;
-  ppu->pixelBuffer[row * 2048 + x * 8 + 2 + ppu->pixelOutputFormat] = ((r2 << 3) | (r2 >> 2)) * ppu->brightness / 15;
-  ppu->pixelBuffer[row * 2048 + x * 8 + 4 + ppu->pixelOutputFormat] = ((b << 3) | (b >> 2)) * ppu->brightness / 15;
-  ppu->pixelBuffer[row * 2048 + x * 8 + 5 + ppu->pixelOutputFormat] = ((g << 3) | (g >> 2)) * ppu->brightness / 15;
-  ppu->pixelBuffer[row * 2048 + x * 8 + 6 + ppu->pixelOutputFormat] = ((r << 3) | (r >> 2)) * ppu->brightness / 15;
+  // snes-ds: only the main screen's pixel, straight into outBuffer (the
+  // sub-screen half of hi-res pixels isn't kept)
+  (void) r2; (void) g2; (void) b2;
+  ppu->outBuffer[(y - 1) * 256 + x] = (ppu->brightLine[r] << 16) | (ppu->brightLine[g] << 8) | ppu->brightLine[b];
 }
 
 static int ppu_getPixel(Ppu* ppu, int x, int y, bool sub, int* r, int* g, int* b) {
@@ -369,11 +823,11 @@ static int ppu_getPixel(Ppu* ppu, int x, int y, bool sub, int* r, int* g, int* b
     bool layerActive = false;
     if(!sub) {
       layerActive = ppu->layer[curLayer].mainScreenEnabled && (
-        !ppu->layer[curLayer].mainScreenWindowed || !ppu_getWindowState(ppu, curLayer, x)
+        !ppu->layer[curLayer].mainScreenWindowed || !ppu_win(ppu, curLayer, x)
       );
     } else {
       layerActive = ppu->layer[curLayer].subScreenEnabled && (
-        !ppu->layer[curLayer].subScreenWindowed || !ppu_getWindowState(ppu, curLayer, x)
+        !ppu->layer[curLayer].subScreenWindowed || !ppu_win(ppu, curLayer, x)
       );
     }
     if(layerActive && (ppu->curHide >> curLayer & 1)) layerActive = false; // snes-ds
@@ -952,6 +1406,7 @@ void ppu_write(Ppu* ppu, uint8_t adr, uint8_t val) {
       break;
     }
     case 0x18: {
+      ppu_sync(ppu); // snes-ds: lines still to draw read vram
       // TODO: vram access during rendering (also cgram and oam)
       uint16_t vramAdr = ppu_getVramRemap(ppu);
       ppu->vram[vramAdr & 0x7fff] = (ppu->vram[vramAdr & 0x7fff] & 0xff00) | val;
@@ -959,6 +1414,7 @@ void ppu_write(Ppu* ppu, uint8_t adr, uint8_t val) {
       break;
     }
     case 0x19: {
+      ppu_sync(ppu);
       uint16_t vramAdr = ppu_getVramRemap(ppu);
       ppu->vram[vramAdr & 0x7fff] = (ppu->vram[vramAdr & 0x7fff] & 0x00ff) | (val << 8);
       if(ppu->vramIncrementOnHigh) ppu->vramPointer += ppu->vramIncrement;
@@ -991,6 +1447,7 @@ void ppu_write(Ppu* ppu, uint8_t adr, uint8_t val) {
       break;
     }
     case 0x22: {
+      ppu_sync(ppu); // snes-ds: and cgram
       if(!ppu->cgramSecondWrite) {
         ppu->cgramBuffer = val;
       } else {
@@ -1108,20 +1565,13 @@ void ppu_write(Ppu* ppu, uint8_t adr, uint8_t val) {
 }
 
 void ppu_putPixels(Ppu* ppu, uint8_t* pixels) {
-  for(int y = 0; y < (ppu->frameOverscan ? 239 : 224); y++) {
+  // snes-ds: made from outBuffer (the main screen only), each pixel and line doubled
+  memset(pixels, 0, 2048 * 480);
+  int lines = ppu->frameOverscan ? 239 : 224;
+  for(int y = 0; y < lines; y++) {
     int dest = y * 2 + (ppu->frameOverscan ? 2 : 16);
-    int y1 = y, y2 = y + 239;
-    if(!ppu->frameInterlace) {
-      y1 = y + (ppu->evenFrame ? 0 : 239);
-      y2 = y1;
-    }
-    memcpy(pixels + (dest * 2048), &ppu->pixelBuffer[y1 * 2048], 2048);
-    memcpy(pixels + ((dest + 1) * 2048), &ppu->pixelBuffer[y2 * 2048], 2048);
-  }
-  // clear top 2 lines, and following 14 and last 16 lines if not overscanning
-  memset(pixels, 0, 2048 * 2);
-  if(!ppu->frameOverscan) {
-    memset(pixels + (2 * 2048), 0, 2048 * 14);
-    memset(pixels + (464 * 2048), 0, 2048 * 16);
+    uint32_t* d = (uint32_t*) (pixels + dest * 2048);
+    for(int x = 0; x < 256; x++) d[x * 2] = d[x * 2 + 1] = ppu->outBuffer[y * 256 + x];
+    memcpy(pixels + (dest + 1) * 2048, d, 2048);
   }
 }

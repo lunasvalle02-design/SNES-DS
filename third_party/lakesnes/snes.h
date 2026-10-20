@@ -59,6 +59,9 @@ struct Snes {
   // misc
   bool fastMem;
   uint8_t openBus;
+  // snes-ds: the IRQ setup changed since the timing last looked at it (not
+  // part of save states: set when one is loaded)
+  bool irqDirty;
 };
 
 Snes* snes_init(void);

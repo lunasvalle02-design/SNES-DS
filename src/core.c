@@ -14,7 +14,6 @@ struct Core {
 	size_t romSize;
 	char title[22];
 	uint32_t frames;
-	uint8_t out[512 * 480 * 4]; /* the core's doubled picture */
 	uint32_t frame[CORE_W * CORE_H];
 	uint32_t split[CORE_W * CORE_H];
 	uint8_t oam[544];
@@ -28,7 +27,6 @@ Core* core_new(void) {
 		free(c);
 		return NULL;
 	}
-	snes_setPixelFormat(c->snes, pixelFormatXRGB);
 	memset(c->snes->ppu->hideMask, 0, sizeof(c->snes->ppu->hideMask));
 	memset(c->snes->ppu->splitMask, 0, sizeof(c->snes->ppu->splitMask));
 	return c;
@@ -72,22 +70,20 @@ void core_set_pad(Core* c, int player, uint16_t buttons) {
 	in->currentState = buttons;
 }
 
+void core_set_threaded(Core* c, bool on) { ppu_setAsync(c->snes->ppu, on); }
+
+void core_set_render(Core* c, bool on) { c->snes->ppu->skipRender = !on; }
+
 void core_run_frame(Core* c) {
 	snes_runFrame(c->snes);
+	ppu_sync(c->snes->ppu); /* every line drawn */
 	c->frames++;
-	/* LakeSnes draws 512x480: every line twice, every pixel as a sub/main
-	 * pair (for hi-res). Take the main pixel of the first copy of each line.
-	 * 224-line frames start 16 lines down, overscan (239) frames 2. */
-	snes_setPixels(c->snes, c->out);
-	int top = c->snes->ppu->frameOverscan ? 2 + 14 : 16;
-	for (int y = 0; y < CORE_H; y++) {
-		const uint32_t* src = (const uint32_t*)(c->out + (size_t)(top + y * 2) * 2048);
-		uint32_t* dst = c->frame + y * CORE_W;
-		for (int x = 0; x < CORE_W; x++) dst[x] = src[x * 2 + 1] & 0xFFFFFF;
-	}
-	/* the split picture, cut the same way; lines not split are empty */
+	/* the main screen's picture, as the PPU leaves it (snes-ds patch);
+	 * overscan (239-line) frames lose 7 lines top and bottom */
 	const Ppu* ppu = c->snes->ppu;
 	int first = ppu->frameOverscan ? 7 : 0;
+	memcpy(c->frame, ppu->outBuffer + first * 256, sizeof(c->frame));
+	/* the split picture, cut the same way; lines not split are empty */
 	for (int y = 0; y < CORE_H; y++) {
 		uint32_t* dst = c->split + y * CORE_W;
 		if (ppu->splitMask[first + y + 1]) memcpy(dst, ppu->splitBuffer + (first + y) * 256, CORE_W * 4);

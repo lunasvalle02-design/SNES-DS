@@ -80,6 +80,8 @@ typedef struct {
 
 /* the profile for a ROM, or NULL */
 const Profile* profile_find(const uint8_t* rom, size_t size);
+/* the same by the CRC32 of the ROM without a copier header */
+const Profile* profile_find_crc(uint32_t crc);
 uint32_t rom_crc32(const uint8_t* rom, size_t size);
 
 bool probes_match(Core* c, const MemProbe* p);

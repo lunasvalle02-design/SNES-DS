@@ -31,6 +31,13 @@ bool core_load_rom(Core* c, const uint8_t* rom, size_t size);
 /* the cartridge's title, from its header */
 const char* core_title(Core* c);
 
+/* draw the picture on a thread of its own while the emulation goes on
+ * (the same pictures; another CPU core busy) */
+void core_set_threaded(Core* c, bool on);
+
+/* off: frames run without being drawn (core_frame keeps the last one) */
+void core_set_render(Core* c, bool on);
+
 void core_set_pad(Core* c, int player, uint16_t buttons);
 void core_run_frame(Core* c);
 uint32_t core_frame_count(Core* c);

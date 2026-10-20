@@ -40,5 +40,7 @@ bool mapworker_request(MapWorker* w, Core* game);
 bool mapworker_busy(MapWorker* w);
 /* a capture finished since the last call: its result (and *img when OK) */
 bool mapworker_poll(MapWorker* w, MapResult* result, MapImage* img);
+/* captures run so far, and how long they took (wall clock, ms) */
+void mapworker_stats(MapWorker* w, int* count, double* avgMs, double* maxMs);
 
 #endif

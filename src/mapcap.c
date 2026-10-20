@@ -3,6 +3,16 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#ifdef __linux__
+#include <sys/resource.h>
+#endif
+
+static double now_ms(void) {
+	struct timespec t;
+	timespec_get(&t, TIME_UTC);
+	return t.tv_sec * 1000.0 + t.tv_nsec / 1e6;
+}
 
 static void run_steps(Core* c, const Step* s) {
 	for (int i = 0; i < STEPS && s[i].frames; i++) {
@@ -55,8 +65,12 @@ MapResult mapcap_capture(Core* hidden, const MapSpec* m, const uint8_t* state, s
 	out->frames = 0;
 	if (!core_load_state(hidden, state, size)) return MAPCAP_NOT_LIVE;
 	if (!probes_match(hidden, m->live)) return MAPCAP_NOT_LIVE;
+	/* nothing to look at until the map is up: those frames aren't drawn */
+	core_set_render(hidden, false);
 	run_steps(hidden, m->open);
-	if (run_until(hidden, m->shown, m->openWithin) < 0) return MAPCAP_NO_MAP;
+	bool opened = run_until(hidden, m->shown, m->openWithin) >= 0;
+	core_set_render(hidden, true);
+	if (!opened) return MAPCAP_NO_MAP;
 	uint32_t* prev = malloc(sizeof(uint32_t) * CORE_W * CORE_H);
 	MapResult r = MAPCAP_OK;
 	if (!settle(hidden, m, prev)) {
@@ -64,10 +78,12 @@ MapResult mapcap_capture(Core* hidden, const MapSpec* m, const uint8_t* state, s
 		goto done;
 	}
 	if (m->open2[0].frames && probes_match(hidden, m->open2If)) {
+		core_set_render(hidden, false);
 		for (int i = 0; i < m->open2Delay; i++) core_run_frame(hidden);
 		run_steps(hidden, m->open2);
 		/* the zoom takes a while to start: don't take the old view as settled */
 		for (int i = 0; i < 8; i++) core_run_frame(hidden);
+		core_set_render(hidden, true);
 		if (!probes_match(hidden, m->shown) || !settle(hidden, m, prev)) {
 			r = MAPCAP_UNSETTLED;
 			goto done;
@@ -118,10 +134,17 @@ struct MapWorker {
 	MapResult result;
 	MapImage* img;  /* the worker's */
 	MapImage* last; /* the last good one, handed out by poll */
+	int count;
+	double totalMs, maxMs;
 };
 
 static void* worker_main(void* arg) {
 	MapWorker* w = arg;
+#ifdef __linux__
+	/* behind the game and its drawing for the CPU (on Linux this is the
+	 * calling thread's niceness only) */
+	setpriority(PRIO_PROCESS, 0, 10);
+#endif
 	pthread_mutex_lock(&w->lock);
 	for (;;) {
 		while (!w->pending && !w->quit) pthread_cond_wait(&w->wake, &w->lock);
@@ -129,8 +152,13 @@ static void* worker_main(void* arg) {
 		w->pending = false;
 		w->busy = true;
 		pthread_mutex_unlock(&w->lock);
+		double t0 = now_ms();
 		MapResult r = mapcap_capture(w->hidden, w->spec, w->state, w->stateSize, w->img);
+		double ms = now_ms() - t0;
 		pthread_mutex_lock(&w->lock);
+		w->count++;
+		w->totalMs += ms;
+		if (ms > w->maxMs) w->maxMs = ms;
 		if (r == MAPCAP_OK) {
 			MapImage* t = w->last;
 			w->last = w->img;
@@ -200,6 +228,14 @@ bool mapworker_request(MapWorker* w, Core* game) {
 	}
 	pthread_mutex_unlock(&w->lock);
 	return w->state != NULL;
+}
+
+void mapworker_stats(MapWorker* w, int* count, double* avgMs, double* maxMs) {
+	pthread_mutex_lock(&w->lock);
+	*count = w->count;
+	*avgMs = w->count ? w->totalMs / w->count : 0;
+	*maxMs = w->maxMs;
+	pthread_mutex_unlock(&w->lock);
 }
 
 bool mapworker_busy(MapWorker* w) {

@@ -74,6 +74,7 @@ void snes_reset(Snes* snes, bool hard) {
   snes->inNmi = false;
   snes->irqCondition = false;
   snes->inIrq = false;
+  snes->irqDirty = true;
   snes->inVblank = false;
   memset(snes->portAutoRead, 0, sizeof(snes->portAutoRead));
   snes->autoJoyRead = false;
@@ -110,6 +111,7 @@ void snes_handleState(Snes* snes, StateHandler* sh) {
   input_handleState(snes->input1, sh);
   input_handleState(snes->input2, sh);
   cart_handleState(snes->cart, sh);
+  snes->irqDirty = true;
 }
 
 void snes_runFrame(Snes* snes) {
@@ -126,13 +128,55 @@ void snes_runFrame(Snes* snes) {
   snes_catchupApu(snes); // catch up the apu after running
 }
 
+// snes-ds: the steps between "events" in one go. snes_runCycle only does
+// something at a few horizontal positions (0, 16, 512, 1104, the H-IRQ
+// position) and at the end of the line; in between, a step is counters
+// going up and an IRQ condition that can't change (it depends only on
+// vPos, which doesn't change within a line, or is false away from the H-IRQ
+// position). After the IRQ setup changes (irqDirty), the next step is run
+// in full, so the condition is worked out again.
+static int snes_quietSteps(Snes* snes) {
+  int h = snes->hPos;
+  int limit = 1358; // the steps from 1358 on can end the line
+  if(h < 16) limit = h == 0 ? 0 : 16;
+  else if(h < 512) limit = 512;
+  else if(h < 1104) limit = 1104;
+  if(h == 16 || h == 512 || h == 1104) limit = h;
+  if(snes->hIrqEnabled) {
+    int ht = snes->hTimer * 4;
+    if(ht >= h && ht < limit) limit = ht;
+  }
+  return limit > h ? (limit - h) / 2 : 0;
+}
+
+static void snes_quietRun(Snes* snes, int steps) {
+  double apuPerStep = (snes->palTiming ? apuCyclesPerMasterPal : apuCyclesPerMaster) * 2.0;
+  for(int i = 0; i < steps; i++) snes->apuCatchupCycles += apuPerStep; // added one by one, as before: the same rounding
+  snes->cycles += 2 * steps;
+  if(snes->hIrqEnabled) snes->irqCondition = false;
+  else if(!snes->vIrqEnabled) snes->irqCondition = false;
+  int joy = snes->autoJoyTimer - 2 * steps;
+  if(snes->autoJoyTimer > 0) snes->autoJoyTimer = joy > 0 ? joy : 0;
+  snes->hPos += 2 * steps;
+}
+
 void snes_runCycles(Snes* snes, int cycles) {
   if(snes->hPos + cycles >= 536 && snes->hPos < 536) {
     // if we go past 536, add 40 cycles for dram refersh
     cycles += 40;
   }
-  for(int i = 0; i < cycles; i += 2) {
-    snes_runCycle(snes);
+  int steps = (cycles + 1) / 2;
+  while(steps > 0) {
+    int quiet = snes->irqDirty ? 0 : snes_quietSteps(snes);
+    if(quiet == 0) {
+      snes->irqDirty = false;
+      snes_runCycle(snes);
+      steps--;
+      continue;
+    }
+    if(quiet > steps) quiet = steps;
+    snes_quietRun(snes, quiet);
+    steps -= quiet;
   }
 }
 
@@ -358,6 +402,7 @@ static void snes_writeReg(Snes* snes, uint16_t adr, uint8_t val) {
       if(!snes->autoJoyRead) snes->autoJoyTimer = 0;
       snes->hIrqEnabled = val & 0x10;
       snes->vIrqEnabled = val & 0x20;
+      snes->irqDirty = true;
       if(!snes->hIrqEnabled && !snes->vIrqEnabled) {
         snes->inIrq = false;
         cpu_setIrq(snes->cpu, false);
@@ -405,18 +450,22 @@ static void snes_writeReg(Snes* snes, uint16_t adr, uint8_t val) {
     }
     case 0x4207: {
       snes->hTimer = (snes->hTimer & 0x100) | val;
+      snes->irqDirty = true;
       break;
     }
     case 0x4208: {
       snes->hTimer = (snes->hTimer & 0x0ff) | ((val & 1) << 8);
+      snes->irqDirty = true;
       break;
     }
     case 0x4209: {
       snes->vTimer = (snes->vTimer & 0x100) | val;
+      snes->irqDirty = true;
       break;
     }
     case 0x420a: {
       snes->vTimer = (snes->vTimer & 0x0ff) | ((val & 1) << 8);
+      snes->irqDirty = true;
       break;
     }
     case 0x420b: {
