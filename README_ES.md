@@ -9,7 +9,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/licencia-GPL--3.0--or--later-FF8A1F" alt="Licencia: GPL-3.0-or-later"></a>
-  <img src="https://img.shields.io/badge/versi%C3%B3n-0.5.0--dev-FF8A1F" alt="Versión 0.5.0-dev">
+  <img src="https://img.shields.io/badge/versi%C3%B3n-0.5.0-FF8A1F" alt="Versión 0.5.0">
   <img src="https://img.shields.io/badge/plataforma-ROCKNIX%20%7C%20Windows%20%7C%20Linux-3B3129" alt="Plataformas: ROCKNIX, Windows, Linux">
   <img src="https://img.shields.io/badge/lenguaje-C11-3B3129" alt="Lenguaje: C11">
 </p>

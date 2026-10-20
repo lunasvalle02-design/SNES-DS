@@ -19,7 +19,7 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente
 | 3 | Segunda pantalla para A Link to the Past | 🔶 Falta la pantalla de reserva |
 | 4 | La consola (ROCKNIX) | ✅ A velocidad completa en la RG DS Plus; entrada y táctil confirmados |
 | 5 | Táctil y comodidad | ✅ Cerrada por ahora |
-| 6 | Más juegos | 🔶 La base está hecha; aún ningún juego nuevo |
+| 6 | Más juegos | 🔶 Añadidos Super Metroid y Super Castlevania IV |
 | 7 | Integración (EmulationStation, RetroAchievements) | ⬜ |
 
 ## Versiones
@@ -30,13 +30,14 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente
 | 0.2.0-dev | El núcleo unas 3,7 veces más rápido (idéntico bit a bit); captura del mapa más barata; L1 + Start + Select para salir |
 | 0.3.0-dev | La interfaz táctil, en inglés y en español: lista de juegos, menú de pausa, cuatro ranuras de estado con captura, ajustes. El menú se abre también tocando la pantalla de abajo o con cualquier botón libre. Corregido: un estallido de ruido al arrancar un juego |
 | 0.4.0-dev | Comprobada en la consola: 60 fps sin cortes de audio; el menú se abre con L3 o el botón R (inicio). Partidas, estados y ajustes escritos de forma segura (un apagado no puede corromperlos); el log de velocidad ya no cuenta el tiempo en el menú |
+| 0.5.0 | Dos juegos más, cada uno en su rama: Super Metroid (el mapa de pausa, con el HUD encima) y Super Castlevania IV (el HUD). Un perfil puede recortar la pantalla de juego mientras su HUD está abajo, así la sala de Super Metroid llena la pantalla de arriba. Los dos comprobados en la consola |
 
 ## Camino a la 1.0
 
 | Versión | Objetivo | Estado |
 |---|---|---|
 | 0.4 | Comprobada en la consola: velocidad, entrada, táctil; partidas que un apagado no puede corromper | ✅ |
-| 0.5 | Un segundo y un tercer juego, en ramas `game/…` (Super Metroid, Super Castlevania IV), con los hooks del motor que necesiten; el formato del perfil se asienta | 🔶 |
+| 0.5 | Un segundo y un tercer juego, en ramas `game/…` (Super Metroid, Super Castlevania IV), con los hooks del motor que necesiten; el formato del perfil se asienta | ✅ |
 | 0.6 (candidata) | Suspender y reanudar, sesiones largas, CI en GitHub Actions, `CHANGELOG.md`, releases en GitHub, las instrucciones de la consola en inglés | ⬜ |
 | 1.0.0 | La candidata usada en la consola durante unos días sin problemas | ⬜ |
 

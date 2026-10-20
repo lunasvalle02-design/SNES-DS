@@ -10,7 +10,7 @@ Descomprime el zip en /storage/roms/ports/. Quedará:
 Las ROMs van donde siempre: /storage/roms/snes/ (.sfc, .smc o .zip, también
 en subcarpetas). "SNES DS" en Ports abre la lista de juegos de esa carpeta
 que tienen perfil de doble pantalla (por ahora, The Legend of Zelda: A Link
-to the Past, USA). Si EmulationStation ya tiene carátulas descargadas
+to the Past, USA; Super Metroid, Japón/USA; Super Castlevania IV, USA). Si EmulationStation ya tiene carátulas descargadas
 (gamelist.xml, images/), la lista las usa.
 Si hace falta reiniciar EmulationStation para que salga en Ports, hazlo.
 
