@@ -33,6 +33,7 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente
 | 0.5.0 | Dos juegos más, cada uno en su rama: Super Metroid (el mapa de pausa, con el HUD encima) y Super Castlevania IV (el HUD). Un perfil puede recortar la pantalla de juego mientras su HUD está abajo, así la sala de Super Metroid llena la pantalla de arriba. Los dos comprobados en la consola |
 | 0.6.0 | La candidata a 1.0. Controles remapeables en los ajustes; un icono para cada juego en la lista; A Link to the Past deja su HUD en la pantalla del juego. CI en GitHub Actions, `CHANGELOG.md`, las instrucciones de la consola en inglés. Suspender y reanudar, comprobado en la consola |
 | 1.0.0 | La primera versión estable: la candidata, usada en la consola varios días sin problemas |
+| 1.1.0 | Una imagen del juego (su carátula, su icono o una tuya) tras el HUD cuando la segunda pantalla no tiene mapa ni menú, como en Super Castlevania IV o un juego sin perfil |
 
 ## Camino a la 1.0
 

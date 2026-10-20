@@ -9,7 +9,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/licencia-GPL--3.0--or--later-FF8A1F" alt="Licencia: GPL-3.0-or-later"></a>
-  <a href="https://github.com/lunasvalle02-design/SNES-DS/releases/latest"><img src="https://img.shields.io/badge/versi%C3%B3n-1.0.0-FF8A1F" alt="Versión 1.0.0"></a>
+  <a href="https://github.com/lunasvalle02-design/SNES-DS/releases/latest"><img src="https://img.shields.io/badge/versi%C3%B3n-1.1.0-FF8A1F" alt="Versión 1.1.0"></a>
   <a href="https://github.com/lunasvalle02-design/SNES-DS/actions/workflows/build.yml"><img src="https://github.com/lunasvalle02-design/SNES-DS/actions/workflows/build.yml/badge.svg" alt="Compilación"></a>
   <img src="https://img.shields.io/badge/plataforma-ROCKNIX%20%7C%20Windows%20%7C%20Linux-3B3129" alt="Plataformas: ROCKNIX, Windows, Linux">
   <img src="https://img.shields.io/badge/lenguaje-C11-3B3129" alt="Lenguaje: C11">
