@@ -13,6 +13,7 @@
  *     --layout=auto|stack|side   (auto: side by side on a wide window, as
  *                                when spanning two panels; else stacked)
  *     --aspect=native|4:3        (also in the settings)
+ *     --language=en|es           the interface's (also in the settings)
  *     --scale=N                  windowed: the picture's scale (default 2)
  *     --screen=WxH               windowed: each screen's size
  *     --fullscreen / --windowed  (default: fullscreen under sway or KMSDRM)
@@ -57,6 +58,7 @@
 #include "core.h"
 #include "game.h"
 #include "gfx.h"
+#include "i18n.h"
 #include "library.h"
 #include "pad.h"
 #include "romfile.h"
@@ -83,11 +85,12 @@ static struct {
 	const char* script;
 	Layout layout;
 	int aspect; /* -1: the settings', 0 native, 1 4:3 */
+	int lang;   /* -1: the settings' */
 	bool noMap, noAudio, printRom, noThreads;
 	int fullscreen; /* -1: decide */
 	int scale, screenW, screenH, stats;
 	long frames;
-} opt = { .layout = LAYOUT_AUTO, .aspect = -1, .fullscreen = -1, .scale = 2, .stats = 10 };
+} opt = { .layout = LAYOUT_AUTO, .aspect = -1, .lang = -1, .fullscreen = -1, .scale = 2, .stats = 10 };
 
 static volatile sig_atomic_t stopRequested;
 static void on_signal(int sig) {
@@ -108,6 +111,7 @@ static void parse_args(int argc, char** argv) {
 		const char* v;
 		if (arg(a, "--layout", &v)) opt.layout = !strcmp(v, "side") ? LAYOUT_SIDE : !strcmp(v, "stack") ? LAYOUT_STACK : LAYOUT_AUTO;
 		else if (arg(a, "--aspect", &v)) opt.aspect = !strcmp(v, "4:3");
+		else if (arg(a, "--language", &v)) opt.lang = lang_from_code(v);
 		else if (arg(a, "--scale", &v)) opt.scale = atoi(v);
 		else if (arg(a, "--screen", &v)) sscanf(v, "%dx%d", &opt.screenW, &opt.screenH);
 		else if (arg(a, "--save-dir", &v)) opt.saveDir = v;
@@ -329,6 +333,8 @@ int main(int argc, char** argv) {
 	settings_defaults(&a->set);
 	settings_load(&a->set, a->configPath);
 	if (opt.aspect >= 0) a->set.wide = opt.aspect;
+	if (opt.lang >= 0) a->set.lang = opt.lang;
+	i18n_lang = a->set.lang;
 	if (opt.script) script_load(opt.script);
 
 #ifndef _WIN32
@@ -407,7 +413,7 @@ int main(int argc, char** argv) {
 			gfx_area(a->gfx, both[i]);
 			gfx_fill_grad(a->gfx, 0, 0, gfx_w(a->gfx), gfx_h(a->gfx), 0, rgb(0x221B16), rgb(0x141010));
 		}
-		gfx_text(a->gfx, FONT_BOLD, 16, gfx_w(a->gfx) / 2, 170, rgb(0xC7B1A0), ALIGN_CENTER, "Buscando juegos…");
+		gfx_text(a->gfx, FONT_BOLD, 16, gfx_w(a->gfx) / 2, 170, rgb(0xC7B1A0), ALIGN_CENTER, T("Looking for games…", "Buscando juegos…"));
 		gfx_done(a->gfx);
 		SDL_RenderPresent(a->ren);
 	}
@@ -599,13 +605,15 @@ int main(int argc, char** argv) {
 					to_game(a);
 					sinceResume = 0;
 				} else {
-					ui_toast(a->ui, "No se ha podido abrir el juego");
+					ui_toast(a->ui, T("Couldn't open the game", "No se ha podido abrir el juego"));
 				}
 				break;
 			case UIA_RESUME: to_game(a); sinceResume = 0; break;
 			case UIA_SAVE: {
 				char m[64];
-				snprintf(m, sizeof(m), game_save_state(a->game, act.arg) ? "Guardado en la ranura %d" : "No se ha podido guardar en la ranura %d", act.arg);
+				snprintf(m, sizeof(m), game_save_state(a->game, act.arg) ? T("Saved to slot %d", "Guardado en la ranura %d")
+				                                                       : T("Couldn't save to slot %d", "No se ha podido guardar en la ranura %d"),
+				         act.arg);
 				ui_toast(a->ui, m);
 				to_game(a);
 				sinceResume = 0;
@@ -613,7 +621,9 @@ int main(int argc, char** argv) {
 			}
 			case UIA_LOAD: {
 				char m[64];
-				snprintf(m, sizeof(m), game_load_state(a->game, act.arg) ? "Cargada la ranura %d" : "No se ha podido cargar la ranura %d", act.arg);
+				snprintf(m, sizeof(m), game_load_state(a->game, act.arg) ? T("Loaded slot %d", "Cargada la ranura %d")
+				                                                       : T("Couldn't load slot %d", "No se ha podido cargar la ranura %d"),
+				         act.arg);
 				ui_toast(a->ui, m);
 				to_game(a);
 				sinceResume = 0;
@@ -635,15 +645,16 @@ int main(int argc, char** argv) {
 			if (act & (ACT_SWAP | ACT_ASPECT | ACT_SPLIT)) {
 				if (act & ACT_SWAP) {
 					a->set.swapped = !a->set.swapped;
-					ui_toast(a->ui, a->set.swapped ? "El juego, en la pantalla de abajo" : "El juego, en la pantalla de arriba");
+					ui_toast(a->ui, a->set.swapped ? T("The game on the bottom screen", "El juego, en la pantalla de abajo")
+				                                       : T("The game on the top screen", "El juego, en la pantalla de arriba"));
 				}
 				if (act & ACT_ASPECT) {
 					a->set.wide = !a->set.wide;
-					ui_toast(a->ui, a->set.wide ? "Formato 4:3" : "Formato original");
+					ui_toast(a->ui, a->set.wide ? T("4:3 picture", "Formato 4:3") : T("Original picture", "Formato original"));
 				}
 				if (act & ACT_SPLIT) {
 					a->set.split = !a->set.split;
-					ui_toast(a->ui, a->set.split ? "HUD y menús abajo" : "HUD y menús en el juego");
+					ui_toast(a->ui, a->set.split ? T("HUD and menus below", "HUD y menús abajo") : T("HUD and menus in the game", "HUD y menús en el juego"));
 				}
 				save_settings(a);
 				apply_settings(a);
@@ -654,8 +665,10 @@ int main(int argc, char** argv) {
 				SDL_SetWindowFullscreen(a->win, opt.fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
 				if (opt.fullscreen) sway_span();
 			}
-			if (act & ACT_SAVE_STATE) ui_toast(a->ui, game_save_state(a->game, 1) ? "Guardado en la ranura 1" : "No se ha podido guardar");
-			if (act & ACT_LOAD_STATE) ui_toast(a->ui, game_load_state(a->game, 1) ? "Cargada la ranura 1" : "La ranura 1 está vacía");
+			if (act & ACT_SAVE_STATE) ui_toast(a->ui, game_save_state(a->game, 1) ? T("Saved to slot 1", "Guardado en la ranura 1")
+			                                                              : T("Couldn't save", "No se ha podido guardar"));
+			if (act & ACT_LOAD_STATE) ui_toast(a->ui, game_load_state(a->game, 1) ? T("Loaded slot 1", "Cargada la ranura 1")
+			                                                              : T("Slot 1 is empty", "La ranura 1 está vacía"));
 			fast = fastToggle || a->pad.fastKey;
 
 			uint64_t t0 = SDL_GetPerformanceCounter();

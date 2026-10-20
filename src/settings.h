@@ -12,6 +12,7 @@ typedef struct {
 	bool map;      /* the hidden core that captures the game's map */
 	bool showFps;
 	int volume;    /* 0-10 */
+	int lang;      /* the interface's language, LANG_* (i18n.h) */
 } Settings;
 
 void settings_defaults(Settings* s);

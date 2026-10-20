@@ -38,7 +38,7 @@ target_include_directories(zip PUBLIC third_party/zip)
 target_compile_options(zip PRIVATE -w)
 
 add_library(snesds_core STATIC src/core.c src/profiles.c src/mapcap.c src/screen2.c src/romfile.c src/library.c
-	src/settings.c ${GAME_SRC})
+	src/settings.c src/i18n.c ${GAME_SRC})
 target_include_directories(snesds_core PUBLIC src)
 target_link_libraries(snesds_core PRIVATE zip)
 find_package(Threads REQUIRED)

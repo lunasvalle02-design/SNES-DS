@@ -56,7 +56,10 @@ move to the second screen, and a hidden second emulator core keeps the game's ow
   Everything works with the buttons too.
 - **Picture as you like it.** The SNES' own aspect at whole-number scales, or 4:3 like a TV, filling the
   RG DS Plus' 1024×768 panels without uneven pixels.
-- **Settings that stick.** Aspect, screen swap, HUD split, map, volume and an FPS counter, kept in `snes-ds.cfg`.
+- **Settings that stick.** Aspect, screen swap, HUD split, map, volume, an FPS counter and the language, kept in
+  `snes-ds.cfg`.
+- **In English and Spanish.** The interface starts in English; the language can be changed from the settings, and
+  the change shows at once.
 - **Battery saves** in the same `.srm` format as RetroArch, written a few seconds after they change.
 - **ROMs** as `.sfc`, `.smc` or inside a `.zip`, recognised by CRC32 (a cache keeps startup fast with large
   libraries).
@@ -92,9 +95,6 @@ scraped; no game content is shown here.
   <img src="docs/images/desktop.png" alt="The desktop build: both screens stacked in one window" width="300">
   <br><sub>On a PC both screens stack in one window; the mouse is the touch screen.</sub>
 </p>
-
-> [!NOTE]
-> The interface is in Spanish for now.
 
 ## Supported games
 
@@ -185,6 +185,7 @@ snes-ds [options] ROM      # straight into a game
 |---|---|
 | `--rom-dir=DIR` | Where the game list looks (and in its subfolders). Default: the ROM's folder, or `.` |
 | `--aspect=native\|4:3` | Picture aspect (also in the settings) |
+| `--language=en\|es` | The interface's language (also in the settings; English by default) |
 | `--layout=auto\|stack\|side` | Screens side by side or stacked; `auto` goes side by side on a wide window |
 | `--scale=N`, `--screen=WxH` | Windowed size: the picture's scale, or each screen's size |
 | `--fullscreen`, `--windowed` | Default: fullscreen under sway or KMSDRM |
@@ -277,6 +278,7 @@ make them.
 | `src/main.c`, `src/game.c` | The app; the game being played (saves, states) |
 | `src/ui/` | The interface: drawing (`gfx.c`) and screens (`ui.c`) |
 | `src/library.c`, `src/settings.c`, `src/romfile.c` | The game list, the settings, reading ROMs and zips |
+| `src/i18n.h`, `src/i18n.c` | The interface's language: each text written beside its translation, `T("Settings", "Ajustes")` |
 | `src/video.c`, `src/pad.c` | Putting both screens on the window; input and shortcuts |
 | `games/` | One directory per game |
 | `tools/harness.c` | The headless harness |

@@ -27,7 +27,7 @@ Legend: ✅ done · 🔶 in progress · ⬜ to do
 |---|---|
 | 0.1.0-dev | The first build for ROCKNIX. Measured on the console: 18-39 ms per emulated frame (25-50 fps), audio dropouts |
 | 0.2.0-dev | The core about 3.7× faster (bit-identical); a cheaper map capture; L1 + Start + Select to quit |
-| 0.3.0-dev | The touch interface: game list, pause menu, four save-state slots with screenshots, settings. The menu also opens with a tap on the bottom screen or any spare button. Fixed: a burst of noise when a game started |
+| 0.3.0-dev | The touch interface, in English and Spanish: game list, pause menu, four save-state slots with screenshots, settings. The menu also opens with a tap on the bottom screen or any spare button. Fixed: a burst of noise when a game started |
 
 ## Decisions
 
@@ -84,7 +84,8 @@ Legend: ✅ done · 🔶 in progress · ⬜ to do
 - ✅ **Game list** at startup (touch and buttons), with a CRC cache (`library-cache.txt`) for fast startup with many
   ROMs, and EmulationStation's covers (`gamelist.xml`, `images/`).
 - ✅ **Pause menu** on the touch screen: continue, save or load a state, settings, leave the game or the app.
-- ✅ **Settings** (aspect, screen swap, HUD split, map, volume, FPS) kept in `snes-ds.cfg`.
+- ✅ **Settings** (aspect, screen swap, HUD split, map, volume, FPS, language) kept in `snes-ds.cfg`.
+- ✅ The interface in English (the default) and Spanish ([`src/i18n.h`](src/i18n.h)), switched from the settings.
 - ✅ The interface ([`src/ui/`](src/ui)): resolution-independent layout, anti-aliased shapes, Nunito through
   stb_truetype, an orange theme with the SNES face-button colours for the button hints.
 
@@ -159,7 +160,6 @@ Legend: ✅ done · 🔶 in progress · ⬜ to do
 - ✅ Covers in the game list. ⬜ Also list the games without a profile (playable on one screen).
 - ⬜ **Touch inventory in A Link to the Past:** tapping an item writes `$7E0202` and sets `$7E0016` to 1, only in
   `07|09/00` and only for items the player has (`$7EF340…`).
-- ⬜ The interface in English as well as Spanish.
 
 ## Phase 6: More games ⬜
 

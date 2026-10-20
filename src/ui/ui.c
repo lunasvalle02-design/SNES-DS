@@ -8,6 +8,7 @@
 #include <time.h>
 
 #include "core.h"
+#include "i18n.h"
 #include "pad.h"
 
 /* --- the look ------------------------------------------------------------ */
@@ -41,7 +42,7 @@ typedef enum { DLG_QUIT, DLG_CLOSE_GAME, DLG_OVERWRITE } DialogKind;
 #define FOCUS_SETTINGS (-1)
 #define FOCUS_QUIT (-2)
 
-enum { SET_ASPECT, SET_SWAP, SET_SPLIT, SET_MAP, SET_VOLUME, SET_FPS, SETTINGS_N };
+enum { SET_ASPECT, SET_SWAP, SET_SPLIT, SET_MAP, SET_VOLUME, SET_FPS, SET_LANG, SETTINGS_N };
 
 struct Ui {
 	Gfx* g;
@@ -384,40 +385,56 @@ static void draw_top_library(Ui* ui) {
 	float tx = cx + cw + 24, tw = w - tx - MARGIN;
 	float y = cy + 4;
 	/* "dual screen": what the profile brings */
-	float pill = gfx_text_w(g, FONT_BOLD, 11, "DOBLE PANTALLA") + 20;
+	const char* dual = T("DUAL SCREEN", "DOBLE PANTALLA");
+	float pill = gfx_text_w(g, FONT_BOLD, 11, dual) + 20;
 	gfx_fill(g, tx, y, pill, 22, 11, with_alpha(C_ORANGE, 0.18f));
-	gfx_text(g, FONT_BOLD, 11, tx + 10, y + 5, C_ORANGE_LIGHT, ALIGN_LEFT, "DOBLE PANTALLA");
+	gfx_text(g, FONT_BOLD, 11, tx + 10, y + 5, C_ORANGE_LIGHT, ALIGN_LEFT, dual);
 	y += 34;
 	int lines = gfx_text_wrap(g, FONT_BOLD, 22, tx, y, tw, 3, 26, C_TEXT, ALIGN_LEFT, lg->profile->title);
 	y += lines * 26 + 10;
 	/* at the foot: the file and how to start it */
 	float by = h - 30, ny = by - 38;
-	if (lg->profile->about) {
+	const char* about = lg->profile->about[i18n_lang] ? lg->profile->about[i18n_lang] : lg->profile->about[LANG_EN];
+	if (about) {
 		int room = (int)((ny - 6 - y) / 18);
 		if (room > 5) room = 5;
-		if (room > 0) gfx_text_wrap(g, FONT_TEXT, 13, tx, y, tw, room, 18, C_MUTED, ALIGN_LEFT, lg->profile->about);
+		if (room > 0) gfx_text_wrap(g, FONT_TEXT, 13, tx, y, tw, room, 18, C_MUTED, ALIGN_LEFT, about);
 	}
 	gfx_text_fit(g, FONT_TEXT, 11, tx, ny, tw, C_FAINT, ALIGN_LEFT, lg->name);
-	gfx_fill(g, tx, by - 16, 92, 32, 16, C_SURFACE);
+	const char* play = T("Play", "Jugar");
+	gfx_fill(g, tx, by - 16, gfx_text_w(g, FONT_BOLD, 14, play) + 50, 32, 16, C_SURFACE);
 	gfx_circle(g, tx + 17, by, 10, C_BTN_A);
 	gfx_text(g, FONT_BOLD, 12, tx + 17, by - 6.5f, rgb(0x1A1210), ALIGN_CENTER, "A");
-	gfx_text(g, FONT_BOLD, 14, tx + 34, by - 8.5f, C_TEXT, ALIGN_LEFT, "Jugar");
+	gfx_text(g, FONT_BOLD, 14, tx + 34, by - 8.5f, C_TEXT, ALIGN_LEFT, play);
 	(void)lines;
 }
 
-static const char* const setting_names[SETTINGS_N] = {
-	"Formato de imagen", "Intercambiar pantallas", "HUD y menús abajo", "Mapa en la pantalla de abajo", "Volumen",
-	"Mostrar FPS",
+static const char* const setting_names[SETTINGS_N][LANGS] = {
+	{ "Aspect ratio", "Formato de imagen" },
+	{ "Swap screens", "Intercambiar pantallas" },
+	{ "HUD and menus below", "HUD y menús abajo" },
+	{ "Map on the bottom screen", "Mapa en la pantalla de abajo" },
+	{ "Volume", "Volumen" },
+	{ "Show FPS", "Mostrar FPS" },
+	{ "Language", "Idioma" },
 };
-static const char* const setting_help[SETTINGS_N] = {
-	"Original: la imagen de la SNES tal cual, con píxeles enteros y nítidos. 4:3: estirada como en un "
-	"televisor, ocupando las pantallas de la RG DS.",
-	"El juego en la pantalla de abajo y la segunda pantalla (mapa, HUD) arriba.",
-	"Lleva el marcador y los menús del juego a la segunda pantalla, y deja la del juego despejada.",
-	"Un segundo núcleo abre el mapa del juego en segundo plano para tenerlo siempre a la vista. Desactívalo "
-	"si notas tirones.",
-	"El volumen del sonido del juego.",
-	"Los fotogramas por segundo, en una esquina de la pantalla del juego.",
+static const char* const setting_help[SETTINGS_N][LANGS] = {
+	{ "Original: the SNES picture as it is, with whole, sharp pixels. 4:3: stretched as on a TV, filling the "
+	  "RG DS screens.",
+	  "Original: la imagen de la SNES tal cual, con píxeles enteros y nítidos. 4:3: estirada como en un "
+	  "televisor, ocupando las pantallas de la RG DS." },
+	{ "The game on the bottom screen, and the second screen (map, HUD) on top.",
+	  "El juego en la pantalla de abajo y la segunda pantalla (mapa, HUD) arriba." },
+	{ "Moves the game's HUD and menus to the second screen, leaving the game screen clear.",
+	  "Lleva el marcador y los menús del juego a la segunda pantalla, y deja la del juego despejada." },
+	{ "A second core opens the game's map in the background, so it's always in view. Turn it off if you notice "
+	  "stutter.",
+	  "Un segundo núcleo abre el mapa del juego en segundo plano para tenerlo siempre a la vista. Desactívalo "
+	  "si notas tirones." },
+	{ "The volume of the game's sound.", "El volumen del sonido del juego." },
+	{ "Frames per second, in a corner of the game screen.",
+	  "Los fotogramas por segundo, en una esquina de la pantalla del juego." },
+	{ "The language of SNES DS's screens and menus.", "El idioma de las pantallas y los menús de SNES DS." },
 };
 
 static void draw_top_panel(Gfx* g, const char* kicker, const char* title, const char* body) {
@@ -438,10 +455,11 @@ static void draw_top(Ui* ui) {
 	case PAGE_LIBRARY: draw_top_library(ui); break;
 	case PAGE_PAUSE: {
 		draw_game_picture(ui, &ui->frame, 0.35f);
-		float pw = gfx_text_w(g, FONT_BOLD, 13, "EN PAUSA") + 46;
+		const char* paused = T("PAUSED", "EN PAUSA");
+		float pw = gfx_text_w(g, FONT_BOLD, 13, paused) + 46;
 		gfx_fill(g, (w - pw) / 2, 14, pw, 30, 15, with_alpha(rgb(0x120D0A), 0.85f));
 		gfx_icon(g, ICON_PAUSE, (w - pw) / 2 + 19, 29, 13, C_ORANGE);
-		gfx_text(g, FONT_BOLD, 13, (w - pw) / 2 + 32, 21, C_TEXT, ALIGN_LEFT, "EN PAUSA");
+		gfx_text(g, FONT_BOLD, 13, (w - pw) / 2 + 32, 21, C_TEXT, ALIGN_LEFT, paused);
 		break;
 	}
 	case PAGE_SLOTS: {
@@ -451,10 +469,10 @@ static void draw_top(Ui* ui) {
 		char label[64];
 		if (ui->slotTime[s]) {
 			char when[32];
-			strftime(when, sizeof(when), "%d/%m/%Y  %H:%M", localtime(&ui->slotTime[s]));
-			snprintf(label, sizeof(label), "Ranura %d  ·  %s", s + 1, when);
+			strftime(when, sizeof(when), T("%Y-%m-%d  %H:%M", "%d/%m/%Y  %H:%M"), localtime(&ui->slotTime[s]));
+			snprintf(label, sizeof(label), T("Slot %d  ·  %s", "Ranura %d  ·  %s"), s + 1, when);
 		} else {
-			snprintf(label, sizeof(label), "Ranura %d  ·  vacía", s + 1);
+			snprintf(label, sizeof(label), T("Slot %d  ·  empty", "Ranura %d  ·  vacía"), s + 1);
 		}
 		float pw = gfx_text_w(g, FONT_BOLD, 13, label) + 32;
 		gfx_fill(g, (w - pw) / 2, gfx_h(g) - 46, pw, 30, 15, with_alpha(rgb(0x120D0A), 0.85f));
@@ -465,7 +483,7 @@ static void draw_top(Ui* ui) {
 		if (ui->game) draw_game_picture(ui, &ui->frame, 0.6f);
 		else draw_background(g);
 		int f = ui->focus[PAGE_SETTINGS];
-		draw_top_panel(g, "AJUSTES", setting_names[f], setting_help[f]);
+		draw_top_panel(g, T("SETTINGS", "AJUSTES"), setting_names[f][i18n_lang], setting_help[f][i18n_lang]);
 		break;
 	}
 	}
@@ -518,7 +536,8 @@ static UiAction nav_library(Ui* ui, uint32_t nav) {
 				ui->settingsFrom = PAGE_LIBRARY;
 				go(ui, PAGE_SETTINGS);
 			} else {
-				open_dialog(ui, DLG_QUIT, 0, "¿Salir de SNES DS?", "Se cerrará el emulador.", "Salir");
+				open_dialog(ui, DLG_QUIT, 0, T("Quit SNES DS?", "¿Salir de SNES DS?"),
+		            T("The emulator will close.", "Se cerrará el emulador."), T("Quit", "Salir"));
 			}
 		}
 	} else if (n) {
@@ -558,10 +577,12 @@ static UiAction draw_library(Ui* ui) {
 	ui->scroll = ease(ui->scroll, ui->scrollTo, 0.3f);
 	if (ui->lib->count == 0) {
 		gfx_icon(g, ICON_GRID, w / 2, gr.viewY + 52, 44, C_FAINT);
-		gfx_text(g, FONT_BOLD, 17, w / 2, gr.viewY + 92, C_TEXT, ALIGN_CENTER, "No hay juegos compatibles");
+		gfx_text(g, FONT_BOLD, 17, w / 2, gr.viewY + 92, C_TEXT, ALIGN_CENTER, T("No supported games", "No hay juegos compatibles"));
 		char msg[1400];
-		snprintf(msg, sizeof(msg), "Copia tus ROMs de SNES (.sfc, .smc o .zip) en %s. Por ahora hay doble pantalla para:",
-		         ui->romDir[0] ? ui->romDir : "la carpeta de ROMs");
+		snprintf(msg, sizeof(msg),
+		         T("Copy your SNES ROMs (.sfc, .smc or .zip) to %s. Dual-screen support so far:",
+		           "Copia tus ROMs de SNES (.sfc, .smc o .zip) en %s. Por ahora hay doble pantalla para:"),
+		         ui->romDir[0] ? ui->romDir : T("the ROM folder", "la carpeta de ROMs"));
 		int l = gfx_text_wrap(g, FONT_TEXT, 12, w / 2, gr.viewY + 120, w - 60, 3, 17, C_MUTED, ALIGN_CENTER, msg);
 		extern const Profile* const games[];
 		float y = gr.viewY + 126 + l * 17;
@@ -608,9 +629,10 @@ static UiAction draw_library(Ui* ui) {
 	/* the header */
 	gfx_fill_grad(g, 0, 0, w, HEADER_H, 0, with_alpha(C_BG0, 0.98f), with_alpha(C_BG0, 0.9f));
 	gfx_fill(g, 0, HEADER_H - 1, w, 1, 0, with_alpha(C_LINE, 0.6f));
-	gfx_text(g, FONT_BOLD, 19, MARGIN, 10, C_TEXT, ALIGN_LEFT, "Juegos");
+	gfx_text(g, FONT_BOLD, 19, MARGIN, 10, C_TEXT, ALIGN_LEFT, T("Games", "Juegos"));
 	char count[48];
-	snprintf(count, sizeof(count), ui->lib->count == 1 ? "1 juego con doble pantalla" : "%d juegos con doble pantalla",
+	snprintf(count, sizeof(count), ui->lib->count == 1 ? T("1 dual-screen game", "1 juego con doble pantalla")
+	                                                   : T("%d dual-screen games", "%d juegos con doble pantalla"),
 	         ui->lib->count);
 	gfx_text(g, FONT_TEXT, 11, MARGIN, 33, C_FAINT, ALIGN_LEFT, count);
 	float d = 36;
@@ -621,11 +643,12 @@ static UiAction draw_library(Ui* ui) {
 	}
 	if (icon_button(ui, 2, ICON_POWER, w - MARGIN - d, 9, d, *f == FOCUS_QUIT) == 2) {
 		*f = FOCUS_QUIT;
-		open_dialog(ui, DLG_QUIT, 0, "¿Salir de SNES DS?", "Se cerrará el emulador.", "Salir");
+		open_dialog(ui, DLG_QUIT, 0, T("Quit SNES DS?", "¿Salir de SNES DS?"),
+		            T("The emulator will close.", "Se cerrará el emulador."), T("Quit", "Salir"));
 	}
 
 	static const char* const b[] = { "A", "X" };
-	static const char* const l[] = { "Jugar", "Ajustes" };
+	const char* l[] = { T("Play", "Jugar"), T("Settings", "Ajustes") };
 	Color c[] = { C_BTN_A, C_BTN_X };
 	draw_footer(g, b, c, l, 2);
 	return a;
@@ -650,12 +673,16 @@ static UiAction tile_action(Ui* ui, int t) {
 		go(ui, PAGE_SETTINGS);
 		break;
 	case TILE_CLOSE:
-		open_dialog(ui, DLG_CLOSE_GAME, 0, "¿Volver a la lista de juegos?",
-		            "Lo que no hayas guardado (en el juego o en un estado) se perderá.", "Salir del juego");
+		open_dialog(ui, DLG_CLOSE_GAME, 0, T("Back to the game list?", "¿Volver a la lista de juegos?"),
+		            T("Anything not saved (in the game or in a state) will be lost.",
+		              "Lo que no hayas guardado (en el juego o en un estado) se perderá."),
+		            T("Leave the game", "Salir del juego"));
 		break;
 	case TILE_QUIT:
-		open_dialog(ui, DLG_QUIT, 0, "¿Salir de SNES DS?",
-		            "Lo que no hayas guardado (en el juego o en un estado) se perderá.", "Salir");
+		open_dialog(ui, DLG_QUIT, 0, T("Quit SNES DS?", "¿Salir de SNES DS?"),
+		            T("Anything not saved (in the game or in a state) will be lost.",
+		              "Lo que no hayas guardado (en el juego o en un estado) se perderá."),
+		            T("Quit", "Salir"));
 		break;
 	}
 	return act(UIA_NONE, 0);
@@ -698,9 +725,10 @@ static UiAction draw_pause(Ui* ui) {
 	UiAction a = act(UIA_NONE, 0);
 	draw_background(g);
 	const char* title = ui->game->profile && ui->game->profile->shortTitle ? ui->game->profile->shortTitle : game_title(ui->game);
-	draw_page_header(ui, "EN PAUSA", title, false);
-	static const char* const names[TILES] = { "Continuar", "Guardar estado", "Cargar estado", "Ajustes", "Salir del juego",
-		                                      "Salir de SNES DS" };
+	draw_page_header(ui, T("PAUSED", "EN PAUSA"), title, false);
+	const char* names[TILES] = { T("Resume", "Continuar"), T("Save state", "Guardar estado"),
+		                         T("Load state", "Cargar estado"), T("Settings", "Ajustes"),
+		                         T("Leave the game", "Salir del juego"), T("Quit SNES DS", "Salir de SNES DS") };
 	static const Icon icons[TILES] = { ICON_PLAY, ICON_SAVE, ICON_LOAD, ICON_GEAR, ICON_HOME, ICON_POWER };
 	float gap = 12, tw = (w - 2 * MARGIN - gap) / 2, top = HEADER_H + 14;
 	float th = (gfx_h(g) - top - FOOTER_H - 14 - gap * 2) / 3;
@@ -733,7 +761,7 @@ static UiAction draw_pause(Ui* ui) {
 	}
 	draw_focus(ui, fx, fy, tw, th, 14);
 	static const char* const b[] = { "A", "B" };
-	static const char* const l[] = { "Elegir", "Volver al juego" };
+	const char* l[] = { T("Choose", "Elegir"), T("Back to the game", "Volver al juego") };
 	Color c[] = { C_BTN_A, C_BTN_B };
 	draw_footer(g, b, c, l, 2);
 	return a;
@@ -745,14 +773,17 @@ static UiAction slot_action(Ui* ui, int s) {
 	if (ui->slotsSave) {
 		if (ui->slotTime[s]) {
 			char t[64];
-			snprintf(t, sizeof(t), "¿Sobrescribir la ranura %d?", s + 1);
-			open_dialog(ui, DLG_OVERWRITE, s + 1, t, "El estado guardado en ella se sustituirá por el actual.", "Sobrescribir");
+			snprintf(t, sizeof(t), T("Overwrite slot %d?", "¿Sobrescribir la ranura %d?"), s + 1);
+			open_dialog(ui, DLG_OVERWRITE, s + 1, t,
+			            T("The state saved in it will be replaced by the current one.",
+			              "El estado guardado en ella se sustituirá por el actual."),
+			            T("Overwrite", "Sobrescribir"));
 			return act(UIA_NONE, 0);
 		}
 		return act(UIA_SAVE, s + 1);
 	}
 	if (!ui->slotTime[s]) {
-		ui_toast(ui, "Esa ranura está vacía");
+		ui_toast(ui, T("That slot is empty", "Esa ranura está vacía"));
 		return act(UIA_NONE, 0);
 	}
 	return act(UIA_LOAD, s + 1);
@@ -773,7 +804,8 @@ static UiAction draw_slots(Ui* ui) {
 	float w = gfx_w(g);
 	UiAction a = act(UIA_NONE, 0);
 	draw_background(g);
-	draw_page_header(ui, ui->slotsSave ? "GUARDAR ESTADO" : "CARGAR ESTADO", "Elige una ranura", true);
+	draw_page_header(ui, ui->slotsSave ? T("SAVE STATE", "GUARDAR ESTADO") : T("LOAD STATE", "CARGAR ESTADO"),
+	                 T("Choose a slot", "Elige una ranura"), true);
 	if (back_tapped(ui)) go(ui, PAGE_PAUSE);
 	float gap = 12, tw = (w - 2 * MARGIN - gap) / 2, top = HEADER_H + 14;
 	float th = (gfx_h(g) - top - FOOTER_H - 14 - gap) / 2;
@@ -802,10 +834,11 @@ static UiAction draw_slots(Ui* ui) {
 		}
 		float tx = px + pw + 12, txw = x + tw - tx - 10;
 		char name[32];
-		snprintf(name, sizeof(name), "Ranura %d", i + 1);
+		snprintf(name, sizeof(name), T("Slot %d", "Ranura %d"), i + 1);
 		gfx_text_fit(g, FONT_BOLD, 15, tx, y + th / 2 - 20, txw, C_TEXT, ALIGN_LEFT, name);
-		char when[32] = "Vacía";
-		if (ui->slotTime[i]) strftime(when, sizeof(when), "%d/%m  %H:%M", localtime(&ui->slotTime[i]));
+		char when[32];
+		snprintf(when, sizeof(when), "%s", T("Empty", "Vacía"));
+		if (ui->slotTime[i]) strftime(when, sizeof(when), T("%b %d  %H:%M", "%d/%m  %H:%M"), localtime(&ui->slotTime[i]));
 		gfx_text_fit(g, FONT_TEXT, 12, tx, y + th / 2 + 2, txw, ui->slotTime[i] ? C_MUTED : C_FAINT, ALIGN_LEFT, when);
 		if (i == *f) {
 			fx = x;
@@ -814,7 +847,7 @@ static UiAction draw_slots(Ui* ui) {
 	}
 	draw_focus(ui, fx, fy, tw, th, 14);
 	static const char* const b[] = { "A", "B" };
-	const char* l[] = { ui->slotsSave ? "Guardar" : "Cargar", "Atrás" };
+	const char* l[] = { ui->slotsSave ? T("Save", "Guardar") : T("Load", "Cargar"), T("Back", "Atrás") };
 	Color c[] = { C_BTN_A, C_BTN_B };
 	draw_footer(g, b, c, l, 2);
 	return a;
@@ -833,7 +866,13 @@ static bool setting_bool(Ui* ui, int i, bool** out) {
 /* change setting i: dir -1 / +1 (left, right), 0 toggles */
 static UiAction change_setting(Ui* ui, int i, int dir) {
 	bool* b;
-	if (setting_bool(ui, i, &b)) {
+	if (i == SET_LANG) {
+		/* left: English, right: Español */
+		int v = dir < 0 ? LANG_EN : dir > 0 ? LANG_ES : (ui->set->lang + 1) % LANGS;
+		if (v == ui->set->lang) return act(UIA_NONE, 0);
+		ui->set->lang = v;
+		i18n_lang = v; /* at once: the next frame is drawn in it */
+	} else if (setting_bool(ui, i, &b)) {
 		/* left: off (Original), right: on (4:3) */
 		bool v = dir < 0 ? false : dir > 0 ? true : !*b;
 		if (v == *b) return act(UIA_NONE, 0);
@@ -879,7 +918,7 @@ static UiAction draw_settings(Ui* ui) {
 	float w = gfx_w(g);
 	UiAction a = act(UIA_NONE, 0);
 	draw_background(g);
-	draw_page_header(ui, ui->game ? "EN PAUSA" : "SNES DS", "Ajustes", true);
+	draw_page_header(ui, ui->game ? T("PAUSED", "EN PAUSA") : "SNES DS", T("Settings", "Ajustes"), true);
 	if (back_tapped(ui)) a = leave_settings(ui);
 	float top = HEADER_H + 8, rh = (gfx_h(g) - top - FOOTER_H - 8) / SETTINGS_N;
 	if (rh > 44) rh = 44;
@@ -892,21 +931,25 @@ static UiAction draw_settings(Ui* ui) {
 		if (i == *f) gfx_fill(g, x, y + 2, rw, rh - 4, 10, C_SURFACE);
 		else if (ht == 1) gfx_fill(g, x, y + 2, rw, rh - 4, 10, with_alpha(C_SURFACE, 0.6f));
 		gfx_text_fit(g, FONT_BOLD, 14, x + 12, y + rh / 2 - 8, rw - 190, i == *f ? C_TEXT : C_MUTED, ALIGN_LEFT,
-		             setting_names[i]);
+		             setting_names[i][i18n_lang]);
 		if (ht == 2) *f = i;
 		float my = y + rh / 2;
-		if (i == SET_ASPECT) {
-			/* two segments: Original | 4:3 */
-			float sw = 66, sx = cx - sw * 2;
+		if (i == SET_ASPECT || i == SET_LANG) {
+			/* two segments: Original | 4:3, English | Español (each language in its own words) */
+			bool right = i == SET_ASPECT ? ui->set->wide : ui->set->lang == LANG_ES;
+			const char* left = i == SET_ASPECT ? "Original" : "English";
+			const char* rightName = i == SET_ASPECT ? "4:3" : "Español";
+			float sw = i == SET_ASPECT ? 66 : 78, sx = cx - sw * 2;
 			gfx_fill(g, sx, my - 13, sw * 2, 26, 13, C_SURFACE2);
-			gfx_fill(g, sx + (ui->set->wide ? sw : 0) + 2, my - 11, sw - 4, 22, 11, C_ORANGE);
-			gfx_text(g, FONT_BOLD, 12, sx + sw / 2, my - 7, ui->set->wide ? C_MUTED : C_ON_ORANGE, ALIGN_CENTER, "Original");
-			gfx_text(g, FONT_BOLD, 12, sx + sw * 1.5f, my - 7, ui->set->wide ? C_ON_ORANGE : C_MUTED, ALIGN_CENTER, "4:3");
-			if (hit(ui, 40, sx, y, sw, rh, false) == 2) {
+			gfx_fill(g, sx + (right ? sw : 0) + 2, my - 11, sw - 4, 22, 11, C_ORANGE);
+			gfx_text(g, FONT_BOLD, 12, sx + sw / 2, my - 7, right ? C_MUTED : C_ON_ORANGE, ALIGN_CENTER, left);
+			gfx_text(g, FONT_BOLD, 12, sx + sw * 1.5f, my - 7, right ? C_ON_ORANGE : C_MUTED, ALIGN_CENTER, rightName);
+			int id = i == SET_ASPECT ? 40 : 52;
+			if (hit(ui, id, sx, y, sw, rh, false) == 2) {
 				*f = i;
 				a = change_setting(ui, i, -1);
 			}
-			if (hit(ui, 41, sx + sw, y, sw, rh, false) == 2) {
+			if (hit(ui, id + 1, sx + sw, y, sw, rh, false) == 2) {
 				*f = i;
 				a = change_setting(ui, i, 1);
 			}
@@ -938,12 +981,12 @@ static UiAction draw_settings(Ui* ui) {
 				a = change_setting(ui, i, 0);
 			}
 		}
-		if (ht == 2 && i != SET_VOLUME && i != SET_ASPECT) a = change_setting(ui, i, 0);
+		if (ht == 2 && i != SET_VOLUME && i != SET_ASPECT && i != SET_LANG) a = change_setting(ui, i, 0);
 	}
 	float fy = top + *f * rh + 2;
 	draw_focus(ui, MARGIN, fy, rw, rh - 4, 10);
 	static const char* const b[] = { "A", "B" };
-	static const char* const l[] = { "Cambiar", "Atrás" };
+	const char* l[] = { T("Change", "Cambiar"), T("Back", "Atrás") };
 	Color c[] = { C_BTN_A, C_BTN_B };
 	draw_footer(g, b, c, l, 2);
 	return a;
@@ -992,7 +1035,7 @@ static UiAction draw_dialog(Ui* ui) {
 		if (i == 1) gfx_fill(g, bx, by, bw, 38, 12, ht == 1 ? C_ORANGE_DEEP : C_ORANGE);
 		else gfx_fill(g, bx, by, bw, 38, 12, ht == 1 ? C_LINE : C_SURFACE2);
 		gfx_text_fit(g, FONT_BOLD, 14, bx + bw / 2, by + 11, bw - 16, i ? C_ON_ORANGE : C_TEXT, ALIGN_CENTER,
-		             i ? ui->dlg.yes : "Cancelar");
+		             i ? ui->dlg.yes : T("Cancel", "Cancelar"));
 		if (ht == 2) {
 			if (i) a = dialog_yes(ui);
 			else ui->dlg.open = false;

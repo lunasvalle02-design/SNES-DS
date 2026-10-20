@@ -56,8 +56,10 @@ pasan a la segunda pantalla, y un segundo núcleo oculto mantiene allí abierto 
   del juego o de la app. Todo funciona también con los botones.
 - **La imagen a tu gusto.** La relación de aspecto original de la SNES a escala entera, o 4:3 como en un televisor,
   llenando los paneles de 1024×768 de la RG DS Plus sin píxeles desiguales.
-- **Ajustes que se recuerdan.** Formato, intercambio de pantallas, separación del HUD, mapa, volumen y contador de
-  FPS, guardados en `snes-ds.cfg`.
+- **Ajustes que se recuerdan.** Formato, intercambio de pantallas, separación del HUD, mapa, volumen, contador de
+  FPS e idioma, guardados en `snes-ds.cfg`.
+- **En inglés y en español.** La interfaz arranca en inglés; el idioma se cambia en los ajustes, y el cambio se ve al
+  momento.
 - **Partidas** (`.srm`) en el mismo formato que RetroArch, escritas unos segundos después de cambiar.
 - **ROMs** en `.sfc`, `.smc` o dentro de un `.zip`, reconocidas por su CRC32 (una caché mantiene el arranque rápido
   con bibliotecas grandes).
@@ -70,19 +72,19 @@ La consola muestra los dos paneles uno al lado del otro, con la pantalla de arri
 carátula descargada, la app genera una; aquí no se muestra ningún contenido de juegos.
 
 <p align="center">
-  <img src="docs/images/library.png" alt="Lista de juegos: el juego elegido en la pantalla de arriba, la lista en la de abajo (táctil)" width="100%">
+  <img src="docs/images/es/library.png" alt="Lista de juegos: el juego elegido en la pantalla de arriba, la lista en la de abajo (táctil)" width="100%">
   <br><sub>Lista de juegos: arriba el juego elegido, abajo la lista en la pantalla táctil.</sub>
 </p>
 
 <p align="center">
-  <img src="docs/images/settings.png" alt="Ajustes: arriba qué hace cada ajuste, abajo los ajustes" width="100%">
+  <img src="docs/images/es/settings.png" alt="Ajustes: arriba qué hace cada ajuste, abajo los ajustes" width="100%">
   <br><sub>Ajustes: arriba qué hace el ajuste elegido, abajo los ajustes.</sub>
 </p>
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/images/pause-menu.png" alt="Menú de pausa en la pantalla de abajo"></td>
-    <td width="50%"><img src="docs/images/save-slots.png" alt="Ranuras de estado en la pantalla de abajo"></td>
+    <td width="50%"><img src="docs/images/es/pause-menu.png" alt="Menú de pausa en la pantalla de abajo"></td>
+    <td width="50%"><img src="docs/images/es/save-slots.png" alt="Ranuras de estado en la pantalla de abajo"></td>
   </tr>
   <tr>
     <td align="center"><sub>Menú de pausa (pantalla de abajo).</sub></td>
@@ -91,7 +93,7 @@ carátula descargada, la app genera una; aquí no se muestra ningún contenido d
 </table>
 
 <p align="center">
-  <img src="docs/images/desktop.png" alt="La versión de escritorio: las dos pantallas apiladas en una ventana" width="300">
+  <img src="docs/images/es/desktop.png" alt="La versión de escritorio: las dos pantallas apiladas en una ventana" width="300">
   <br><sub>En PC las dos pantallas se apilan en una ventana; el ratón hace de pantalla táctil.</sub>
 </p>
 
@@ -185,6 +187,7 @@ snes-ds [opciones] ROM      # directamente a un juego
 |---|---|
 | `--rom-dir=DIR` | Dónde busca la lista de juegos (y en sus subcarpetas). Por defecto: la carpeta de la ROM, o `.` |
 | `--aspect=native\|4:3` | Formato de imagen (también en los ajustes) |
+| `--language=en\|es` | El idioma de la interfaz (también en los ajustes; inglés por defecto) |
 | `--layout=auto\|stack\|side` | Pantallas lado a lado o apiladas; `auto` las pone lado a lado en una ventana ancha |
 | `--scale=N`, `--screen=WxH` | Tamaño en ventana: la escala de la imagen, o el tamaño de cada pantalla |
 | `--fullscreen`, `--windowed` | Por defecto, pantalla completa con sway o KMSDRM |
@@ -277,6 +280,7 @@ Los guiones salen con código 1 si algo cambia. Hace falta tu propia ROM; las pa
 | `src/main.c`, `src/game.c` | La app; la partida en curso (partidas, estados) |
 | `src/ui/` | La interfaz: dibujo (`gfx.c`) y pantallas (`ui.c`) |
 | `src/library.c`, `src/settings.c`, `src/romfile.c` | La lista de juegos, los ajustes, la lectura de ROMs y zips |
+| `src/i18n.h`, `src/i18n.c` | El idioma de la interfaz: cada texto escrito junto a su traducción, `T("Settings", "Ajustes")` |
 | `src/video.c`, `src/pad.c` | Colocar las dos pantallas en la ventana; entrada y atajos |
 | `games/` | Un directorio por juego |
 | `tools/harness.c` | El harness sin ventana |

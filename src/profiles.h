@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include "core.h"
+#include "i18n.h"
 
 #define PROBES 4
 
@@ -71,7 +72,7 @@ typedef struct {
 	const char* id;    /* its directory under games/ */
 	const char* title;
 	const char* shortTitle; /* for the game list's cards; NULL: title */
-	const char* about;      /* what its second screen shows, for the game list */
+	const char* about[LANGS]; /* what its second screen shows, for the game list */
 	uint32_t crc32[4]; /* of the ROM without a copier header */
 	SplitRule split[SPLITS]; /* first match wins */
 	/* the lines of a SPLIT_HUD worth showing (its strip on the second

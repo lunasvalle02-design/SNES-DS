@@ -7,7 +7,10 @@ const Profile game_zelda_alttp = {
 	.id = "zelda_alttp",
 	.title = "The Legend of Zelda: A Link to the Past",
 	.shortTitle = "A Link to the Past",
-	.about = "Mapa del mundo y de cada mazmorra, el HUD y el menú de objetos en la pantalla de abajo.",
+	.about = {
+		[LANG_EN] = "The world map and each dungeon's, the HUD and the item menu on the bottom screen.",
+		[LANG_ES] = "Mapa del mundo y de cada mazmorra, el HUD y el menú de objetos en la pantalla de abajo.",
+	},
 	.crc32 = { 0x777AAC2F }, /* USA */
 	/* $7E0010 is the main module, $7E0011 the sub-module: 07 indoors,
 	 * 09 outdoors, 0E the menus (01 items, 02 text, 03 dungeon map,

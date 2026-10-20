@@ -4,8 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "i18n.h"
+
 void settings_defaults(Settings* s) {
-	*s = (Settings) { .wide = false, .swapped = false, .split = true, .map = true, .showFps = false, .volume = 10 };
+	*s = (Settings) { .wide = false, .swapped = false, .split = true, .map = true, .showFps = false, .volume = 10,
+		              .lang = LANG_EN };
 }
 
 void settings_load(Settings* s, const char* path) {
@@ -23,6 +26,7 @@ void settings_load(Settings* s, const char* path) {
 		else if (!strcmp(line, "map")) s->map = v;
 		else if (!strcmp(line, "show_fps")) s->showFps = v;
 		else if (!strcmp(line, "volume")) s->volume = v < 0 ? 0 : v > 10 ? 10 : v;
+		else if (!strcmp(line, "language")) s->lang = lang_from_code(eq + 1);
 	}
 	fclose(f);
 }
@@ -31,7 +35,7 @@ bool settings_save(const Settings* s, const char* path) {
 	FILE* f = fopen(path, "w");
 	if (!f) return false;
 	fprintf(f, "# snes-ds settings (also changed from the menu)\n");
-	fprintf(f, "aspect=%s\nswapped=%d\nsplit=%d\nmap=%d\nshow_fps=%d\nvolume=%d\n", s->wide ? "4:3" : "native",
-	        s->swapped, s->split, s->map, s->showFps, s->volume);
+	fprintf(f, "aspect=%s\nswapped=%d\nsplit=%d\nmap=%d\nshow_fps=%d\nvolume=%d\nlanguage=%s\n",
+	        s->wide ? "4:3" : "native", s->swapped, s->split, s->map, s->showFps, s->volume, lang_code(s->lang));
 	return fclose(f) == 0;
 }

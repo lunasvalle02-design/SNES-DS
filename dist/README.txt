@@ -39,8 +39,11 @@ pruébalo tú con --menu-button=NOMBRE en launch.sh).
 Ajustes
 -------
 Formato de imagen (original / 4:3), intercambiar pantallas, HUD y menús
-abajo, mapa en la pantalla de abajo, volumen y mostrar FPS. Se guardan en
-snes-ds/snes-ds.cfg y valen para todos los juegos.
+abajo, mapa en la pantalla de abajo, volumen, mostrar FPS e idioma. Se
+guardan en snes-ds/snes-ds.cfg y valen para todos los juegos.
+
+La interfaz arranca en inglés. Para ponerla en español: Settings, la
+última fila (Language), Español.
 
 Controles en partida
 --------------------

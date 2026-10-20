@@ -28,7 +28,7 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente
 |---|---|
 | 0.1.0-dev | La primera versión para ROCKNIX. Medida en la consola: 18-39 ms por fotograma emulado (25-50 fps), con cortes de audio |
 | 0.2.0-dev | El núcleo unas 3,7 veces más rápido (idéntico bit a bit); captura del mapa más barata; L1 + Start + Select para salir |
-| 0.3.0-dev | La interfaz táctil: lista de juegos, menú de pausa, cuatro ranuras de estado con captura, ajustes. El menú se abre también tocando la pantalla de abajo o con cualquier botón libre. Corregido: un estallido de ruido al arrancar un juego |
+| 0.3.0-dev | La interfaz táctil, en inglés y en español: lista de juegos, menú de pausa, cuatro ranuras de estado con captura, ajustes. El menú se abre también tocando la pantalla de abajo o con cualquier botón libre. Corregido: un estallido de ruido al arrancar un juego |
 
 ## Decisiones
 
@@ -85,7 +85,9 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente
 - ✅ **Lista de juegos** al arrancar (táctil y botones), con caché de CRC (`library-cache.txt`) para arrancar rápido
   con muchas ROMs, y las carátulas de EmulationStation (`gamelist.xml`, `images/`).
 - ✅ **Menú de pausa** en la pantalla táctil: continuar, guardar o cargar estado, ajustes, salir del juego o de la app.
-- ✅ **Ajustes** (formato, intercambiar pantallas, separación del HUD, mapa, volumen, FPS) guardados en `snes-ds.cfg`.
+- ✅ **Ajustes** (formato, intercambiar pantallas, separación del HUD, mapa, volumen, FPS, idioma) guardados en
+  `snes-ds.cfg`.
+- ✅ La interfaz en inglés (por defecto) y en español ([`src/i18n.h`](src/i18n.h)), a elegir en los ajustes.
 - ✅ La interfaz ([`src/ui/`](src/ui)): maquetación independiente de la resolución, formas suavizadas, Nunito con
   stb_truetype, un tema naranja con los colores de los botones del SNES en las pistas de controles.
 
@@ -163,7 +165,6 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente
 - ✅ Carátulas en la lista de juegos. ⬜ Mostrar también los juegos sin perfil (jugables a una pantalla).
 - ⬜ **Inventario táctil en A Link to the Past:** tocar un objeto escribe `$7E0202` y pone `$7E0016` a 1, solo en
   `07|09/00` y solo con los objetos que se tienen (`$7EF340…`).
-- ⬜ La interfaz en inglés además de en español.
 
 ## Fase 6: Más juegos ⬜
 
