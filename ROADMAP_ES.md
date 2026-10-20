@@ -90,7 +90,7 @@ perfil en el que se escriben los módulos de juego.
 
 - ✅ `src/main.c`: una ventana SDL2 con las dos pantallas, apiladas (arriba el juego, abajo la segunda pantalla) o lado
   a lado (`--layout=side --screen=1024x768`, como en la consola), a escala entera.
-- ✅ Entrada por teclado y mando (SDL GameController, por posición de los botones). ⬜ Mapeo configurable.
+- ✅ Entrada por teclado y mando (SDL GameController, por posición de los botones). ✅ Mapeo configurable (Ajustes → Controles).
 - ✅ Audio a 48 kHz con cola de SDL, sincronizado por el audio (por el reloj si no hay audio).
 - ✅ Partidas (`.srm` junto a la ROM o en `--save-dir`; se escriben al cambiar y al salir).
 - ✅ Estado rápido (F5/F7), avance rápido (Tab) y cuatro ranuras de estado con captura (desde el menú).

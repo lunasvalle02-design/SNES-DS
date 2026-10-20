@@ -35,14 +35,18 @@
 #define FOOTER_H 30.0f
 #define MARGIN 16.0f
 
-typedef enum { PAGE_LIBRARY, PAGE_PAUSE, PAGE_SLOTS, PAGE_SETTINGS } Page;
+typedef enum { PAGE_LIBRARY, PAGE_PAUSE, PAGE_SLOTS, PAGE_SETTINGS, PAGE_CONTROLS } Page;
 typedef enum { DLG_QUIT, DLG_CLOSE_GAME, DLG_OVERWRITE } DialogKind;
 
 /* the library's header buttons, as focus values */
 #define FOCUS_SETTINGS (-1)
 #define FOCUS_QUIT (-2)
 
-enum { SET_ASPECT, SET_SWAP, SET_SPLIT, SET_MAP, SET_VOLUME, SET_FPS, SET_LANG, SETTINGS_N };
+enum { SET_ASPECT, SET_SWAP, SET_SPLIT, SET_MAP, SET_VOLUME, SET_FPS, SET_LANG, SET_CONTROLS, SETTINGS_N };
+
+/* the controls page: the bindings, then "reset", two columns */
+#define CONTROLS_N (BINDS + 1)
+#define CAPTURE_MS 6000
 
 struct Ui {
 	Gfx* g;
@@ -53,7 +57,10 @@ struct Ui {
 	char version[32];
 	Page page, settingsFrom;
 	bool slotsSave;
-	int focus[4];
+	int focus[5];
+	int capture;          /* the binding waiting for an input, or -1 */
+	uint32_t captureAt;
+	bool pendingControls; /* ui_captured changed them: say so next frame */
 	float scroll, scrollTo;
 
 	/* touch, in the bottom screen's units */
@@ -212,6 +219,7 @@ Ui* ui_new(Gfx* g, Settings* set, Library* lib, const char* romDir, const char* 
 	snprintf(ui->romDir, sizeof(ui->romDir), "%s", romDir ? romDir : "");
 	snprintf(ui->version, sizeof(ui->version), "%s", version);
 	ui->pressId = -1;
+	ui->capture = -1;
 	ui->battery = read_battery();
 	ui->batteryAt = SDL_GetTicks();
 	ui_library_changed(ui);
@@ -417,6 +425,7 @@ static const char* const setting_names[SETTINGS_N][LANGS] = {
 	{ "Volume", "Volumen" },
 	{ "Show FPS", "Mostrar FPS" },
 	{ "Language", "Idioma" },
+	{ "Controls", "Controles" },
 };
 static const char* const setting_help[SETTINGS_N][LANGS] = {
 	{ "Original: the SNES picture as it is, with whole, sharp pixels. 4:3: stretched as on a TV, filling the "
@@ -435,7 +444,35 @@ static const char* const setting_help[SETTINGS_N][LANGS] = {
 	{ "Frames per second, in a corner of the game screen.",
 	  "Los fotogramas por segundo, en una esquina de la pantalla del juego." },
 	{ "The language of SNES DS's screens and menus.", "El idioma de las pantallas y los menús de SNES DS." },
+	{ "Which of the console's buttons is each SNES button, and which one opens this menu.",
+	  "Qué botón de la consola es cada botón de la SNES, y cuál abre este menú." },
 };
+
+/* the controls page's rows: the SNES button (its colour on the pad), and
+ * what the top screen says about it */
+static const struct { const char* name; uint32_t color; } control_buttons[BINDS] = {
+	{ "B", 0xF2BE2C }, { "A", 0xE23D3D }, { "Y", 0x3A9E5A }, { "X", 0x3F7BDB }, { "L", 0 }, { "R", 0 },
+	{ "START", 0 }, { "SELECT", 0 }, { "MENU", 0 },
+};
+
+static void control_help(int i, char* title, size_t tn, const char** body) {
+	if (i == BINDS) {
+		snprintf(title, tn, "%s", T("Reset the controls", "Restablecer los controles"));
+		*body = T("Every button back to how it came.", "Todos los botones como venían.");
+	} else if (i == BIND_MENU) {
+		snprintf(title, tn, "%s", T("SNES DS's menu", "El menú de SNES DS"));
+		*body = T("One more button for this menu in a game. L3, R3, the home button and a tap on the bottom screen "
+		          "always open it too, unless a SNES button has them.",
+		          "Un botón más para este menú durante la partida. L3, R3, el botón de inicio y tocar la pantalla de "
+		          "abajo también lo abren, salvo si son de un botón de la SNES.");
+	} else {
+		snprintf(title, tn, T("SNES %s", "%s de la SNES"), control_buttons[i].name);
+		*body = T("A, then the console's button for it (a trigger or a key works too). A button another one had "
+		          "swaps with it. A tap, or 6 seconds, gives up.",
+		          "A, y luego el botón de la consola que quieras para él (vale un gatillo o una tecla). Si otro ya lo "
+		          "tenía, se intercambian. Tocar la pantalla, o 6 segundos, lo deja.");
+	}
+}
 
 static void draw_top_panel(Gfx* g, const char* kicker, const char* title, const char* body) {
 	float w = gfx_w(g), h = gfx_h(g);
@@ -484,6 +521,21 @@ static void draw_top(Ui* ui) {
 		else draw_background(g);
 		int f = ui->focus[PAGE_SETTINGS];
 		draw_top_panel(g, T("SETTINGS", "AJUSTES"), setting_names[f][i18n_lang], setting_help[f][i18n_lang]);
+		break;
+	}
+	case PAGE_CONTROLS: {
+		if (ui->game) draw_game_picture(ui, &ui->frame, 0.6f);
+		else draw_background(g);
+		char title[64];
+		const char* body;
+		control_help(ui->focus[PAGE_CONTROLS], title, sizeof(title), &body);
+		if (ui->capture >= 0) {
+			snprintf(title, sizeof(title), T("Press the button for %s", "Pulsa el botón para %s"),
+			         ui->capture == BIND_MENU ? T("the menu", "el menú") : control_buttons[ui->capture].name);
+			body = T("Any of the console's buttons, a trigger or a key. A tap on the screen, or waiting, gives up.",
+			         "Cualquier botón de la consola, un gatillo o una tecla. Tocar la pantalla, o esperar, lo deja.");
+		}
+		draw_top_panel(g, T("CONTROLS", "CONTROLES"), title, body);
 		break;
 	}
 	}
@@ -893,10 +945,20 @@ static UiAction leave_settings(Ui* ui) {
 	return act(UIA_NONE, 0);
 }
 
+static void open_controls(Ui* ui) {
+	ui->capture = -1;
+	go(ui, PAGE_CONTROLS);
+}
+
 static UiAction nav_settings(Ui* ui, uint32_t nav) {
 	int* f = &ui->focus[PAGE_SETTINGS];
 	if ((nav & NAV_UP) && *f > 0) (*f)--;
 	if ((nav & NAV_DOWN) && *f < SETTINGS_N - 1) (*f)++;
+	if (*f == SET_CONTROLS && (nav & (NAV_OK | NAV_RIGHT))) {
+		open_controls(ui);
+		return act(UIA_NONE, 0);
+	}
+	if (*f == SET_CONTROLS && (nav & NAV_LEFT)) return act(UIA_NONE, 0);
 	if (nav & NAV_LEFT) return change_setting(ui, *f, -1);
 	if (nav & NAV_RIGHT) return change_setting(ui, *f, 1);
 	if (nav & NAV_OK) return change_setting(ui, *f, 0);
@@ -953,6 +1015,9 @@ static UiAction draw_settings(Ui* ui) {
 				*f = i;
 				a = change_setting(ui, i, 1);
 			}
+		} else if (i == SET_CONTROLS) {
+			gfx_icon(g, ICON_RIGHT, cx - 10, my, 16, C_MUTED);
+			if (ht == 2) open_controls(ui);
 		} else if (i == SET_VOLUME) {
 			float bw = 100, bx = cx - 26 - bw - 8;
 			if (hit(ui, 42, bx - 34, y, 34, rh, false) == 2) {
@@ -981,10 +1046,145 @@ static UiAction draw_settings(Ui* ui) {
 				a = change_setting(ui, i, 0);
 			}
 		}
-		if (ht == 2 && i != SET_VOLUME && i != SET_ASPECT && i != SET_LANG) a = change_setting(ui, i, 0);
+		if (ht == 2 && i != SET_VOLUME && i != SET_ASPECT && i != SET_LANG && i != SET_CONTROLS) a = change_setting(ui, i, 0);
 	}
 	float fy = top + *f * rh + 2;
 	draw_focus(ui, MARGIN, fy, rw, rh - 4, 10);
+	static const char* const b[] = { "A", "B" };
+	const char* l[] = { T("Change", "Cambiar"), T("Back", "Atrás") };
+	Color c[] = { C_BTN_A, C_BTN_B };
+	draw_footer(g, b, c, l, 2);
+	return a;
+}
+
+/* --- controls ------------------------------------------------------------ */
+
+int ui_capturing(Ui* ui) {
+	if (ui->capture >= 0 && SDL_GetTicks() - ui->captureAt > CAPTURE_MS) ui->capture = -1;
+	return ui->page == PAGE_CONTROLS ? ui->capture : -1;
+}
+
+static UiAction controls_changed(Ui* ui) {
+	return act(UIA_CONTROLS, 0);
+}
+
+void ui_captured(Ui* ui, const char* bind) {
+	int i = ui->capture;
+	ui->capture = -1;
+	if (i < 0 || !bind) return;
+	char* binds[BINDS];
+	for (int k = 0; k < BINDS; k++) binds[k] = ui->set->binds[k];
+	char now[SETTINGS_BIND_LEN];
+	snprintf(now, sizeof(now), "%s", binds[i][0] ? binds[i] : pad_bind_default(i));
+	/* the one that had it gets this one's: they swap */
+	for (int k = 0; k < BINDS; k++) {
+		if (k == i) continue;
+		const char* other = binds[k][0] ? binds[k] : pad_bind_default(k);
+		if (!strcmp(other, bind)) snprintf(binds[k], SETTINGS_BIND_LEN, "%s", i == BIND_MENU || k == BIND_MENU ? "none" : now);
+	}
+	snprintf(binds[i], SETTINGS_BIND_LEN, "%s", bind);
+	ui->pendingControls = true;
+}
+
+static void start_capture(Ui* ui, int i) {
+	ui->capture = i;
+	ui->captureAt = SDL_GetTicks();
+}
+
+static UiAction reset_controls(Ui* ui) {
+	for (int k = 0; k < BINDS; k++) ui->set->binds[k][0] = 0;
+	ui_toast(ui, T("Controls reset", "Controles restablecidos"));
+	return controls_changed(ui);
+}
+
+static UiAction nav_controls(Ui* ui, uint32_t nav) {
+	int* f = &ui->focus[PAGE_CONTROLS];
+	if (ui->capture >= 0) return act(UIA_NONE, 0);
+	if ((nav & NAV_UP) && *f >= 2) *f -= 2;
+	if ((nav & NAV_DOWN) && *f + 2 < CONTROLS_N) *f += 2;
+	if ((nav & NAV_LEFT) && *f % 2) (*f)--;
+	if ((nav & NAV_RIGHT) && !(*f % 2) && *f + 1 < CONTROLS_N) (*f)++;
+	if (nav & NAV_OK) {
+		if (*f == BINDS) return reset_controls(ui);
+		start_capture(ui, *f);
+	}
+	if (nav & NAV_BACK) go(ui, PAGE_SETTINGS);
+	if (nav & NAV_MENU) {
+		if (ui->game) return act(UIA_RESUME, 0);
+		go(ui, PAGE_SETTINGS);
+	}
+	return act(UIA_NONE, 0);
+}
+
+static UiAction draw_controls(Ui* ui) {
+	Gfx* g = ui->g;
+	float w = gfx_w(g);
+	UiAction a = act(UIA_NONE, 0);
+	draw_background(g);
+	draw_page_header(ui, T("SETTINGS", "AJUSTES"), T("Controls", "Controles"), true);
+	if (back_tapped(ui)) {
+		ui->capture = -1;
+		go(ui, PAGE_SETTINGS);
+	}
+	/* a tap anywhere gives up waiting */
+	if (ui->capture >= 0 && ui->t.pressed) ui->capture = -1;
+	int* f = &ui->focus[PAGE_CONTROLS];
+	int rows = (CONTROLS_N + 1) / 2;
+	float top = HEADER_H + 8, gap = 8, rh = (gfx_h(g) - top - FOOTER_H - 8) / rows;
+	if (rh > 50) rh = 50;
+	float cw = (w - 2 * MARGIN - gap) / 2;
+	float fx = 0, fy = 0;
+	for (int i = 0; i < CONTROLS_N; i++) {
+		float x = MARGIN + (i % 2) * (cw + gap), y = top + (i / 2) * rh;
+		float ch = rh - 6, my = y + ch / 2;
+		int ht = hit(ui, 100 + i, x, y, cw, ch, false);
+		gfx_fill(g, x, y, cw, ch, 10, i == *f ? C_SURFACE : with_alpha(C_SURFACE, ht == 1 ? 0.8f : 0.5f));
+		if (i == *f) {
+			fx = x;
+			fy = y;
+		}
+		if (ht == 2 && ui->capture < 0) {
+			*f = i;
+			if (i == BINDS) a = reset_controls(ui);
+			else start_capture(ui, i);
+		}
+		if (i == BINDS) {
+			gfx_icon(g, ICON_BACK, x + 22, my, 15, C_MUTED);
+			gfx_text_fit(g, FONT_BOLD, 13, x + 40, my - 8, cw - 50, i == *f ? C_TEXT : C_MUTED, ALIGN_LEFT,
+			             T("Reset", "Restablecer"));
+			continue;
+		}
+		/* the SNES button: a coloured circle for the face ones, a pill else */
+		float bx = x + 10;
+		const char* name = i == BIND_MENU ? T("MENU", "MENÚ") : control_buttons[i].name;
+		float bw;
+		if (i <= BIND_X) {
+			bw = 24;
+			gfx_circle(g, bx + 12, my, 12, rgb(control_buttons[i].color));
+			gfx_text(g, FONT_BOLD, 12, bx + 12, my - 7.5f, rgb(0x1A1210), ALIGN_CENTER, name);
+		} else {
+			bw = gfx_text_w(g, FONT_BOLD, 10, name) + 16;
+			gfx_fill(g, bx, my - 11, bw, 22, 11, C_SURFACE2);
+			gfx_text(g, FONT_BOLD, 10, bx + bw / 2, my - 6.5f, C_TEXT, ALIGN_CENTER, name);
+		}
+		float tx = bx + bw + 10, tw = x + cw - 10 - tx;
+		if (ui->capture == i) {
+			float pulse = 0.6f + 0.4f * sinf(ui->frames * 0.15f);
+			int left = (int)((CAPTURE_MS - (SDL_GetTicks() - ui->captureAt)) / 1000) + 1;
+			char t[48];
+			snprintf(t, sizeof(t), T("Press a button… %d", "Pulsa un botón… %d"), left);
+			gfx_text_fit(g, FONT_BOLD, 12, tx, my - 7.5f, tw, with_alpha(C_ORANGE_LIGHT, pulse), ALIGN_LEFT, t);
+		} else {
+			char label[64];
+			pad_bind_label(ui->set->binds[i][0] ? ui->set->binds[i] : pad_bind_default(i), label, sizeof(label));
+			gfx_text_fit(g, FONT_BOLD, 12, tx, my - 7.5f, tw, i == *f ? C_TEXT : C_MUTED, ALIGN_LEFT, label);
+		}
+	}
+	draw_focus(ui, fx, fy, cw, rh - 6, 10);
+	if (ui->pendingControls) {
+		ui->pendingControls = false;
+		a = controls_changed(ui);
+	}
 	static const char* const b[] = { "A", "B" };
 	const char* l[] = { T("Change", "Cambiar"), T("Back", "Atrás") };
 	Color c[] = { C_BTN_A, C_BTN_B };
@@ -1102,6 +1302,7 @@ UiAction ui_frame(Ui* ui, uint32_t nav, const UiTouch* touch, SDL_Rect top, SDL_
 		else if (ui->page == PAGE_LIBRARY) a = nav_library(ui, nav);
 		else if (ui->page == PAGE_PAUSE) a = nav_pause(ui, nav);
 		else if (ui->page == PAGE_SLOTS) a = nav_slots(ui, nav);
+		else if (ui->page == PAGE_CONTROLS) a = nav_controls(ui, nav);
 		else a = nav_settings(ui, nav);
 	}
 	ui->modal = ui->dlg.open;
@@ -1117,6 +1318,7 @@ UiAction ui_frame(Ui* ui, uint32_t nav, const UiTouch* touch, SDL_Rect top, SDL_
 	case PAGE_PAUSE: t = draw_pause(ui); break;
 	case PAGE_SLOTS: t = draw_slots(ui); break;
 	case PAGE_SETTINGS: t = draw_settings(ui); break;
+	case PAGE_CONTROLS: t = draw_controls(ui); break;
 	}
 	if (ui->dlg.open) {
 		UiAction d = draw_dialog(ui);

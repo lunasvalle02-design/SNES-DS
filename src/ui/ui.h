@@ -31,6 +31,7 @@ typedef enum {
 	UIA_CLOSE_GAME, /* back to the game list */
 	UIA_QUIT,
 	UIA_SETTINGS,   /* the settings changed (already in the Settings) */
+	UIA_CONTROLS,   /* the controls changed (Settings.binds) */
 } UiActionKind;
 
 typedef struct {
@@ -51,6 +52,12 @@ void ui_show_pause(Ui* ui, Game* game);
 
 /* one frame of the app's screens: input, then both screens drawn */
 UiAction ui_frame(Ui* ui, uint32_t nav, const UiTouch* touch, SDL_Rect top, SDL_Rect bottom);
+
+/* the controls page waits for an input for one of the bindings (BIND_*),
+ * or -1: main hands it the next one with ui_captured (pad_capture's text;
+ * NULL: given up) */
+int ui_capturing(Ui* ui);
+void ui_captured(Ui* ui, const char* bind);
 
 /* a short message, shown for a couple of seconds */
 void ui_toast(Ui* ui, const char* msg);

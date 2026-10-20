@@ -56,8 +56,8 @@ move to the second screen, and a hidden second emulator core keeps the game's ow
   Everything works with the buttons too.
 - **Picture as you like it.** The SNES' own aspect at whole-number scales, or 4:3 like a TV, filling the
   RG DS Plus' 1024×768 panels without uneven pixels.
-- **Settings that stick.** Aspect, screen swap, HUD split, map, volume, an FPS counter and the language, kept in
-  `snes-ds.cfg`.
+- **Settings that stick.** Aspect, screen swap, HUD split, map, volume, an FPS counter, the language and the
+  controls, kept in `snes-ds.cfg`.
 - **In English and Spanish.** The interface starts in English; the language can be changed from the settings, and
   the change shows at once.
 - **Battery saves** in the same `.srm` format as RetroArch, written a few seconds after they change. Saves, states
@@ -126,7 +126,9 @@ and the speed every 10 seconds. Device-side instructions (in Spanish) ship as
 
 ## Controls
 
-SNES buttons go by position: bottom = B, right = A, top = X, left = Y.
+SNES buttons go by position: bottom = B, right = A, top = X, left = Y. **Settings → Controls** moves any of them
+(and Start, Select, L, R, plus one more button for the menu) to another of the console's buttons, a trigger or a
+key: choose the SNES button, then press the one you want for it. A button another one had swaps with it.
 
 | Action | Handheld | Keyboard (PC) |
 |---|---|---|

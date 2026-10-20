@@ -1,0 +1,20 @@
+# Settings > Controls: Select moved to the left face button (SDL's "x")
+# through a virtual controller; that button's old SNES button (Y)
+# gets Select's in exchange. scripts/check.sh compares the
+# "menu:" and "controls:" lines with controls.expected.
+5 nav x
+10 nav down
+13 nav down
+16 nav down
+19 nav down
+22 nav down
+25 nav down
+28 nav down
+42 nav ok
+46 nav down
+49 nav down
+52 nav down
+55 nav right
+58 nav ok
+64 button x
+80 quit

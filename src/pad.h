@@ -51,6 +51,26 @@ enum {
 	NAV_QUIT = 1 << 13, /* L + Start + Select, or the window closed */
 };
 
+/* what the player can move to another input (Settings > Controls), in this
+ * order: the SNES buttons the controller gives (the d-pad and the left
+ * stick stay the directions), then the menu, on top of the ones that
+ * always open it */
+enum { BIND_B, BIND_A, BIND_Y, BIND_X, BIND_L, BIND_R, BIND_START, BIND_SELECT, BIND_MENU, BINDS };
+
+typedef enum {
+	BIND_NONE,
+	BIND_BUTTON, /* a controller button, by SDL's name: "button:back" */
+	BIND_AXIS,   /* an axis pushed one way: "axis:lefttrigger+" */
+	BIND_JOY,    /* a raw button the controller's mapping leaves out: "joy:8" */
+	BIND_KEY,    /* a key, by scancode: "key:40" */
+} BindKind;
+
+typedef struct {
+	BindKind kind;
+	int code; /* the button, axis, raw button or scancode */
+	int dir;  /* an axis: +1 or -1 */
+} Bind;
+
 typedef struct {
 	uint16_t keys;   /* SNES buttons held on the keyboard */
 	uint16_t keysSwallowed; /* of those, the ones held since pad_swallow */
@@ -67,6 +87,7 @@ typedef struct {
 	int menuJoyButton;  /* or a raw joystick button (-1: none) */
 	int extraButtons;   /* buttons held on other input devices (pad_extra_button) */
 	bool menuTapped;    /* a menu button went down since the last frame */
+	Bind bind[BINDS];   /* BIND_* */
 	/* the app's screens */
 	uint32_t navKeys;   /* keyboard presses since the last pad_nav */
 	uint16_t navPrev;
@@ -77,6 +98,17 @@ void pad_init(Pad* p);
 /* "guide", "back", "misc1"... (SDL's names) or "joy:N": one more button
  * for the menu, on top of the ones it already takes */
 bool pad_set_menu_button(Pad* p, const char* name);
+/* BIND_* i to an input, as text (pad_capture's, or the settings file's):
+ * NULL or "": its default; "none": nothing. False (and the default kept)
+ * when the text isn't one */
+bool pad_set_bind(Pad* p, int i, const char* text);
+const char* pad_bind_default(int i);
+/* an input event as a binding's text, for the controls page: a controller
+ * button, a trigger or the right stick pushed, a raw button outside the
+ * mapping, a key. False for anything else */
+bool pad_capture(SDL_GameController* gc, const SDL_Event* e, char* out, size_t n);
+/* a binding's text in words, for the screen ("" / NULL: the default's) */
+void pad_bind_label(const char* text, char* out, size_t n);
 /* a button of another input device (not the controller) went down / up:
  * it counts as the menu button (handhelds may put theirs on a device of
  * its own) */

@@ -1,6 +1,7 @@
 #include "pad.h"
 
 #include "core.h"
+#include "i18n.h"
 
 #define SELECT_HOLD 30 /* frames held alone before Select reaches the game */
 #define SELECT_PULSE 6 /* frames of Select given to the game on a short press */
@@ -11,10 +12,172 @@
 #include <stdlib.h>
 #include <string.h>
 
+static uint64_t unmapped_buttons(SDL_GameController* gc);
+
+/* --- bindings ---------------------------------------------------------------- */
+
+/* the SNES buttons BIND_B... stand for */
+static const uint16_t bind_bits[BIND_MENU] = { PAD_B, PAD_A, PAD_Y, PAD_X, PAD_L, PAD_R, PAD_START, PAD_SELECT };
+
+/* by position, as SDL names them: its "a" is the bottom face button (the
+ * SNES' B), "b" the right one (A), "x" the left one (Y), "y" the top one (X) */
+static const char* const bind_defaults[BINDS] = {
+	"button:a", "button:b", "button:x", "button:y", "button:leftshoulder", "button:rightshoulder",
+	"button:start", "button:back", "none",
+};
+
+const char* pad_bind_default(int i) { return i >= 0 && i < BINDS ? bind_defaults[i] : "none"; }
+
+static bool parse_bind(const char* s, Bind* b) {
+	*b = (Bind) { BIND_NONE, 0, 0 };
+	if (!strcmp(s, "none")) return true;
+	if (!strncmp(s, "button:", 7)) {
+		SDL_GameControllerButton c = SDL_GameControllerGetButtonFromString(s + 7);
+		if (c == SDL_CONTROLLER_BUTTON_INVALID) return false;
+		*b = (Bind) { BIND_BUTTON, c, 0 };
+		return true;
+	}
+	if (!strncmp(s, "axis:", 5)) {
+		char name[32];
+		size_t n = strlen(s + 5);
+		if (n < 2 || n >= sizeof(name)) return false;
+		char sign = s[5 + n - 1];
+		if (sign != '+' && sign != '-') return false;
+		memcpy(name, s + 5, n - 1);
+		name[n - 1] = 0;
+		SDL_GameControllerAxis a = SDL_GameControllerGetAxisFromString(name);
+		if (a == SDL_CONTROLLER_AXIS_INVALID) return false;
+		*b = (Bind) { BIND_AXIS, a, sign == '+' ? 1 : -1 };
+		return true;
+	}
+	if (!strncmp(s, "joy:", 4) && s[4] >= '0' && s[4] <= '9') {
+		*b = (Bind) { BIND_JOY, atoi(s + 4), 0 };
+		return b->code < 64;
+	}
+	if (!strncmp(s, "key:", 4) && s[4] >= '0' && s[4] <= '9') {
+		*b = (Bind) { BIND_KEY, atoi(s + 4), 0 };
+		return b->code > 0 && b->code < SDL_NUM_SCANCODES;
+	}
+	return false;
+}
+
+bool pad_set_bind(Pad* p, int i, const char* text) {
+	if (i < 0 || i >= BINDS) return false;
+	if (!text || !text[0]) text = bind_defaults[i];
+	Bind b;
+	if (!parse_bind(text, &b)) {
+		parse_bind(bind_defaults[i], &p->bind[i]);
+		return false;
+	}
+	p->bind[i] = b;
+	return true;
+}
+
+static bool bind_held(const Bind* b, SDL_GameController* gc) {
+	switch (b->kind) {
+	case BIND_BUTTON: return gc && SDL_GameControllerGetButton(gc, (SDL_GameControllerButton)b->code);
+	case BIND_AXIS: return gc && SDL_GameControllerGetAxis(gc, (SDL_GameControllerAxis)b->code) * b->dir > 16000;
+	case BIND_JOY: {
+		SDL_Joystick* j = gc ? SDL_GameControllerGetJoystick(gc) : NULL;
+		return j && b->code < SDL_JoystickNumButtons(j) && SDL_JoystickGetButton(j, b->code);
+	}
+	case BIND_KEY: {
+		int n;
+		const Uint8* k = SDL_GetKeyboardState(&n);
+		return b->code < n && k[b->code];
+	}
+	case BIND_NONE: break;
+	}
+	return false;
+}
+
+/* a controller button or raw button one of the SNES buttons has: it's not
+ * a menu button then */
+static bool bound(const Pad* p, BindKind kind, int code) {
+	for (int i = 0; i < BIND_MENU; i++) {
+		if (p->bind[i].kind == kind && p->bind[i].code == code) return true;
+	}
+	return false;
+}
+
+bool pad_capture(SDL_GameController* gc, const SDL_Event* e, char* out, size_t n) {
+	switch (e->type) {
+	case SDL_CONTROLLERBUTTONDOWN: {
+		const char* name = SDL_GameControllerGetStringForButton((SDL_GameControllerButton)e->cbutton.button);
+		if (!name) return false;
+		snprintf(out, n, "button:%s", name);
+		return true;
+	}
+	case SDL_CONTROLLERAXISMOTION: {
+		/* the left stick is the d-pad */
+		if (e->caxis.axis == SDL_CONTROLLER_AXIS_LEFTX || e->caxis.axis == SDL_CONTROLLER_AXIS_LEFTY) return false;
+		if (abs(e->caxis.value) < 24000) return false;
+		const char* name = SDL_GameControllerGetStringForAxis((SDL_GameControllerAxis)e->caxis.axis);
+		if (!name) return false;
+		snprintf(out, n, "axis:%s%c", name, e->caxis.value > 0 ? '+' : '-');
+		return true;
+	}
+	case SDL_JOYBUTTONDOWN: {
+		/* the mapped ones come as controller buttons too */
+		if (!gc || e->jbutton.which != SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(gc))) return false;
+		if (e->jbutton.button >= 64 || !(unmapped_buttons(gc) >> e->jbutton.button & 1)) return false;
+		snprintf(out, n, "joy:%d", e->jbutton.button);
+		return true;
+	}
+	case SDL_KEYDOWN:
+		if (e->key.repeat || e->key.keysym.scancode == SDL_SCANCODE_UNKNOWN) return false;
+		snprintf(out, n, "key:%d", e->key.keysym.scancode);
+		return true;
+	default: return false;
+	}
+}
+
+void pad_bind_label(const char* text, char* out, size_t n) {
+	static const struct { const char* name; const char* en; const char* es; } names[] = {
+		{ "a", "Bottom face button", "Botón de abajo" }, { "b", "Right face button", "Botón de la derecha" },
+		{ "x", "Left face button", "Botón de la izquierda" }, { "y", "Top face button", "Botón de arriba" },
+		{ "back", "Select", "Select" }, { "start", "Start", "Start" }, { "guide", "Home", "Inicio" },
+		{ "leftshoulder", "L1", "L1" }, { "rightshoulder", "R1", "R1" }, { "leftstick", "L3", "L3" },
+		{ "rightstick", "R3", "R3" }, { "dpup", "D-pad up", "Cruceta arriba" },
+		{ "dpdown", "D-pad down", "Cruceta abajo" }, { "dpleft", "D-pad left", "Cruceta izquierda" },
+		{ "dpright", "D-pad right", "Cruceta derecha" }, { "lefttrigger+", "L2", "L2" },
+		{ "righttrigger+", "R2", "R2" }, { "rightx+", "Right stick right", "Stick derecho a la derecha" },
+		{ "rightx-", "Right stick left", "Stick derecho a la izquierda" },
+		{ "righty+", "Right stick down", "Stick derecho abajo" }, { "righty-", "Right stick up", "Stick derecho arriba" },
+	};
+	if (!text || !text[0]) text = "";
+	Bind b;
+	if (!text[0] || !parse_bind(text, &b)) {
+		snprintf(out, n, "%s", T("Default", "Por defecto"));
+		return;
+	}
+	const char* name = strchr(text, ':') ? strchr(text, ':') + 1 : text;
+	switch (b.kind) {
+	case BIND_NONE: snprintf(out, n, "%s", T("None", "Ninguno")); return;
+	case BIND_BUTTON:
+	case BIND_AXIS:
+		for (size_t i = 0; i < sizeof(names) / sizeof(names[0]); i++) {
+			if (!strcmp(name, names[i].name)) {
+				snprintf(out, n, "%s", T(names[i].en, names[i].es));
+				return;
+			}
+		}
+		snprintf(out, n, "%s", name);
+		return;
+	case BIND_JOY: snprintf(out, n, T("Button %d", "Botón %d"), b.code); return;
+	case BIND_KEY: {
+		const char* k = SDL_GetScancodeName((SDL_Scancode)b.code);
+		snprintf(out, n, T("Key %s", "Tecla %s"), k && k[0] ? k : "?");
+		return;
+	}
+	}
+}
+
 void pad_init(Pad* p) {
 	memset(p, 0, sizeof(*p));
 	p->menuButton = SDL_CONTROLLER_BUTTON_INVALID;
 	p->menuJoyButton = -1;
+	for (int i = 0; i < BINDS; i++) pad_set_bind(p, i, NULL);
 }
 
 /* the controller's buttons the SNES has no use for: any of them opens the
@@ -62,9 +225,10 @@ bool pad_set_menu_button(Pad* p, const char* name) {
 static bool menu_held(Pad* p, SDL_GameController* gc) {
 	if (p->extraButtons) return true;
 	if (!gc) return false;
+	if (bind_held(&p->bind[BIND_MENU], gc)) return true;
 	if (p->menuButton != SDL_CONTROLLER_BUTTON_INVALID && SDL_GameControllerGetButton(gc, p->menuButton)) return true;
 	for (size_t i = 0; i < sizeof(spare) / sizeof(spare[0]); i++) {
-		if (SDL_GameControllerGetButton(gc, spare[i])) return true;
+		if (!bound(p, BIND_BUTTON, spare[i]) && SDL_GameControllerGetButton(gc, spare[i])) return true;
 	}
 	SDL_Joystick* j = SDL_GameControllerGetJoystick(gc);
 	if (!j) return false;
@@ -72,7 +236,7 @@ static bool menu_held(Pad* p, SDL_GameController* gc) {
 		return true;
 	uint64_t raw = unmapped_buttons(gc);
 	for (int b = 0; raw >> b; b++) {
-		if ((raw >> b & 1) && SDL_JoystickGetButton(j, b)) return true;
+		if ((raw >> b & 1) && !bound(p, BIND_JOY, b) && SDL_JoystickGetButton(j, b)) return true;
 	}
 	return false;
 }
@@ -89,11 +253,16 @@ void pad_extra_button(Pad* p, bool down) {
 void pad_button_event(Pad* p, SDL_GameController* gc, const SDL_Event* e) {
 	if (!gc) return;
 	bool menu = false;
+	const Bind* m = &p->bind[BIND_MENU];
 	if (e->type == SDL_CONTROLLERBUTTONDOWN) {
-		for (size_t i = 0; i < sizeof(spare) / sizeof(spare[0]); i++) menu |= e->cbutton.button == spare[i];
-		menu |= p->menuButton != SDL_CONTROLLER_BUTTON_INVALID && e->cbutton.button == p->menuButton;
+		int b = e->cbutton.button;
+		for (size_t i = 0; i < sizeof(spare) / sizeof(spare[0]); i++) menu |= b == (int)spare[i] && !bound(p, BIND_BUTTON, b);
+		menu |= p->menuButton != SDL_CONTROLLER_BUTTON_INVALID && b == p->menuButton;
+		menu |= m->kind == BIND_BUTTON && m->code == b;
 	} else if (e->type == SDL_JOYBUTTONDOWN && e->jbutton.button < 64) {
-		menu = (unmapped_buttons(gc) >> e->jbutton.button & 1) || e->jbutton.button == p->menuJoyButton;
+		int b = e->jbutton.button;
+		menu = ((unmapped_buttons(gc) >> b & 1) && !bound(p, BIND_JOY, b)) || b == p->menuJoyButton;
+		menu |= m->kind == BIND_JOY && m->code == b;
 	}
 	if (menu) p->menuTapped = true;
 }
@@ -162,20 +331,21 @@ void pad_key(Pad* p, const SDL_KeyboardEvent* e) {
 	}
 }
 
-/* the controller as SNES buttons, by position: bottom B, right A, top X,
- * left Y (SDL's A/B/X/Y are positions too) */
-static uint16_t read_controller(SDL_GameController* gc) {
-	static const struct { SDL_GameControllerButton b; uint16_t bit; } map[] = {
-		{ SDL_CONTROLLER_BUTTON_A, PAD_B }, { SDL_CONTROLLER_BUTTON_B, PAD_A },
-		{ SDL_CONTROLLER_BUTTON_X, PAD_Y }, { SDL_CONTROLLER_BUTTON_Y, PAD_X },
-		{ SDL_CONTROLLER_BUTTON_LEFTSHOULDER, PAD_L }, { SDL_CONTROLLER_BUTTON_RIGHTSHOULDER, PAD_R },
-		{ SDL_CONTROLLER_BUTTON_START, PAD_START }, { SDL_CONTROLLER_BUTTON_BACK, PAD_SELECT },
+/* the controller as SNES buttons: by the bindings (by default by position:
+ * bottom B, right A, top X, left Y), the d-pad and the left stick the
+ * directions */
+static uint16_t read_controller(Pad* p, SDL_GameController* gc) {
+	static const struct { SDL_GameControllerButton b; uint16_t bit; } dirs[] = {
 		{ SDL_CONTROLLER_BUTTON_DPAD_UP, PAD_UP }, { SDL_CONTROLLER_BUTTON_DPAD_DOWN, PAD_DOWN },
 		{ SDL_CONTROLLER_BUTTON_DPAD_LEFT, PAD_LEFT }, { SDL_CONTROLLER_BUTTON_DPAD_RIGHT, PAD_RIGHT },
 	};
 	uint16_t pad = 0;
-	for (size_t i = 0; i < sizeof(map) / sizeof(map[0]); i++) {
-		if (SDL_GameControllerGetButton(gc, map[i].b)) pad |= map[i].bit;
+	for (int i = 0; i < BIND_MENU; i++) {
+		if (bind_held(&p->bind[i], gc)) pad |= bind_bits[i];
+	}
+	if (!gc) return pad;
+	for (size_t i = 0; i < sizeof(dirs) / sizeof(dirs[0]); i++) {
+		if (SDL_GameControllerGetButton(gc, dirs[i].b)) pad |= dirs[i].bit;
 	}
 	int lx = SDL_GameControllerGetAxis(gc, SDL_CONTROLLER_AXIS_LEFTX);
 	int ly = SDL_GameControllerGetAxis(gc, SDL_CONTROLLER_AXIS_LEFTY);
@@ -191,7 +361,7 @@ uint16_t pad_frame(Pad* p, SDL_GameController* gc) {
 		{ PAD_START, ACT_MENU }, { PAD_R, ACT_SAVE_STATE }, { PAD_L, ACT_LOAD_STATE }, { PAD_X, ACT_SWAP },
 		{ PAD_Y, ACT_ASPECT }, { PAD_A, ACT_SPLIT }, { PAD_RIGHT, ACT_FAST },
 	};
-	uint16_t raw = gc ? read_controller(gc) : 0;
+	uint16_t raw = read_controller(p, gc);
 	bool guide = menu_held(p, gc);
 	/* the menu button: let go without being part of a shortcut, the menu */
 	if (guide && !p->guidePrev) p->guideUsed = false;
@@ -236,10 +406,16 @@ uint16_t pad_frame(Pad* p, SDL_GameController* gc) {
 	if (select && !(p->consumed & PAD_SELECT)) {
 		p->selectFrames++;
 	} else if (!select && (p->prev & PAD_SELECT)) {
-		if (!(p->consumed & PAD_SELECT) && p->selectFrames <= SELECT_HOLD) p->selectPulse = SELECT_PULSE;
+		if (!(p->consumed & PAD_SELECT) && p->selectFrames <= SELECT_HOLD) {
+			p->selectPulse = SELECT_PULSE;
+			printf("input: Select to the game (%d frames)\n", SELECT_PULSE);
+		} else {
+			printf("input: Select kept from the game (%s)\n", p->consumed & PAD_SELECT ? "a shortcut" : "held through");
+		}
 		p->selectFrames = 0;
 	}
 	bool selectThrough = select && !(p->consumed & PAD_SELECT) && p->selectFrames > SELECT_HOLD;
+	if (selectThrough && p->selectFrames == SELECT_HOLD + 1) printf("input: Select held: to the game\n");
 	if (!select) p->selectFrames = 0;
 
 	p->consumed &= raw; /* let go: no longer a shortcut */
@@ -261,7 +437,7 @@ uint32_t pad_nav(Pad* p, SDL_GameController* gc) {
 		{ PAD_R, NAV_R }, { PAD_START, NAV_START }, { PAD_SELECT, NAV_SELECT },
 	};
 	const uint16_t dirs = PAD_UP | PAD_DOWN | PAD_LEFT | PAD_RIGHT;
-	uint16_t raw = gc ? read_controller(gc) : 0;
+	uint16_t raw = read_controller(p, gc);
 	bool guide = menu_held(p, gc);
 	uint16_t pressed = raw & ~p->navPrev;
 	/* held directions repeat */
@@ -284,7 +460,7 @@ uint32_t pad_nav(Pad* p, SDL_GameController* gc) {
 }
 
 void pad_swallow(Pad* p, SDL_GameController* gc) {
-	uint16_t raw = gc ? read_controller(gc) : 0;
+	uint16_t raw = read_controller(p, gc);
 	p->consumed = raw;
 	p->keysSwallowed = p->keys;
 	p->prev = raw;

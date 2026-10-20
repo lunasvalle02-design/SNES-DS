@@ -57,7 +57,7 @@ pasan a la segunda pantalla, y un segundo núcleo oculto mantiene allí abierto 
 - **La imagen a tu gusto.** La relación de aspecto original de la SNES a escala entera, o 4:3 como en un televisor,
   llenando los paneles de 1024×768 de la RG DS Plus sin píxeles desiguales.
 - **Ajustes que se recuerdan.** Formato, intercambio de pantallas, separación del HUD, mapa, volumen, contador de
-  FPS e idioma, guardados en `snes-ds.cfg`.
+  FPS, idioma y controles, guardados en `snes-ds.cfg`.
 - **En inglés y en español.** La interfaz arranca en inglés; el idioma se cambia en los ajustes, y el cambio se ve al
   momento.
 - **Partidas** (`.srm`) en el mismo formato que RetroArch, escritas unos segundos después de cambiar. Las partidas,
@@ -127,7 +127,9 @@ entrada y la velocidad cada 10 segundos. Las instrucciones para la consola van e
 
 ## Controles
 
-Los botones del SNES van por posición: abajo = B, derecha = A, arriba = X, izquierda = Y.
+Los botones del SNES van por posición: abajo = B, derecha = A, arriba = X, izquierda = Y. **Ajustes → Controles**
+lleva cualquiera de ellos (y Start, Select, L, R, más un botón extra para el menú) a otro botón de la consola, un
+gatillo o una tecla: elige el botón de la SNES y pulsa el que quieras para él. Si otro ya lo tenía, se intercambian.
 
 | Acción | Consola | Teclado (PC) |
 |---|---|---|

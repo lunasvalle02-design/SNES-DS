@@ -8,7 +8,7 @@
 # earlier ones leave. A script NAME.txt with a NAME.expected beside it must
 # print exactly those "hash" lines; any other must exit 0. A game whose ROM
 # isn't in ROMDIR is skipped, and said so. Then the app itself runs without a
-# window through tools/app_tests/*.txt (the menu opened and closed with a
+# window through tools/app_tests/*.txt (the menu opened and closed, the controls moved, with a
 # virtual controller), when it was built.
 #
 # The harness is build/harness (or build/harness.exe); HARNESS=... to use
@@ -68,7 +68,7 @@ for id in $IDS; do
 done
 
 # the app itself, without a window: tools/app_tests/NAME.txt drives it (the
-# first game in ROMDIR's list) and its "menu:" lines must be NAME.expected
+# first game in ROMDIR's list) and its "menu:" and "controls:" lines must be NAME.expected
 APP=""
 for b in build/snes-ds build/snes-ds.exe; do
 	[ -x "$b" ] && APP="$b" && break
@@ -84,7 +84,7 @@ else
 		SDL_VIDEODRIVER=offscreen SDL_AUDIODRIVER=dummy "$APP" --no-audio --windowed --config=out/check/app/test.cfg \
 			--rom-dir="$ROMS" --save-dir=out/check/app --state-dir=out/check/app --script="$script" > "$log" 2>&1
 		ran=$((ran + 1))
-		if grep '^menu:' "$log" | diff "tools/app_tests/$name.expected" - > "out/check/app/$name.diff"; then
+		if grep -E '^(menu|controls):' "$log" | diff "tools/app_tests/$name.expected" - > "out/check/app/$name.diff"; then
 			echo "ok    app/$name.txt"
 		else
 			echo "FAIL  app/$name.txt (log: $log, diff: out/check/app/$name.diff)"

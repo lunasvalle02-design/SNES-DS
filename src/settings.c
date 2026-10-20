@@ -7,6 +7,9 @@
 #include "fileutil.h"
 #include "i18n.h"
 
+/* the bindings' keys in the file: bind_b=button:a... */
+static const char* const bind_keys[SETTINGS_BINDS] = { "b", "a", "y", "x", "l", "r", "start", "select", "menu" };
+
 void settings_defaults(Settings* s) {
 	*s = (Settings) { .wide = false, .swapped = false, .split = true, .map = true, .showFps = false, .volume = 10,
 		              .lang = LANG_EN };
@@ -28,6 +31,13 @@ void settings_load(Settings* s, const char* path) {
 		else if (!strcmp(line, "show_fps")) s->showFps = v;
 		else if (!strcmp(line, "volume")) s->volume = v < 0 ? 0 : v > 10 ? 10 : v;
 		else if (!strcmp(line, "language")) s->lang = lang_from_code(eq + 1);
+		else if (!strncmp(line, "bind_", 5)) {
+			char* v = eq + 1;
+			v[strcspn(v, "\r\n")] = 0;
+			for (int i = 0; i < SETTINGS_BINDS; i++) {
+				if (!strcmp(line + 5, bind_keys[i])) snprintf(s->binds[i], sizeof(s->binds[i]), "%s", v);
+			}
+		}
 	}
 	fclose(f);
 }
@@ -39,5 +49,8 @@ bool settings_save(const Settings* s, const char* path) {
 	ok = fprintf(f, "aspect=%s\nswapped=%d\nsplit=%d\nmap=%d\nshow_fps=%d\nvolume=%d\nlanguage=%s\n",
 	             s->wide ? "4:3" : "native", s->swapped, s->split, s->map, s->showFps, s->volume,
 	             lang_code(s->lang)) > 0 && ok;
+	for (int i = 0; i < SETTINGS_BINDS; i++) {
+		if (s->binds[i][0]) ok = fprintf(f, "bind_%s=%s\n", bind_keys[i], s->binds[i]) > 0 && ok;
+	}
 	return atomic_close(f, path, ok);
 }
