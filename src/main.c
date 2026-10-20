@@ -35,6 +35,9 @@
  *                                ok back up down left right x y l r start
  *                                select menu), key NAME (an SDL key name,
  *                                pressed as on the keyboard: "Escape"),
+ *                                button NAME (an SDL controller button,
+ *                                "guide", "leftstick", held 3 frames on a
+ *                                virtual controller),
  *                                tap X Y (0-1 across the bottom screen),
  *                                shot FILE, shotbottom FILE (the bottom
  *                                screen alone), quit
@@ -264,12 +267,16 @@ static bool start_game(App* a, const char* path) {
 }
 
 static void to_game(App* a) {
+	printf("menu: back to the game\n");
+	fflush(stdout);
 	a->mode = MODE_GAME;
 	pad_swallow(&a->pad, a->gc);
 	if (a->audio) SDL_ClearQueuedAudio(a->audio);
 }
 
 static void to_menu(App* a) {
+	printf("menu: open\n");
+	fflush(stdout);
 	a->mode = MODE_UI;
 	ui_show_pause(a->ui, a->game);
 	pad_swallow(&a->pad, a->gc);
@@ -451,6 +458,10 @@ int main(int argc, char** argv) {
 	double fps = 0;
 
 	SDL_Keycode keyUp = 0; /* the script's key, let go the frame after */
+	/* the script's controller: a virtual one, made the controller on first use */
+	SDL_Joystick* vjoy = NULL;
+	int vbutton = -1;
+	long vbuttonUp = 0;
 	while (!quit) {
 		uint64_t iterStart = SDL_GetPerformanceCounter();
 		touch.pressed = touch.released = false;
@@ -545,6 +556,10 @@ int main(int argc, char** argv) {
 
 		/* the test script */
 		uint32_t scriptNav = 0;
+		if (vjoy && vbutton >= 0 && tick >= vbuttonUp) {
+			SDL_JoystickSetVirtualButton(vjoy, vbutton, SDL_RELEASED);
+			vbutton = -1;
+		}
 		const char* shotNow = NULL;
 		bool shotBottom = false;
 		for (int i = 0; i < scriptLines; i++) {
@@ -557,7 +572,36 @@ int main(int argc, char** argv) {
 				shotNow = l->arg;
 				shotBottom = true;
 			}
-			else if (!strcmp(l->cmd, "key")) {
+			else if (!strcmp(l->cmd, "button")) {
+				/* a controller button, held for 3 frames, on a virtual controller
+				 * that takes the real one's place: the same path as a handheld's */
+				if (!vjoy) {
+					SDL_VirtualJoystickDesc d;
+					SDL_zero(d);
+					d.version = SDL_VIRTUAL_JOYSTICK_DESC_VERSION;
+					d.type = SDL_JOYSTICK_TYPE_GAMECONTROLLER;
+					d.naxes = SDL_CONTROLLER_AXIS_MAX;
+					d.nbuttons = SDL_CONTROLLER_BUTTON_MAX;
+					d.name = "script controller";
+					int idx = SDL_JoystickAttachVirtualEx(&d);
+					SDL_GameController* gc = idx >= 0 ? SDL_GameControllerOpen(idx) : NULL;
+					if (gc) {
+						a->gc = gc;
+						vjoy = SDL_GameControllerGetJoystick(gc);
+						pad_swallow(&a->pad, a->gc);
+					} else {
+						fprintf(stderr, "script: no virtual controller: %s\n", SDL_GetError());
+					}
+				}
+				SDL_GameControllerButton b = SDL_GameControllerGetButtonFromString(l->arg);
+				if (vjoy && b != SDL_CONTROLLER_BUTTON_INVALID) {
+					SDL_JoystickSetVirtualButton(vjoy, b, SDL_PRESSED);
+					vbutton = b;
+					vbuttonUp = tick + 3;
+				} else {
+					fprintf(stderr, "script: button %s not pressed\n", l->arg);
+				}
+			} else if (!strcmp(l->cmd, "key")) {
 				/* a key press as the keyboard makes it (handled next frame) */
 				SDL_Event ev;
 				SDL_zero(ev);
@@ -642,7 +686,9 @@ int main(int argc, char** argv) {
 		} else {
 			uint16_t buttons = pad_frame(&a->pad, a->gc);
 			uint32_t act = a->pad.actions;
-			a->pad.actions = 0;
+			/* the menu is opened at the top of the next frame, with the taps
+			 * and Esc: kept, not dropped with the rest */
+			a->pad.actions = act & ACT_MENU;
 			if (act & ACT_QUIT) quit = true;
 			if (act & (ACT_SWAP | ACT_ASPECT | ACT_SPLIT)) {
 				if (act & ACT_SWAP) {

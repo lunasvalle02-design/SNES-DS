@@ -25,12 +25,11 @@ están los ajustes y el botón de salir.
 
 El menú (en partida)
 --------------------
-Tocar la pantalla de abajo durante la partida pausa el juego y abre el
-menú en ella: continuar, guardar y cargar estado (4 ranuras, con su
-captura), ajustes, salir del juego (a la lista) o salir de SNES DS.
-También lo abren el botón de menú de la consola (cualquier botón que el
-SNES no usa: el de inicio/RG, L3, R3...) y Select + Start. B o el botón de
-menú vuelven al juego.
+Pulsar el stick izquierdo (L3) durante la partida pausa el juego y abre
+el menú en la pantalla de abajo: continuar, guardar y cargar estado (4
+ranuras, con su captura), ajustes, salir del juego (a la lista) o salir de
+SNES DS. También lo abren tocar la pantalla de abajo, el botón de inicio
+(guide), R3 y Select + Start. B o L3 vuelven al juego.
 
 Si el botón de menú no hace nada, snes-ds.log apunta los dispositivos de
 entrada y las primeras pulsaciones ("input: ..."): pásamelo y lo ajusto (o

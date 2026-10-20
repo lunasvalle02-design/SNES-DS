@@ -231,6 +231,6 @@ From the [roadmap](ROADMAP.md), phase 6. Branch names follow the rules above.
 | [`src/screen2.c`](src/screen2.c), [`src/mapcap.c`](src/mapcap.c) | How profiles are used: the second screen, the map capture |
 | [`src/core.h`](src/core.h) | Everything the rest of the code may ask of the emulator |
 | [`tools/harness.c`](tools/harness.c) | The harness and its commands |
-| [`scripts/check.sh`](scripts/check.sh) | The tests of every game |
+| [`scripts/check.sh`](scripts/check.sh) | The tests of every game, and of the app (`tools/app_tests/`) |
 | [`games/zelda_alttp/`](games/zelda_alttp) | A complete example: profile, README, tests |
 | [`docs/game-template/`](docs/game-template) | The starting point for a new game |

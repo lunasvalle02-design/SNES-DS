@@ -128,7 +128,7 @@ SNES buttons go by position: bottom = B, right = A, top = X, left = Y.
 
 | Action | Handheld | Keyboard (PC) |
 |---|---|---|
-| Pause menu | Tap the bottom screen · the menu button (any button the SNES doesn't use: home/RG, L3, R3…) · Select + Start | Esc · a click on the bottom screen |
+| Pause menu | **L3** (click the left stick) · tap the bottom screen · the home button · Select + Start | Esc · a click on the bottom screen |
 | Quit | L1 + Start + Select | — |
 | Save / load state (slot 1) | Select + R / Select + L (on release) | F5 / F7 |
 | Swap screens | Select + X | F2 |

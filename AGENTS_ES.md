@@ -236,6 +236,6 @@ De la fase 6 de la [hoja de ruta](ROADMAP_ES.md). Los nombres de rama siguen las
 | [`src/screen2.c`](src/screen2.c), [`src/mapcap.c`](src/mapcap.c) | Cómo se usan los perfiles: la segunda pantalla, la captura del mapa |
 | [`src/core.h`](src/core.h) | Todo lo que el resto del código puede pedirle al emulador |
 | [`tools/harness.c`](tools/harness.c) | El harness y sus comandos |
-| [`scripts/check.sh`](scripts/check.sh) | Los tests de todos los juegos |
+| [`scripts/check.sh`](scripts/check.sh) | Los tests de todos los juegos, y de la app (`tools/app_tests/`) |
 | [`games/zelda_alttp/`](games/zelda_alttp) | Un ejemplo completo: perfil, README, tests |
 | [`docs/game-template/`](docs/game-template) | El punto de partida de un juego nuevo |

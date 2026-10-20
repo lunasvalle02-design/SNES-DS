@@ -34,7 +34,7 @@ Legend: ✅ done · 🔶 in progress · ⬜ to do
 
 | Version | Goal | Status |
 |---|---|---|
-| 0.4 | Checked on the console: speed, input, touch; saves that a power cut can't corrupt | 🔶 Only the menu button is left to confirm |
+| 0.4 | Checked on the console: speed, input, touch; saves that a power cut can't corrupt | 🔶 The menu button fixed; to confirm on the console |
 | 0.5 | A second and third game, on `game/…` branches, with whatever engine hooks they need; the profile format settles | ⬜ |
 | 0.6 (release candidate) | Sleep and resume, long sessions, CI on GitHub Actions, `CHANGELOG.md`, GitHub releases, the device instructions in English | ⬜ |
 | 1.0.0 | The release candidate used on the console for some days without problems | ⬜ |
@@ -164,8 +164,10 @@ in.
   (enhancement chips, Mode 7 throughout) will be measured as they come.
 - ✅ Touch on the device: one Goodix panel, tied by sway to the whole layout; since SNES DS's window spans both
   panels, taps land where they should (the bottom panel is the right half).
-- ⬜ Confirm which button arrives as the menu button. Every button the SNES doesn't use opens the menu (on the
-  RG DS Plus mapping: guide = button 10, L3 = 11, R3 = 12), and the log records each press.
+- 🔶 The menu button. The console's log shows guide (button 10) and L3 (11) reaching the app, but the menu didn't
+  open: the main loop dropped the controller's menu action (only Esc and taps got through). Fixed in 0.4, with a test
+  that drives the app through a virtual controller (`tools/app_tests/menu.txt`, run by `scripts/check.sh`). L3 is
+  the menu button on the RG DS Plus (its "R" button never reaches apps: ROCKNIX keeps it). To confirm on the console.
 - ✅ Battery saves, save states, their pictures, the settings and the game list's cache are written to a temporary
   file, flushed to the disk and renamed over the old one ([`src/fileutil.c`](src/fileutil.c)): a power cut leaves the
   old file or the new one.

@@ -35,7 +35,7 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente
 
 | Versión | Objetivo | Estado |
 |---|---|---|
-| 0.4 | Comprobada en la consola: velocidad, entrada, táctil; partidas que un apagado no puede corromper | 🔶 Solo falta confirmar el botón de menú |
+| 0.4 | Comprobada en la consola: velocidad, entrada, táctil; partidas que un apagado no puede corromper | 🔶 Botón de menú corregido; falta confirmarlo en la consola |
 | 0.5 | Un segundo y un tercer juego, en ramas `game/…`, con los hooks del motor que necesiten; el formato del perfil se asienta | ⬜ |
 | 0.6 (candidata) | Suspender y reanudar, sesiones largas, CI en GitHub Actions, `CHANGELOG.md`, releases en GitHub, las instrucciones de la consola en inglés | ⬜ |
 | 1.0.0 | La candidata usada en la consola durante unos días sin problemas | ⬜ |
@@ -168,8 +168,11 @@ perfil en el que se escriben los módulos de juego.
   más; los juegos más pesados (chips de mejora, Mode 7 todo el rato) se medirán según lleguen.
 - ✅ El táctil en la consola: un panel Goodix, asignado por sway a todo el escritorio; como la ventana de SNES DS ocupa
   los dos paneles, los toques caen donde deben (el panel de abajo es la mitad derecha).
-- ⬜ Confirmar qué botón llega como botón de menú. Cualquier botón que el SNES no usa abre el menú (en el mapeo de la
-  RG DS Plus: guide = botón 10, L3 = 11, R3 = 12), y el log apunta cada pulsación.
+- 🔶 El botón de menú. El log de la consola muestra que guide (botón 10) y L3 (11) llegan a la app, pero el menú no se
+  abría: el bucle principal descartaba la acción de menú del mando (solo pasaban Esc y los toques). Corregido en la
+  0.4, con un test que maneja la app con un mando virtual (`tools/app_tests/menu.txt`, lo pasa `scripts/check.sh`).
+  L3 es el botón de menú en la RG DS Plus (su botón "R" nunca llega a las apps: se lo queda ROCKNIX). Falta
+  confirmarlo en la consola.
 - ✅ Las partidas, los estados, sus capturas, los ajustes y la caché de la lista se escriben en un fichero temporal,
   se fuerzan al disco y se renombran sobre el anterior ([`src/fileutil.c`](src/fileutil.c)): un apagado deja el
   fichero viejo o el nuevo.

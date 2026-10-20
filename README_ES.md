@@ -129,7 +129,7 @@ Los botones del SNES van por posición: abajo = B, derecha = A, arriba = X, izqu
 
 | Acción | Consola | Teclado (PC) |
 |---|---|---|
-| Menú de pausa | Tocar la pantalla de abajo · el botón de menú (cualquier botón que el SNES no usa: inicio/RG, L3, R3…) · Select + Start | Esc · un clic en la pantalla de abajo |
+| Menú de pausa | **L3** (pulsar el stick izquierdo) · tocar la pantalla de abajo · el botón de inicio · Select + Start | Esc · un clic en la pantalla de abajo |
 | Salir | L1 + Start + Select | — |
 | Guardar / cargar estado (ranura 1) | Select + R / Select + L (al soltar) | F5 / F7 |
 | Intercambiar pantallas | Select + X | F2 |

@@ -1,0 +1,13 @@
+# The app's menu, opened and closed the ways a handheld does, through a
+# virtual controller (scripts/check.sh runs it without a window and compares
+# the "menu:" lines with menu.expected):
+#   guide opens the menu, guide again resumes; L3 opens it, A (SDL's B: the
+#   right-hand button) on "Resume" resumes; R3 opens it; Esc closes it.
+3 nav ok
+100 button guide
+110 button guide
+130 button leftstick
+150 button b
+170 button rightstick
+190 key Escape
+200 quit
