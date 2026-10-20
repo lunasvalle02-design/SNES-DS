@@ -16,7 +16,7 @@ Legend: ✅ done · 🔶 in progress · ⬜ to do
 | 1 | Core and harness on PC | ✅ |
 | 2 | Desktop app with two screens, game list and pause menu | ✅ |
 | 3 | Second screen for A Link to the Past | 🔶 A fallback screen is missing |
-| 4 | The device (ROCKNIX) | 🔶 The speed of v0.2+ is still to be measured on the console |
+| 4 | The device (ROCKNIX) | ✅ Full speed on the RG DS Plus; the menu button is still to be confirmed |
 | 5 | Touch and comfort | ✅ Closed for now |
 | 6 | More games | 🔶 The groundwork is done; no new game yet |
 | 7 | Integration (EmulationStation, RetroAchievements) | ⬜ |
@@ -28,6 +28,20 @@ Legend: ✅ done · 🔶 in progress · ⬜ to do
 | 0.1.0-dev | The first build for ROCKNIX. Measured on the console: 18-39 ms per emulated frame (25-50 fps), audio dropouts |
 | 0.2.0-dev | The core about 3.7× faster (bit-identical); a cheaper map capture; L1 + Start + Select to quit |
 | 0.3.0-dev | The touch interface, in English and Spanish: game list, pause menu, four save-state slots with screenshots, settings. The menu also opens with a tap on the bottom screen or any spare button. Fixed: a burst of noise when a game started |
+| 0.4.0-dev | Checked on the console: 60 fps with no audio dropouts. Saves, states and settings written safely (a power cut can't corrupt them); the speed log no longer counts time in the menu |
+
+## The road to 1.0
+
+| Version | Goal | Status |
+|---|---|---|
+| 0.4 | Checked on the console: speed, input, touch; saves that a power cut can't corrupt | 🔶 Only the menu button is left to confirm |
+| 0.5 | A second and third game, on `game/…` branches, with whatever engine hooks they need; the profile format settles | ⬜ |
+| 0.6 (release candidate) | Sleep and resume, long sessions, CI on GitHub Actions, `CHANGELOG.md`, GitHub releases, the device instructions in English | ⬜ |
+| 1.0.0 | The release candidate used on the console for some days without problems | ⬜ |
+
+What 1.0 promises, once out (semantic versioning: breaking any of it means 2.0): the `snes-ds.cfg` format, battery
+saves and save states staying loadable, the command-line options, and the profile format game modules are written
+in.
 
 ## Decisions
 
@@ -143,14 +157,20 @@ Legend: ✅ done · 🔶 in progress · ⬜ to do
 
 - ✅ A cheaper hidden map core: it doesn't draw while opening the map, runs at low priority on Linux, and the wait
   between captures counts from the end of the last one. A world capture went from 271 to 108 ms on PC.
-- ⬜ **Second measurement on the console** with `snes-ds.log` and `bench.log`. By the proportions of the first, it
-  should come to about 10 ms per frame. If that's still not enough:
-  1. Keep on with the picture unit, the limit with the thread: packed colours, sprites, windows.
-  2. Branch-free composition loops: slightly slower on PC, but the in-order A55 might gain. To be measured there.
-  3. The CPU and the APU (the main thread): memory access, DMA, the DSP.
-  4. Swap the core behind `core.h`: bsnes-jg (GPL-3) or Snes9x (non-commercial license).
-- ⬜ Confirm on the console which button arrives as the menu button and how sway ties each touch panel to its
-  output (the log records both).
+- ✅ **Second measurement on the console (v0.3.0, A Link to the Past, from Link's house to the castle):** 60 fps
+  throughout, **9.3-10.2 ms per emulated frame** (the estimate was ~10), peaks of 15-19 ms while the map is captured,
+  which the audio queue absorbs: **no audio dropouts**. Drawing takes ~1.7 ms. Map captures take ~290 ms outdoors and
+  up to ~1.1 s in the castle, in the background. No further optimisation is needed for this game; heavier games
+  (enhancement chips, Mode 7 throughout) will be measured as they come.
+- ✅ Touch on the device: one Goodix panel, tied by sway to the whole layout; since SNES DS's window spans both
+  panels, taps land where they should (the bottom panel is the right half).
+- ⬜ Confirm which button arrives as the menu button. Every button the SNES doesn't use opens the menu (on the
+  RG DS Plus mapping: guide = button 10, L3 = 11, R3 = 12), and the log records each press.
+- ✅ Battery saves, save states, their pictures, the settings and the game list's cache are written to a temporary
+  file, flushed to the disk and renamed over the old one ([`src/fileutil.c`](src/fileutil.c)): a power cut leaves the
+  old file or the new one.
+- ✅ The speed log and the FPS counter leave out the time spent in the game list and the menu (a pause read as
+  28 fps before).
 - ⬜ BananaOS (KMSDRM, one window per panel).
 
 ## Phase 5: Touch and comfort ✅
@@ -195,7 +215,7 @@ tests → test on the device. One branch each:
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| LakeSnes doesn't reach 60 fps on the Cortex-A55 | High | First measurement: 18-39 ms/frame. Optimised about 3.7× (phase 4); the second measurement is pending. `core.h` allows swapping the core |
+| LakeSnes doesn't reach 60 fps on the Cortex-A55 | Was high, now low | Optimised about 3.7× (phase 4): A Link to the Past runs at ~9.5 ms/frame on the RG DS Plus. Heavier games still to be measured; `core.h` allows swapping the core |
 | LakeSnes accuracy bugs (its `bugs.md`: hangs on SPC uploads in some games) | Medium | A Link to the Past is verified by zelda3; test every new game |
 | A game changes BG3's registers mid-frame | Low | The split happens in the picture unit itself, scanline by scanline, so it's already covered |
 | Licensing (Snes9x isn't GPL-compatible) | Medium | Stay with LakeSnes or bsnes |

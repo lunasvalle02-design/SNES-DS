@@ -184,7 +184,11 @@ expresar, un atajo de velocidad que solo sirve para un juego):
    ejemplo) son indicadores opcionales del perfil, medidas con `bench` en el harness y nunca activadas por defecto.
    Las optimizaciones que lo mantienen idéntico bit a bit son para todos: van en una rama `engine/`.
 4. **Los cambios en el núcleo** (`third_party/lakesnes`) se listan en [PATCHES.md](third_party/lakesnes/PATCHES.md),
-   se marcan con `snes-ds` en el código y mantienen los hashes idénticos (regla básica 4).
+   se marcan con `snes-ds` en el código y mantienen los hashes idénticos (regla básica 4). Un cambio en lo que guarda
+   un estado sube además `stateVersion` en `snes_other.c`, para que los estados antiguos se rechacen en vez de
+   cargarse mal.
+5. **Los ficheros que conserva el jugador** (partidas, estados, ajustes) se escriben con
+   [`src/fileutil.h`](src/fileutil.h), nunca con un simple `fopen`: un apagado no debe dejar un fichero a medias.
 
 ## Estilo de código
 

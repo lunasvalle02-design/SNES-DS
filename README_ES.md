@@ -9,7 +9,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/licencia-GPL--3.0--or--later-FF8A1F" alt="Licencia: GPL-3.0-or-later"></a>
-  <img src="https://img.shields.io/badge/versi%C3%B3n-0.3.0--dev-FF8A1F" alt="Versión 0.3.0-dev">
+  <img src="https://img.shields.io/badge/versi%C3%B3n-0.4.0--dev-FF8A1F" alt="Versión 0.4.0-dev">
   <img src="https://img.shields.io/badge/plataforma-ROCKNIX%20%7C%20Windows%20%7C%20Linux-3B3129" alt="Plataformas: ROCKNIX, Windows, Linux">
   <img src="https://img.shields.io/badge/lenguaje-C11-3B3129" alt="Lenguaje: C11">
 </p>
@@ -25,8 +25,8 @@ compatible, un pequeño **perfil** le dice al emulador qué partes de la imagen 
 pasan a la segunda pantalla, y un segundo núcleo oculto mantiene allí abierto el **mapa** del propio juego, en vivo.
 
 > [!NOTE]
-> SNES DS está en una fase temprana de desarrollo. De momento es compatible con un juego, y la velocidad en la
-> consola tras las últimas optimizaciones está pendiente de medir.
+> SNES DS está en una fase temprana de desarrollo. De momento es compatible con un juego, que va a velocidad
+> completa en la RG DS Plus (unos 9,5 ms por fotograma, con el mapa capturándose en segundo plano).
 
 ## Contenido
 
@@ -60,7 +60,8 @@ pasan a la segunda pantalla, y un segundo núcleo oculto mantiene allí abierto 
   FPS e idioma, guardados en `snes-ds.cfg`.
 - **En inglés y en español.** La interfaz arranca en inglés; el idioma se cambia en los ajustes, y el cambio se ve al
   momento.
-- **Partidas** (`.srm`) en el mismo formato que RetroArch, escritas unos segundos después de cambiar.
+- **Partidas** (`.srm`) en el mismo formato que RetroArch, escritas unos segundos después de cambiar. Las partidas,
+  los estados y los ajustes se escriben de forma que un apagado no pueda dejar un fichero a medias.
 - **ROMs** en `.sfc`, `.smc` o dentro de un `.zip`, reconocidas por su CRC32 (una caché mantiene el arranque rápido
   con bibliotecas grandes).
 - **Harness sin ventana** para investigar la memoria y las capas de un juego sin la consola, y para pasar tests de

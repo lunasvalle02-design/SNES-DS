@@ -41,3 +41,10 @@ aarch64.
     ($2122), reset and state handling first wait for every line handed over (`ppu_sync`), and so does whoever reads
     the picture (snes-ds's `core_run_frame`).
   - The thread spins briefly between lines and sleeps between frames.
+
+## Save states
+
+LakeSnes' states start with an id, `stateVersion` (in `snes_other.c`), their length and the cartridge's type, and a
+state that doesn't match is refused. The snes-ds patches don't change what goes into a state (the masks, the
+caches and the render thread are left out of it), so states keep loading across them. **Any change to what a state
+holds must raise `stateVersion`**, so that older states are refused instead of loaded wrongly.

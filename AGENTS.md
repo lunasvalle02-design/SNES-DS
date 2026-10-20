@@ -182,7 +182,10 @@ that only works for one game):
    flags, measured with `bench` in the harness, and never on by default. Optimisations that keep it bit-identical
    belong to everybody: they go in an `engine/` branch.
 4. **Core changes** (`third_party/lakesnes`) are listed in [PATCHES.md](third_party/lakesnes/PATCHES.md), marked
-   `snes-ds` in the code, and keep the hashes identical (ground rule 4).
+   `snes-ds` in the code, and keep the hashes identical (ground rule 4). A change to what a save state holds also
+   raises `stateVersion` in `snes_other.c`, so older states are refused rather than loaded wrongly.
+5. **Files the player keeps** (battery saves, states, settings) are written with
+   [`src/fileutil.h`](src/fileutil.h), never with a plain `fopen`: a power cut must not leave half a file.
 
 ## Code style
 

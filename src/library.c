@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
+#include "fileutil.h"
 #include "romfile.h"
 
 /* --- the cache: "size mtime crc path" lines, crc 0 for files that aren't
@@ -53,12 +54,14 @@ static CacheLine* cache_get(Cache* c, const char* path) {
 }
 
 static void cache_save(Cache* c, const char* path) {
-	FILE* f = path && c->changed ? fopen(path, "w") : NULL;
+	FILE* f = path && c->changed ? atomic_open(path) : NULL;
 	if (f) {
+		bool ok = true;
 		for (int i = 0; i < c->count; i++) {
-			fprintf(f, "%lld %lld %08x %s\n", c->lines[i].size, c->lines[i].mtime, (unsigned)c->lines[i].crc, c->lines[i].path);
+			ok = fprintf(f, "%lld %lld %08x %s\n", c->lines[i].size, c->lines[i].mtime, (unsigned)c->lines[i].crc,
+			             c->lines[i].path) > 0 && ok;
 		}
-		fclose(f);
+		atomic_close(f, path, ok);
 	}
 	for (int i = 0; i < c->count; i++) free(c->lines[i].path);
 	free(c->lines);

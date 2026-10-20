@@ -17,7 +17,7 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente
 | 1 | Núcleo y harness en PC | ✅ |
 | 2 | App de escritorio con dos pantallas, lista de juegos y menú de pausa | ✅ |
 | 3 | Segunda pantalla para A Link to the Past | 🔶 Falta la pantalla de reserva |
-| 4 | La consola (ROCKNIX) | 🔶 Falta medir en la consola la velocidad de la v0.2 en adelante |
+| 4 | La consola (ROCKNIX) | ✅ A velocidad completa en la RG DS Plus; falta confirmar el botón de menú |
 | 5 | Táctil y comodidad | ✅ Cerrada por ahora |
 | 6 | Más juegos | 🔶 La base está hecha; aún ningún juego nuevo |
 | 7 | Integración (EmulationStation, RetroAchievements) | ⬜ |
@@ -29,6 +29,20 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente
 | 0.1.0-dev | La primera versión para ROCKNIX. Medida en la consola: 18-39 ms por fotograma emulado (25-50 fps), con cortes de audio |
 | 0.2.0-dev | El núcleo unas 3,7 veces más rápido (idéntico bit a bit); captura del mapa más barata; L1 + Start + Select para salir |
 | 0.3.0-dev | La interfaz táctil, en inglés y en español: lista de juegos, menú de pausa, cuatro ranuras de estado con captura, ajustes. El menú se abre también tocando la pantalla de abajo o con cualquier botón libre. Corregido: un estallido de ruido al arrancar un juego |
+| 0.4.0-dev | Comprobada en la consola: 60 fps sin cortes de audio. Partidas, estados y ajustes escritos de forma segura (un apagado no puede corromperlos); el log de velocidad ya no cuenta el tiempo en el menú |
+
+## Camino a la 1.0
+
+| Versión | Objetivo | Estado |
+|---|---|---|
+| 0.4 | Comprobada en la consola: velocidad, entrada, táctil; partidas que un apagado no puede corromper | 🔶 Solo falta confirmar el botón de menú |
+| 0.5 | Un segundo y un tercer juego, en ramas `game/…`, con los hooks del motor que necesiten; el formato del perfil se asienta | ⬜ |
+| 0.6 (candidata) | Suspender y reanudar, sesiones largas, CI en GitHub Actions, `CHANGELOG.md`, releases en GitHub, las instrucciones de la consola en inglés | ⬜ |
+| 1.0.0 | La candidata usada en la consola durante unos días sin problemas | ⬜ |
+
+Lo que promete la 1.0, una vez publicada (versionado semántico: romper algo de esto obliga a la 2.0): el formato de
+`snes-ds.cfg`, que las partidas y los estados sigan cargando, las opciones de línea de comandos y el formato del
+perfil en el que se escriben los módulos de juego.
 
 ## Decisiones
 
@@ -147,15 +161,20 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente
 
 - ✅ Un núcleo oculto del mapa más barato: no dibuja mientras abre el mapa, va con prioridad baja en Linux, y la espera
   entre capturas cuenta desde que termina la anterior. Una captura del mundo pasó de 271 a 108 ms en PC.
-- ⬜ **Segunda medida en la consola** con `snes-ds.log` y `bench.log`. Por la proporción de la primera, debería
-  rondar los 10 ms por fotograma. Si aún no basta:
-  1. Seguir con la unidad de imagen, que es el límite con el hilo: colores empaquetados, sprites, ventanas.
-  2. Bucles de composición sin saltos: en PC son algo más lentos, pero el A55 (en orden) podría ganar. Hay que
-     medirlo allí.
-  3. La CPU y la APU (el hilo principal): accesos a memoria, DMA, el DSP.
-  4. Cambiar el núcleo detrás de `core.h`: bsnes-jg (GPL-3) o Snes9x (licencia no comercial).
-- ⬜ Confirmar en la consola qué botón llega como botón de menú y cómo asigna sway cada panel táctil a su salida (el
-  log apunta las dos cosas).
+- ✅ **Segunda medida en la consola (v0.3.0, A Link to the Past, de la casa de Link al castillo):** 60 fps en todo
+  momento, **9,3-10,2 ms por fotograma emulado** (la estimación era ~10), picos de 15-19 ms mientras se captura el
+  mapa, que absorbe la cola de audio: **ningún corte de audio**. Dibujar cuesta ~1,7 ms. Las capturas del mapa tardan
+  ~290 ms en el exterior y hasta ~1,1 s en el castillo, en segundo plano. Para este juego no hace falta optimizar
+  más; los juegos más pesados (chips de mejora, Mode 7 todo el rato) se medirán según lleguen.
+- ✅ El táctil en la consola: un panel Goodix, asignado por sway a todo el escritorio; como la ventana de SNES DS ocupa
+  los dos paneles, los toques caen donde deben (el panel de abajo es la mitad derecha).
+- ⬜ Confirmar qué botón llega como botón de menú. Cualquier botón que el SNES no usa abre el menú (en el mapeo de la
+  RG DS Plus: guide = botón 10, L3 = 11, R3 = 12), y el log apunta cada pulsación.
+- ✅ Las partidas, los estados, sus capturas, los ajustes y la caché de la lista se escriben en un fichero temporal,
+  se fuerzan al disco y se renombran sobre el anterior ([`src/fileutil.c`](src/fileutil.c)): un apagado deja el
+  fichero viejo o el nuevo.
+- ✅ El log de velocidad y el contador de FPS no cuentan el tiempo en la lista de juegos ni en el menú (antes una
+  pausa aparecía como 28 fps).
 - ⬜ BananaOS (KMSDRM, una ventana por panel).
 
 ## Fase 5: Táctil y comodidad ✅
@@ -202,7 +221,7 @@ perfil → tests → prueba en la consola. Una rama cada uno:
 
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
-| LakeSnes no llega a 60 fps en el Cortex-A55 | Alto | Primera medida: 18-39 ms/fotograma. Optimizado unas 3,7 veces (fase 4); falta la segunda medida. `core.h` permite cambiar de núcleo |
+| LakeSnes no llega a 60 fps en el Cortex-A55 | Era alto, ahora bajo | Optimizado unas 3,7 veces (fase 4): A Link to the Past va a ~9,5 ms/fotograma en la RG DS Plus. Faltan por medir juegos más pesados; `core.h` permite cambiar de núcleo |
 | Fallos de precisión de LakeSnes (su `bugs.md`: bloqueos en subidas al SPC en algunos juegos) | Medio | A Link to the Past está verificado por zelda3; probar cada juego nuevo |
 | Un juego cambia los registros de BG3 a mitad de fotograma | Bajo | La separación se hace en la propia unidad de imagen, scanline a scanline, así que ya está cubierto |
 | Licencias (Snes9x no es compatible con la GPL) | Medio | Seguir con LakeSnes o bsnes |

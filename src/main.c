@@ -452,6 +452,7 @@ int main(int argc, char** argv) {
 
 	SDL_Keycode keyUp = 0; /* the script's key, let go the frame after */
 	while (!quit) {
+		uint64_t iterStart = SDL_GetPerformanceCounter();
 		touch.pressed = touch.released = false;
 		if (keyUp) {
 			SDL_Event ev;
@@ -594,6 +595,7 @@ int main(int argc, char** argv) {
 				touch.pressed = false;
 			}
 		}
+		bool uiIter = a->mode == MODE_UI;
 
 		if (a->mode == MODE_UI) {
 			uint32_t nav = pad_nav(&a->pad, a->gc) | scriptNav;
@@ -742,6 +744,13 @@ int main(int argc, char** argv) {
 			uint64_t now = SDL_GetPerformanceCounter();
 			if (next > now) SDL_Delay((uint32_t)((next - now) * 1000 / freq));
 			else next = now;
+		}
+		/* time in the app's screens (the game list, the menu) isn't game time:
+		 * the speed counters leave it out, or a pause reads as a slowdown */
+		if (uiIter) {
+			uint64_t d = SDL_GetPerformanceCounter() - iterStart;
+			st.since += d;
+			fpsSince += d;
 		}
 	}
 

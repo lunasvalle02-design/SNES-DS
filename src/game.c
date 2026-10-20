@@ -5,15 +5,22 @@
 #include <string.h>
 #include <sys/stat.h>
 
+#include "fileutil.h"
 #include "romfile.h"
 #include "stb_image.h"
 #include "stb_image_write.h"
 
-static bool write_file(const char* p, const void* d, size_t n) {
-	FILE* f = fopen(p, "wb");
-	if (!f) return false;
-	bool ok = fwrite(d, 1, n, f) == n;
-	return fclose(f) == 0 && ok;
+/* saves are written so a power cut never leaves half of one (fileutil.h) */
+static bool write_file(const char* p, const void* d, size_t n) { return file_write_atomic(p, d, n); }
+
+typedef struct {
+	FILE* f;
+	bool failed;
+} PngOut;
+
+static void png_out(void* ctx, void* data, int size) {
+	PngOut* o = ctx;
+	if (fwrite(data, 1, size, o->f) != (size_t)size) o->failed = true;
 }
 
 /* DIR/name-of-rom, or beside the ROM */
@@ -145,7 +152,11 @@ bool game_save_state(Game* g, int slot) {
 			rgb[i * 3 + 2] = px[i];
 		}
 		slot_path(g, slot, ".png", p, sizeof(p));
-		stbi_write_png(p, CORE_W, CORE_H, 3, rgb, CORE_W * 3);
+		PngOut o = { atomic_open(p), false };
+		if (o.f) {
+			bool done = stbi_write_png_to_func(png_out, &o, CORE_W, CORE_H, 3, rgb, CORE_W * 3) && !o.failed;
+			atomic_close(o.f, p, done);
+		}
 		free(rgb);
 	}
 	fflush(stdout);

@@ -9,7 +9,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-FF8A1F" alt="License: GPL-3.0-or-later"></a>
-  <img src="https://img.shields.io/badge/version-0.3.0--dev-FF8A1F" alt="Version 0.3.0-dev">
+  <img src="https://img.shields.io/badge/version-0.4.0--dev-FF8A1F" alt="Version 0.4.0-dev">
   <img src="https://img.shields.io/badge/platform-ROCKNIX%20%7C%20Windows%20%7C%20Linux-3B3129" alt="Platforms: ROCKNIX, Windows, Linux">
   <img src="https://img.shields.io/badge/language-C11-3B3129" alt="Language: C11">
 </p>
@@ -25,8 +25,8 @@ game, a small **profile** tells the emulator which parts of the picture belong e
 move to the second screen, and a hidden second emulator core keeps the game's own **map** open there, live.
 
 > [!NOTE]
-> SNES DS is in early development. One game is supported so far, and the speed on the device after the latest
-> optimisations is still being measured.
+> SNES DS is in early development. One game is supported so far; it runs at full speed on the RG DS Plus (about
+> 9.5 ms per frame, with the map captured in the background).
 
 ## Contents
 
@@ -60,7 +60,8 @@ move to the second screen, and a hidden second emulator core keeps the game's ow
   `snes-ds.cfg`.
 - **In English and Spanish.** The interface starts in English; the language can be changed from the settings, and
   the change shows at once.
-- **Battery saves** in the same `.srm` format as RetroArch, written a few seconds after they change.
+- **Battery saves** in the same `.srm` format as RetroArch, written a few seconds after they change. Saves, states
+  and settings are written so that a power cut can't leave half a file.
 - **ROMs** as `.sfc`, `.smc` or inside a `.zip`, recognised by CRC32 (a cache keeps startup fast with large
   libraries).
 - **Headless harness** to research a game's memory and layers without the device, and to run regression tests.
