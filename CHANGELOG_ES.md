@@ -6,7 +6,7 @@ Lo que trajo cada versión de SNES DS. Las versiones siguen el [versionado semá
 antes de la 1.0 todo puede cambiar todavía (ver [lo que promete la 1.0](ROADMAP_ES.md#camino-a-la-10)). Las
 descargas están en la [página de releases](https://github.com/lunasvalle02-design/SNES-DS/releases).
 
-## Sin publicar
+## 1.1.0
 
 ### Añadido
 - **Una imagen tras el HUD**: cuando la segunda pantalla solo tiene el HUD, o nada (un juego sin mapa, como Super
