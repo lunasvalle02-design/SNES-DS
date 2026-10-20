@@ -236,10 +236,16 @@ uint16_t pad_frame(Pad* p, SDL_GameController* gc) {
 	if (select && !(p->consumed & PAD_SELECT)) {
 		p->selectFrames++;
 	} else if (!select && (p->prev & PAD_SELECT)) {
-		if (!(p->consumed & PAD_SELECT) && p->selectFrames <= SELECT_HOLD) p->selectPulse = SELECT_PULSE;
+		if (!(p->consumed & PAD_SELECT) && p->selectFrames <= SELECT_HOLD) {
+			p->selectPulse = SELECT_PULSE;
+			printf("input: Select to the game (%d frames)\n", SELECT_PULSE);
+		} else {
+			printf("input: Select kept from the game (%s)\n", p->consumed & PAD_SELECT ? "a shortcut" : "held through");
+		}
 		p->selectFrames = 0;
 	}
 	bool selectThrough = select && !(p->consumed & PAD_SELECT) && p->selectFrames > SELECT_HOLD;
+	if (selectThrough && p->selectFrames == SELECT_HOLD + 1) printf("input: Select held: to the game\n");
 	if (!select) p->selectFrames = 0;
 
 	p->consumed &= raw; /* let go: no longer a shortcut */
