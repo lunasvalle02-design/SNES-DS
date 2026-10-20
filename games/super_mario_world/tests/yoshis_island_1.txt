@@ -1,0 +1,43 @@
+# Super Mario World: into Yoshi's Island 1 and back, from new_game.txt's
+# `yoshis_house` state: the status bar's split in a level and paused, no
+# capture there, and the world map again after Mario dies. Leaves in OUTDIR:
+#   yi1      Mario at the start of Yoshi's Island 1 ($0100 = 14)
+#   died     back on the world map, a life fewer
+#
+#   scripts/check.sh ROMDIR super_mario_world
+load yoshis_house
+watch 0x100 1
+hold LEFT 30       # to Yoshi's Island 1's tile
+until 0x13D9 0xFF 0x03 300
+expect 0x1F17 38 00 88 00  # Yoshi's Island 1
+map yi1_tile ok    # a new tile: the world map, Mario on it
+untiltap 0x100 0xFF 0x14 600 A
+wait 60
+save yi1
+expect 0x13BF 29   # the level (its world-map number)
+map yi1 not_live   # in a level: no capture, the last map stays
+split 4 0 37
+wait 1
+splitbox           # the status bar: lines 9-36
+split 0
+
+# paused ($13D4): still a level, the status bar stays on the second screen
+untiltap 0x13D4 0xFF 0x01 60 START
+wait 30
+expect 0x100 14
+split 4 0 37
+wait 1
+splitbox           # lines 9-36
+split 0
+untiltap 0x13D4 0xFF 0x00 300 START
+
+# Mario dies ($71 = 09): fading out (0B) to the world map, a life fewer
+wait 10
+poke 0x71 0x09
+until 0x100 0xFF 0x0E 600
+until 0x13D9 0xFF 0x03 300
+wait 30
+save died
+expect 0xDBE 03    # lives: 4 shown
+expect 0x1F17 38 00 88 00  # still on Yoshi's Island 1's tile
+map died ok

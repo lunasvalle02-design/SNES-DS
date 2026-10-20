@@ -206,7 +206,7 @@ Then the same path for each game: harness → `layershot` for the layers → `wa
 tests → test on the device. One branch each:
 
 1. ✅ **Super Metroid** (`game/super_metroid`): the pause map and the HUD's minimap.
-2. ⬜ Super Mario World (`game/super_mario_world`): the world map and the HUD.
+2. ✅ **Super Mario World** (`game/super_mario_world`): the world map and the HUD.
 3. ⬜ Secret of Mana, Chrono Trigger and Final Fantasy VI (`game/secret_of_mana`, `game/chrono_trigger`,
    `game/final_fantasy_vi`): menus and the Mode 7 world map.
 4. 🔶 Super Castlevania IV ✅ and Dracula X ⬜ (`game/super_castlevania_iv`, `game/castlevania_dracula_x`): the HUD.
