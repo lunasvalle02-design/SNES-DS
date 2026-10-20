@@ -6,6 +6,14 @@ What each version of SNES DS brought. Versions follow [semantic versioning](http
 may still change (see [what 1.0 promises](ROADMAP.md#the-road-to-10)). Downloads are on the
 [releases page](https://github.com/lunasvalle02-design/SNES-DS/releases).
 
+## 1.0.0
+
+The first stable version: 0.6.0, used on the console for some days without problems. From here on, what
+[1.0 promises](ROADMAP.md#the-road-to-10) holds (the `snes-ds.cfg` format, battery saves and save states staying
+loadable, the command-line options and the profile format); breaking any of it would mean 2.0. Fixes come as 1.0.x.
+
+- The README's screenshots show the current interface: the games' icons and the controls page.
+
 ## 0.6.0 — the release candidate
 
 ### Added

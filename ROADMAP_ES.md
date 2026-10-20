@@ -32,6 +32,7 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente
 | 0.4.0-dev | Comprobada en la consola: 60 fps sin cortes de audio; el menú se abre con L3 o el botón R (inicio). Partidas, estados y ajustes escritos de forma segura (un apagado no puede corromperlos); el log de velocidad ya no cuenta el tiempo en el menú |
 | 0.5.0 | Dos juegos más, cada uno en su rama: Super Metroid (el mapa de pausa, con el HUD encima) y Super Castlevania IV (el HUD). Un perfil puede recortar la pantalla de juego mientras su HUD está abajo, así la sala de Super Metroid llena la pantalla de arriba. Los dos comprobados en la consola |
 | 0.6.0 | La candidata a 1.0. Controles remapeables en los ajustes; un icono para cada juego en la lista; A Link to the Past deja su HUD en la pantalla del juego. CI en GitHub Actions, `CHANGELOG.md`, las instrucciones de la consola en inglés. Suspender y reanudar, comprobado en la consola |
+| 1.0.0 | La primera versión estable: la candidata, usada en la consola varios días sin problemas |
 
 ## Camino a la 1.0
 
@@ -40,7 +41,7 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente
 | 0.4 | Comprobada en la consola: velocidad, entrada, táctil; partidas que un apagado no puede corromper | ✅ |
 | 0.5 | Un segundo y un tercer juego, en ramas `game/…` (Super Metroid, Super Castlevania IV), con los hooks del motor que necesiten; el formato del perfil se asienta | ✅ |
 | 0.6 (candidata) | Suspender y reanudar, sesiones largas, CI en GitHub Actions, `CHANGELOG.md`, releases en GitHub, las instrucciones de la consola en inglés | ✅ Las sesiones largas son lo que comprueban los días antes de la 1.0 |
-| 1.0.0 | La candidata usada en la consola durante unos días sin problemas | ⬜ |
+| 1.0.0 | La candidata usada en la consola durante unos días sin problemas | ✅ |
 
 Lo que promete la 1.0, una vez publicada (versionado semántico: romper algo de esto obliga a la 2.0): el formato de
 `snes-ds.cfg`, que las partidas y los estados sigan cargando, las opciones de línea de comandos y el formato del
