@@ -12,9 +12,12 @@
 
 ## Second screen
 
-- **HUD:** BG3, lines 15-59. It leaves the game screen in modules `07`/`09`, during text (`0E/02`) and through doors
-  (`0F`/`10`), and is drawn over the map.
+- **HUD:** BG3, lines 15-59. It stays on the game screen, in play, during text (`0E/02`) and through doors
+  (`0F`/`10`). Until 0.5.0 it moved to the second screen in those modules and was drawn over the map, which looked
+  wrong over the dungeon map; the profile has no `SPLIT_HUD` rule now.
 - **Item menu** (`0E/01`): all of BG3 moves to the second screen, and the world stays visible on the game screen.
+  The menu is a whole screen of its own that replaces the map while it's up (the game draws it in place of the HUD),
+  not a strip over the map, so it stays.
 - **Map:** the hidden core presses X.
   - Outdoors it presses X again for the whole world (`0E/07`).
   - In a dungeon the dungeon map comes up (`0E/03`). The map item isn't needed: it shows the rooms visited, and the

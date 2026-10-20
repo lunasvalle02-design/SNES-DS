@@ -111,7 +111,8 @@ in.
   `games/games.c`; the engine (`src/profiles.c`) holds no game data.
 - ✅ **HUD below:** in modules `07`/`09` (including the scroll between rooms), BG3 lines 0-64 go to the bottom
   screen; also during dialogue (`0E/02`) and through doors (`0F`/`10`). The text box starts at BG3 row 9 (line 72)
-  when at the top and row 18 when at the bottom (`$7E1CD2`), so it never reaches the HUD.
+  when at the top and row 18 when at the bottom (`$7E1CD2`), so it never reaches the HUD. **Undone for 0.6.0:** over
+  the dungeon map the HUD looked wrong, so it stays on the game screen.
 - ✅ **Item menu below:** with `0E/01`, all of BG3 goes down and the world stays visible above.
 - ⬜ **Dialogue below** (optional): move the text box to the second screen too. A profile option.
 - ✅ **Live map on a hidden core** (`src/mapcap.c`, on a thread): copy the state, press X (and X again for the whole

@@ -8,28 +8,23 @@ const Profile game_zelda_alttp = {
 	.title = "The Legend of Zelda: A Link to the Past",
 	.shortTitle = "A Link to the Past",
 	.about = {
-		[LANG_EN] = "The world map and each dungeon's, the HUD and the item menu on the bottom screen.",
-		[LANG_ES] = "Mapa del mundo y de cada mazmorra, el HUD y el menú de objetos en la pantalla de abajo.",
+		[LANG_EN] = "The world map and each dungeon's, and the item menu, on the bottom screen; the HUD stays with the game.",
+		[LANG_ES] = "Mapa del mundo y de cada mazmorra, y el menú de objetos, en la pantalla de abajo; el HUD se queda con el juego.",
 	},
 	.crc32 = { 0x777AAC2F }, /* USA */
 	/* $7E0010 is the main module, $7E0011 the sub-module: 07 indoors,
 	 * 09 outdoors, 0E the menus (01 items, 02 text, 03 dungeon map,
-	 * 07 world map). BG3 holds the HUD, the text box and the item menu */
+	 * 07 world map). BG3 holds the HUD (lines 15-59), the text box and the
+	 * item menu. The HUD stays on the game screen: drawn over the dungeon
+	 * map on the second screen it looked wrong, so there are no SPLIT_HUD
+	 * rules (in play, modules 07/09; in text, 0E/02; at doors, 0F/10: all
+	 * of BG3 stays up top) */
 	.split = {
 		/* the item menu: all of BG3, the world stays on the game screen */
 		{ .when = { PROBE(0x7E0010, 0x0E), PROBE(0x7E0011, 0x01) }, .kind = SPLIT_FULL, .layers = LAYER_BG3, .y0 = 0, .y1 = 224 },
-		/* in play (rooms, scrolling between them): the top of BG3, the HUD
-		 * (lines 15-59) */
-		{ .when = { PROBE_EITHER(0x7E0010, 0x07, 0x09) }, .kind = SPLIT_HUD, .layers = LAYER_BG3, .y0 = 0, .y1 = 64 },
-		/* text: the box starts at BG3 row 9 (line 72) when it's up top
-		 * ($7E1CD2 = $6125), row 18 below ($6244), so it never reaches
-		 * the HUD's lines */
-		{ .when = { PROBE(0x7E0010, 0x0E), PROBE(0x7E0011, 0x02) }, .kind = SPLIT_HUD, .layers = LAYER_BG3, .y0 = 0, .y1 = 64 },
-		/* going in or out of a door (the spotlight) */
-		{ .when = { PROBE_EITHER(0x7E0010, 0x0F, 0x10) }, .kind = SPLIT_HUD, .layers = LAYER_BG3, .y0 = 0, .y1 = 64 },
 	},
-	/* the HUD is lines 15-59; a little room around it */
-	.hudShowY0 = 12, .hudShowY1 = 60,
+	/* no SPLIT_HUD rule, so no HUD strip to show (hudShowY0/Y1 and
+	 * gameShowY0/Y1 left at 0) */
 	/* at power-on, right after the sound driver is uploaded (frame 82),
 	 * the game asks for sound effect $0A on $2143: a very high-pitched
 	 * sample on voice 7, 0.3 s of hiss over the black screen. Nothing else

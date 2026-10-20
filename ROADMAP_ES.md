@@ -113,7 +113,8 @@ perfil en el que se escriben los módulos de juego.
   `games/games.c`; el motor (`src/profiles.c`) no contiene datos de ningún juego.
 - ✅ **HUD abajo:** en los módulos `07`/`09` (incluido el paso entre salas), las líneas 0-64 de BG3 van a la pantalla
   de abajo; también en los diálogos (`0E/02`) y al cruzar puertas (`0F`/`10`). El cuadro de texto empieza en la fila
-  9 de BG3 (línea 72) si está arriba y en la 18 si está abajo (`$7E1CD2`), así que nunca llega al HUD.
+  9 de BG3 (línea 72) si está arriba y en la 18 si está abajo (`$7E1CD2`), así que nunca llega al HUD. **Deshecho en
+  la 0.6.0:** sobre el mapa de la mazmorra el HUD quedaba mal, así que se queda en la pantalla de juego.
 - ✅ **Menú de objetos abajo:** con `0E/01`, todo BG3 baja y el mundo sigue a la vista arriba.
 - ⬜ **Diálogos abajo** (opcional): llevar también el cuadro de texto a la segunda pantalla. Una opción del perfil.
 - ✅ **Mapa en vivo con núcleo oculto** (`src/mapcap.c`, en un hilo): copiar el estado, pulsar X (y X otra vez para
