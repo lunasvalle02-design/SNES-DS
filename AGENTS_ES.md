@@ -132,7 +132,7 @@ Copia [`docs/game-template/`](docs/game-template) a `games/<id>/` y rellena `pro
 | `split[]` | Hasta 4 reglas, gana la primera que encaje: sondas de memoria (`PROBE`, `PROBE_EITHER`) → qué capas y líneas van a la segunda pantalla, como franja de HUD (`SPLIT_HUD`, sobre el mapa) o pantalla completa (`SPLIT_FULL`, un menú) |
 | `hudShowY0/Y1` | Las líneas de una franja de HUD que merece la pena mostrar |
 | `bootMuteFrames` | Fotogramas de sonido que silenciar tras el encendido |
-| `map` | Cómo abre el mapa el núcleo oculto, cuándo puede empezar una captura (`live`), cómo saber que está abierto (`shown`), qué cambios lanzan una captura nueva (`room`) y cómo reconocer una imagen estable y no vacía |
+| `map` | Cómo abre el mapa el núcleo oculto, cuándo puede empezar una captura (`live`), cómo saber que está abierto (`shown`), qué cambios lanzan una captura nueva (`room`), cómo reconocer una imagen estable y no vacía, y qué deja fuera la captura bajo la franja del HUD (`hideLayers`) |
 
 Comenta cada valor con qué es y cómo se encontró, como hace `games/zelda_alttp/profile.c`. Después regístralo en
 [`games/games.c`](games/games.c): `extern const Profile game_<id>;` y `&game_<id>,` en la lista. CMake recoge
