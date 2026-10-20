@@ -40,8 +40,16 @@ presses ("input: ..."): open an issue on GitHub with it (or try
 Settings
 --------
 Aspect ratio (original / 4:3), swap screens, HUD and menus below, map on
-the bottom screen, volume, show FPS, language and controls. They're kept in
-snes-ds/snes-ds.cfg and apply to every game.
+the bottom screen, picture behind the HUD, volume, show FPS, language and
+controls. They're kept in snes-ds/snes-ds.cfg and apply to every game.
+
+Picture behind the HUD: when the second screen has only the HUD (a game
+with no map, such as Super Castlevania IV), the game's cover or icon fills
+the rest, darkened. For a picture of your own, put a PNG or JPG in
+snes-ds/backgrounds/, named after the game's id or the ROM's file name:
+  snes-ds/backgrounds/super_castlevania_iv.png
+  snes-ds/backgrounds/Super Castlevania IV (USA).jpg
+(ids: zelda_alttp, super_metroid, super_castlevania_iv)
 
 Controls: choose a SNES button (B, A, Y, X, L, R, Start, Select or the
 menu), press A, then the console's button you want for it (a trigger

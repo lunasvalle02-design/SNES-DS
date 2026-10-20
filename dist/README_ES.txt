@@ -40,8 +40,17 @@ con él (o prueba tú --menu-button=NOMBRE en launch.sh).
 Ajustes
 -------
 Formato de imagen (original / 4:3), intercambiar pantallas, HUD y menús
-abajo, mapa en la pantalla de abajo, volumen, mostrar FPS, idioma y
-controles. Se guardan en snes-ds/snes-ds.cfg y valen para todos los juegos.
+abajo, mapa en la pantalla de abajo, imagen tras el HUD, volumen, mostrar
+FPS, idioma y controles. Se guardan en snes-ds/snes-ds.cfg y valen para
+todos los juegos.
+
+Imagen tras el HUD: cuando la segunda pantalla solo tiene el HUD (un juego
+sin mapa, como Super Castlevania IV), la carátula o el icono del juego
+llena el resto, oscurecido. Para usar una imagen tuya, pon un PNG o JPG en
+snes-ds/backgrounds/, con el id del juego o el nombre del fichero de la ROM:
+  snes-ds/backgrounds/super_castlevania_iv.png
+  snes-ds/backgrounds/Super Castlevania IV (USA).jpg
+(ids: zelda_alttp, super_metroid, super_castlevania_iv)
 
 Controles: elige un botón de la SNES (B, A, Y, X, L, R, Start, Select o el
 menú), pulsa A y luego el botón de la consola que quieras para él (vale un

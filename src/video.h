@@ -21,9 +21,12 @@ typedef struct {
 	SDL_Texture* pic; /* 256x224, as the core draws it */
 	SDL_Texture* up;  /* for 4:3: the picture at whole-number scales */
 	int upW, upH;
+	bool alpha;       /* the picture's clear parts show what's under it */
 } ScreenTex;
 
-void screen_tex_init(SDL_Renderer* ren, ScreenTex* t);
+/* alpha: the pictures are 0xAARRGGBB, drawn over what's there (else
+ * 0x00RRGGBB, opaque) */
+void screen_tex_init(SDL_Renderer* ren, ScreenTex* t, bool alpha);
 void screen_tex_free(ScreenTex* t);
 /* lines y0..y1 of a 256x224 picture (0x00RRGGBB; 0, CORE_H: all of it)
  * inside r, at the SNES' aspect or 4:3 */

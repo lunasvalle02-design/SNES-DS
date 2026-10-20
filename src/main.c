@@ -54,6 +54,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
@@ -243,6 +244,8 @@ typedef struct {
 	Mode mode;
 	Pad pad;
 	ScreenTex texGame, texSecond;
+	char progDir[1024];
+	Image background; /* the game's picture, behind a second screen with only the HUD */
 } App;
 
 static void save_settings(App* a) {
@@ -265,12 +268,69 @@ static void apply_settings(App* a) {
 	if (!a->game) return;
 	game_set_split(a->game, a->set.split);
 	game_set_map(a->game, a->set.map && !opt.noMap);
+	screen2_set_see_through(a->game->s2, a->set.background && a->background.tex);
+}
+
+static bool load_first(App* a, const char* const* paths, int n) {
+	for (int i = 0; i < n; i++) {
+		struct stat st;
+		if (paths[i][0] && stat(paths[i], &st) == 0 && gfx_image_load(a->gfx, paths[i], &a->background)) {
+			printf("background: %s\n", paths[i]);
+			return true;
+		}
+	}
+	return false;
+}
+
+/* the picture behind the HUD: the player's own (backgrounds/<id> or
+ * backgrounds/<the ROM's name>, .png or .jpg), else the game's cover in the
+ * list, else its icon */
+static void load_background(App* a, const char* romPath) {
+	gfx_image_free(&a->background);
+	const Profile* p = a->game->profile;
+	const char* file = strrchr(romPath, '/');
+	const char* bs = strrchr(romPath, '\\');
+	if (!file || (bs && bs > file)) file = bs;
+	file = file ? file + 1 : romPath;
+	char base[512];
+	snprintf(base, sizeof(base), "%s", file);
+	char* dot = strrchr(base, '.');
+	if (dot) *dot = 0;
+	char own[4][1200];
+	snprintf(own[0], sizeof(own[0]), "%s/backgrounds/%s.png", a->progDir, p ? p->id : "");
+	snprintf(own[1], sizeof(own[1]), "%s/backgrounds/%s.jpg", a->progDir, p ? p->id : "");
+	snprintf(own[2], sizeof(own[2]), "%s/backgrounds/%s.png", a->progDir, base);
+	snprintf(own[3], sizeof(own[3]), "%s/backgrounds/%s.jpg", a->progDir, base);
+	const char* const ownp[] = { p ? own[0] : "", p ? own[1] : "", own[2], own[3] };
+	if (load_first(a, ownp, 4)) return;
+	if (!p) return;
+	const char* cover = NULL;
+	for (int i = 0; i < a->lib.count; i++) {
+		if (!strcmp(a->lib.games[i].path, romPath)) cover = a->lib.games[i].cover;
+	}
+	char icon[1200];
+	snprintf(icon, sizeof(icon), "%s/assets/games/%s.png", a->progDir, p->id);
+	const char* const rest[] = { cover ? cover : "", icon };
+	load_first(a, rest, 2);
+}
+
+/* behind the second screen, when it has nothing of its own but the HUD:
+ * the game's picture, filling it, darkened so the HUD reads */
+static void draw_background(App* a, SDL_Rect r) {
+	if (!a->set.background || !a->background.tex || !screen2_empty(a->game->s2)) return;
+	gfx_area(a->gfx, r);
+	float w = gfx_w(a->gfx), h = gfx_h(a->gfx);
+	gfx_image(a->gfx, &a->background, 0, 0, w, h, 0, true, 1);
+	gfx_fill(a->gfx, 0, 0, w, h, 0, with_alpha(rgb(0x0C0806), 0.55f));
+	gfx_done(a->gfx);
 }
 
 static bool start_game(App* a, const char* path) {
 	Game* g = game_open(path, opt.saveDir, opt.stateDir, a->set.map && !opt.noMap, a->set.split, !opt.noThreads);
 	if (!g) return false;
 	a->game = g;
+	load_background(a, path);
+	apply_settings(a);
 	char title[300];
 	snprintf(title, sizeof(title), "SNES DS - %s", game_title(g));
 	SDL_SetWindowTitle(a->win, title);
@@ -297,6 +357,7 @@ static void to_menu(App* a) {
 static void close_game(App* a) {
 	game_close(a->game);
 	a->game = NULL;
+	gfx_image_free(&a->background);
 	SDL_SetWindowTitle(a->win, "SNES DS");
 	a->mode = MODE_UI;
 	ui_show_library(a->ui);
@@ -344,6 +405,7 @@ int main(int argc, char** argv) {
 		fprintf(stderr, "unknown --menu-button %s\n", opt.menuButton);
 	char progDir[1024], assets[1100], cachePath[1100];
 	program_dir(argv[0], progDir, sizeof(progDir));
+	snprintf(a->progDir, sizeof(a->progDir), "%s", progDir);
 	snprintf(assets, sizeof(assets), "%s/assets", progDir);
 	snprintf(cachePath, sizeof(cachePath), "%s/library-cache.txt", progDir);
 	if (opt.config) snprintf(a->configPath, sizeof(a->configPath), "%s", opt.config);
@@ -388,8 +450,8 @@ int main(int argc, char** argv) {
 	SDL_GetRendererInfo(a->ren, &ri);
 	printf("snes-ds %s; video: %s, renderer %s, %s\n", SNESDS_VERSION, driver, ri.name,
 	       opt.fullscreen ? "fullscreen" : "windowed");
-	screen_tex_init(a->ren, &a->texGame);
-	screen_tex_init(a->ren, &a->texSecond);
+	screen_tex_init(a->ren, &a->texGame, false);
+	screen_tex_init(a->ren, &a->texSecond, true);
 	a->gfx = gfx_new(a->ren, assets);
 	if (!a->gfx) {
 		fprintf(stderr, "the app's fonts aren't in %s\n", assets);
@@ -794,6 +856,7 @@ int main(int argc, char** argv) {
 				int y0, y1;
 				screen2_game_lines(a->game->s2, &y0, &y1);
 				video_present(a->ren, &a->texGame, core_frame(a->game->core), y0, y1, gameRect, a->set.wide);
+				draw_background(a, secondRect);
 				video_present(a->ren, &a->texSecond, screen2_picture(a->game->s2), 0, CORE_H, secondRect, a->set.wide);
 				ui_draw_overlay(a->ui, gameRect, fps);
 				st.drawMs += ms_since(t1);

@@ -23,9 +23,17 @@ void screen2_free(Screen2* s);
 void screen2_before_frame(Screen2* s, Core* game);
 void screen2_after_frame(Screen2* s, Core* game);
 
-/* the picture, 256x224 0x00RRGGBB: the menu while it's up, else the map
- * with the HUD over it where the game has it */
+/* the picture, 256x224 0xAARRGGBB: the menu while it's up, else the map
+ * with the HUD over it where the game has it. Opaque, but for what's left
+ * empty when see-through (screen2_set_see_through) */
 const uint32_t* screen2_picture(Screen2* s);
+
+/* nothing of its own behind the HUD now: no map (a game without one, or
+ * before the first capture) and no menu */
+bool screen2_empty(Screen2* s);
+/* see-through: while empty, the picture leaves that space clear (and the
+ * HUD's lines half dark), for a background drawn under it */
+void screen2_set_see_through(Screen2* s, bool on);
 
 /* the lines of the game's picture its screen shows now (the profile's
  * gameShowY0/Y1 while its HUD is down here, else all of them) */
