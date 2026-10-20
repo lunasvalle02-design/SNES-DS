@@ -57,8 +57,8 @@ move to the second screen, and a hidden second emulator core keeps the game's ow
   EmulationStation has scraped), and a pause menu: four save-state slots with screenshots, settings, and leaving the
   game or the app. Everything works with the buttons too.
 - **A picture behind the HUD.** When the second screen has only the HUD (a game with no map, such as Super
-  Castlevania IV), the game's cover or icon fills the rest, darkened; or a picture of your own, in
-  `snes-ds/backgrounds/`.
+  Castlevania IV, or one with no profile), the game's cover or icon fills the rest, darkened; or a picture of your
+  own, in `snes-ds/backgrounds/`.
 - **Controls your way.** Any SNES button, and one more for the menu, can be moved to another of the console's
   buttons, a trigger or a key, from the settings.
 - **Picture as you like it.** The SNES' own aspect at whole-number scales, or 4:3 like a TV, filling the

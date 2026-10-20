@@ -441,9 +441,9 @@ static const char* const setting_help[SETTINGS_N][LANGS] = {
 	  "stutter.",
 	  "Un segundo núcleo abre el mapa del juego en segundo plano para tenerlo siempre a la vista. Desactívalo "
 	  "si notas tirones." },
-	{ "When the second screen has only the HUD (a game with no map), the game's cover or icon fills the rest. "
+	{ "When the second screen has only the HUD (a game with no map or no profile), the game's cover or icon fills the rest. "
 	  "Your own picture: snes-ds/backgrounds/<id or ROM name>.png.",
-	  "Cuando la segunda pantalla solo tiene el HUD (un juego sin mapa), la carátula o el icono del juego llena el "
+	  "Cuando la segunda pantalla solo tiene el HUD (un juego sin mapa o sin perfil), la carátula o el icono del juego llena el "
 	  "resto. Una imagen tuya: snes-ds/backgrounds/<id o nombre de la ROM>.png." },
 	{ "The volume of the game's sound.", "El volumen del sonido del juego." },
 	{ "Frames per second, in a corner of the game screen.",

@@ -44,8 +44,8 @@ the bottom screen, picture behind the HUD, volume, show FPS, language and
 controls. They're kept in snes-ds/snes-ds.cfg and apply to every game.
 
 Picture behind the HUD: when the second screen has only the HUD (a game
-with no map, such as Super Castlevania IV), the game's cover or icon fills
-the rest, darkened. For a picture of your own, put a PNG or JPG in
+with no map, such as Super Castlevania IV, or one with no profile), the
+game's cover or icon fills the rest, darkened. For a picture of your own, put a PNG or JPG in
 snes-ds/backgrounds/, named after the game's id or the ROM's file name:
   snes-ds/backgrounds/super_castlevania_iv.png
   snes-ds/backgrounds/Super Castlevania IV (USA).jpg

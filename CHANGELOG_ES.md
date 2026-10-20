@@ -9,10 +9,11 @@ descargas están en la [página de releases](https://github.com/lunasvalle02-des
 ## Sin publicar
 
 ### Añadido
-- **Una imagen tras el HUD**: cuando la segunda pantalla solo tiene el HUD (un juego sin mapa, como Super
-  Castlevania IV, o antes de la primera captura del mapa), la carátula o el icono del juego llena el resto,
-  oscurecido para que el HUD se lea. Una imagen propia va en `snes-ds/backgrounds/<id o nombre de la ROM>.png` (o
-  `.jpg`). Activado por defecto; Ajustes → Imagen tras el HUD lo desactiva.
+- **Una imagen tras el HUD**: cuando la segunda pantalla solo tiene el HUD, o nada (un juego sin mapa, como Super
+  Castlevania IV, un juego sin perfil, o antes de la primera captura del mapa), la carátula o el icono del juego
+  llena el resto, oscurecido para que el HUD se lea. Una imagen propia va en
+  `snes-ds/backgrounds/<id o nombre de la ROM>.png` (o `.jpg`). Activado por defecto; Ajustes → Imagen tras el HUD lo
+  desactiva.
 
 ## 1.0.0
 

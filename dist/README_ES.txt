@@ -45,8 +45,8 @@ FPS, idioma y controles. Se guardan en snes-ds/snes-ds.cfg y valen para
 todos los juegos.
 
 Imagen tras el HUD: cuando la segunda pantalla solo tiene el HUD (un juego
-sin mapa, como Super Castlevania IV), la carátula o el icono del juego
-llena el resto, oscurecido. Para usar una imagen tuya, pon un PNG o JPG en
+sin mapa, como Super Castlevania IV, o uno sin perfil), la carátula o el
+icono del juego llena el resto, oscurecido. Para usar una imagen tuya, pon un PNG o JPG en
 snes-ds/backgrounds/, con el id del juego o el nombre del fichero de la ROM:
   snes-ds/backgrounds/super_castlevania_iv.png
   snes-ds/backgrounds/Super Castlevania IV (USA).jpg

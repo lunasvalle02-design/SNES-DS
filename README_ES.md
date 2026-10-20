@@ -57,8 +57,8 @@ pasan a la segunda pantalla, y un segundo núcleo oculto mantiene allí abierto 
   carátulas que haya descargado EmulationStation), y un menú de pausa: cuatro ranuras de estado con captura, ajustes
   y salir del juego o de la app. Todo funciona también con los botones.
 - **Una imagen tras el HUD.** Cuando la segunda pantalla solo tiene el HUD (un juego sin mapa, como Super
-  Castlevania IV), la carátula o el icono del juego llena el resto, oscurecido; o una imagen tuya, en
-  `snes-ds/backgrounds/`.
+  Castlevania IV, o uno sin perfil), la carátula o el icono del juego llena el resto, oscurecido; o una imagen tuya,
+  en `snes-ds/backgrounds/`.
 - **Los controles a tu manera.** Cualquier botón de la SNES, y uno más para el menú, se puede llevar a otro botón de
   la consola, un gatillo o una tecla, desde los ajustes.
 - **La imagen a tu gusto.** La relación de aspecto original de la SNES a escala entera, o 4:3 como en un televisor,

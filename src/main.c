@@ -283,8 +283,8 @@ static bool load_first(App* a, const char* const* paths, int n) {
 }
 
 /* the picture behind the HUD: the player's own (backgrounds/<id> or
- * backgrounds/<the ROM's name>, .png or .jpg), else the game's cover in the
- * list, else its icon */
+ * backgrounds/<the ROM's name>, .png or .jpg), else the game's cover (a
+ * game with no profile too), else its icon */
 static void load_background(App* a, const char* romPath) {
 	gfx_image_free(&a->background);
 	const Profile* p = a->game->profile;
@@ -303,15 +303,12 @@ static void load_background(App* a, const char* romPath) {
 	snprintf(own[3], sizeof(own[3]), "%s/backgrounds/%s.jpg", a->progDir, base);
 	const char* const ownp[] = { p ? own[0] : "", p ? own[1] : "", own[2], own[3] };
 	if (load_first(a, ownp, 4)) return;
-	if (!p) return;
-	const char* cover = NULL;
-	for (int i = 0; i < a->lib.count; i++) {
-		if (!strcmp(a->lib.games[i].path, romPath)) cover = a->lib.games[i].cover;
-	}
+	char* cover = library_cover(romPath);
 	char icon[1200];
-	snprintf(icon, sizeof(icon), "%s/assets/games/%s.png", a->progDir, p->id);
-	const char* const rest[] = { cover ? cover : "", icon };
+	snprintf(icon, sizeof(icon), "%s/assets/games/%s.png", a->progDir, p ? p->id : "");
+	const char* const rest[] = { cover ? cover : "", p ? icon : "" };
 	load_first(a, rest, 2);
+	free(cover);
 }
 
 /* behind the second screen, when it has nothing of its own but the HUD:
