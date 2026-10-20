@@ -205,7 +205,7 @@ tests → test on the device. One branch each:
 2. ⬜ Super Mario World (`game/super_mario_world`): the world map and the HUD.
 3. ⬜ Secret of Mana, Chrono Trigger and Final Fantasy VI (`game/secret_of_mana`, `game/chrono_trigger`,
    `game/final_fantasy_vi`): menus and the Mode 7 world map.
-4. ⬜ Super Castlevania IV and Dracula X (`game/super_castlevania_iv`, `game/castlevania_dracula_x`): the HUD.
+4. 🔶 Super Castlevania IV ✅ and Dracula X ⬜ (`game/super_castlevania_iv`, `game/castlevania_dracula_x`): the HUD.
 
 ## Phase 7: Integration ⬜
 

@@ -1,0 +1,34 @@
+# Super Castlevania IV: from power-on to Simon in control in block 1-1,
+# through play select, name entry (the default name) and the castle gate's
+# scene, checking the game's mode and state on the way (exits 1 if one is
+# off). Leaves in OUTDIR:
+#   play     Simon in block 1-1, in control ($0032 = 04, $0070 = 05)
+#
+#   scripts/check.sh ROMDIR super_castlevania_iv
+watch 0x32 1
+watch 0x70 1
+until 0x32 0xFF 0x02 1200              # the Konami logo, then the title's
+until 0x1C00 0xFF 0x06 1500            # stone wall and logo, all drawn
+wait 60
+tap START          # title -> play select
+wait 150
+expect 0x32 01
+tap START          # Start: a fade (03), then name entry (04)
+until 0x32 0xFF 0x04 300
+wait 60
+tap START          # the default name (left alone, name entry goes back to the title)
+wait 30
+expect 0x70 00
+until 0x70 0xFF 0x05 2000              # the gate's scene, loading, fading in: play
+wait 30
+save play
+expect 0x32 04
+expect 0x13F2 05   # hearts: 5
+expect 0x13F4 10   # Simon's health: 16, full
+expect 0x13F6 10   # the enemy's: 16
+expect 0x7C 05     # lives: the HUD shows P=04
+expect 0x8E 00     # no subweapon
+split 4 0 224      # BG3 alone: the HUD is lines 0-31
+wait 1
+splitbox
+split 0
