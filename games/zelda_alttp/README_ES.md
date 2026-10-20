@@ -34,7 +34,7 @@
 | `$7E040C` | Mazmorra ×2 | `FF` fuera de las mazmorras, `00` Castillo de Hyrule (incluido el Santuario) |
 | `$7E1CD2` | Esquina del cuadro de texto (VRAM) | `$6125` arriba (fila 9 de BG3, línea 72), `$6244` abajo (fila 18) |
 | `$7EF3C5` | Progreso | `02` = Zelda rescatada; permite empezar en el Santuario |
-| `$7E0202` | Objeto Y equipado | Aún sin usar (inventario táctil) |
+| `$7E0202` | Objeto Y equipado | Sin usar |
 | `$7E0016` | Actualizar el HUD en el próximo NMI | Aún sin usar |
 
 En el modo 1, BG1 es la lluvia o la capa superior, BG2 el terreno o la sala, y BG3 el HUD, el texto y el menú.
@@ -52,12 +52,12 @@ fotograma 110, así que el perfil silencia esos fotogramas (`bootMuteFrames`).
 Hace falta tu propia ROM; las partidas no, los guiones las crean.
 
 ```bash
+scripts/check.sh CARPETA_DE_ROMS zelda_alttp                     # todos, en orden (tests/order)
 ./build/harness ROM out games/zelda_alttp/tests/new_game.txt     # del encendido al mapa y el menú
 ./build/harness ROM out games/zelda_alttp/tests/sanctuary.txt    # una mazmorra (usa los estados del anterior)
-./build/harness ROM out games/zelda_alttp/tests/core_check.txt   # hashes del núcleo, frente a una ejecución anterior a un cambio
+./build/harness ROM out games/zelda_alttp/tests/core_check.txt   # hashes del núcleo (referencia: core_check.expected)
 ```
 
 ## Pendiente
 
-- Inventario táctil (`$7E0202` + `$7E0016`).
 - Otras regiones (Europa, Japón): sus CRC32, y si sus direcciones cambian.

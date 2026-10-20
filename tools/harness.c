@@ -3,6 +3,8 @@
  * device (like gba-ds' tools/harness.c).
  *
  *   harness ROM OUTDIR SCRIPT        (ROM: .sfc/.smc/.zip; SCRIPT "-" reads stdin)
+ *   harness --find ID ROMDIR         print the path of the ROM in ROMDIR (or its
+ *                                    subfolders) whose profile is games/ID
  *
  * Script commands, one per line (# starts a comment):
  *   wait N                     run N frames, no buttons
@@ -34,6 +36,9 @@
  *                              NAME_0..N.png and the result; fail unless it's
  *                              RESULT (ok, not_live, no_map, unsettled, empty)
  *   hash                       CRC32s of the picture, the split picture, WRAM
+ *   audio N [NAME]             run N frames recording the sound to NAME.wav,
+ *                              printing each frame's loudness and the APU
+ *                              ports / DSP setup when a sound starts
  *   threads on|off             draw on a thread of its own (core_set_threaded)
  *   echo TEXT / frame / quit
  * ADDR is hex; below 0x20000 it's an offset into WRAM ($7E0000), so 0x10
@@ -45,6 +50,7 @@
 #include <time.h>
 
 #include "core.h"
+#include "library.h"
 #include "mapcap.h"
 #include "profiles.h"
 #include "romfile.h"
@@ -540,8 +546,20 @@ static void command(char* line) {
 }
 
 int main(int argc, char** argv) {
+	/* the ROM of one game (by its profile's id) in a folder: for scripts/check.sh */
+	if (argc == 4 && !strcmp(argv[1], "--find")) {
+		Library lib;
+		library_scan(&lib, argv[3], NULL);
+		int found = -1;
+		for (int i = 0; i < lib.count && found < 0; i++) {
+			if (!strcmp(lib.games[i].profile->id, argv[2])) found = i;
+		}
+		if (found >= 0) puts(lib.games[found].path);
+		library_free(&lib);
+		return found >= 0 ? 0 : 1;
+	}
 	if (argc < 4) {
-		fprintf(stderr, "usage: harness ROM OUTDIR SCRIPT\n");
+		fprintf(stderr, "usage: harness ROM OUTDIR SCRIPT\n       harness --find ID ROMDIR\n");
 		return 2;
 	}
 	outdir = argv[2];

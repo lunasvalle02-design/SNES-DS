@@ -34,7 +34,7 @@
 | `$7E040C` | Dungeon ×2 | `FF` outside dungeons, `00` Hyrule Castle (the Sanctuary included) |
 | `$7E1CD2` | The text box's corner (VRAM) | `$6125` at the top (BG3 row 9, line 72), `$6244` at the bottom (row 18) |
 | `$7EF3C5` | Progress | `02` = Zelda rescued; lets a game start at the Sanctuary |
-| `$7E0202` | Equipped Y item | Not used yet (touch inventory) |
+| `$7E0202` | Equipped Y item | Not used |
 | `$7E0016` | Update the HUD at the next NMI | Not used yet |
 
 In Mode 1, BG1 is the rain or the top layer, BG2 the terrain or the room, and BG3 the HUD, the text and the menu.
@@ -52,12 +52,12 @@ frames (`bootMuteFrames`).
 Your own ROM is needed; saves are not, the scripts make them.
 
 ```bash
+scripts/check.sh ROMDIR zelda_alttp                              # all of them, in order (tests/order)
 ./build/harness ROM out games/zelda_alttp/tests/new_game.txt     # power-on to the map and the menu
 ./build/harness ROM out games/zelda_alttp/tests/sanctuary.txt    # a dungeon (uses the states the first leaves)
-./build/harness ROM out games/zelda_alttp/tests/core_check.txt   # core hashes, against a run before a change
+./build/harness ROM out games/zelda_alttp/tests/core_check.txt   # core hashes (reference: core_check.expected)
 ```
 
 ## To do
 
-- Touch inventory (`$7E0202` + `$7E0016`).
 - Other regions (Europe, Japan): their CRC32s, and whether their addresses differ.

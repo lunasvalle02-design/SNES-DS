@@ -239,14 +239,18 @@ games/
     tests/*.txt           its harness scripts
 ```
 
+The full procedure, with the branch to use (`game/<id>`) and what a pull request needs, is in
+[AGENTS.md](AGENTS.md); in short:
+
 1. **Research it with the harness:** `layershot` shows which layer holds the HUD or a menu; `watch` and `dumpram`
    find the memory values that tell each screen apart.
 2. **Write `games/<id>/profile.c`** with `const Profile game_<id> = { .id = "<id>", ... }`, plus its `README.md`
    and `tests/`.
 3. **Register it** in [`games/games.c`](games/games.c): `extern const Profile game_<id>;` and `&game_<id>,`.
 
-CMake picks up `games/*/*.c` on its own. Should a game ever need code of its own (a touch inventory, say), it goes
-in its directory and its profile hooks it in.
+CMake picks up `games/*/*.c` on its own. Should a game ever need code of its own (a second screen drawn its own way, say), it goes
+in its directory and its profile hooks it in, through a generic hook the engine gains first (see
+[AGENTS.md](AGENTS.md#game-specific-code-and-optimisations)).
 
 ## Testing
 
@@ -266,7 +270,11 @@ Its commands (presses, per-layer screenshots, `peek`/`watch`/`expect` on memory,
 | `core_check.txt` | Picture, split-picture and RAM hashes, to prove a core change gives the very same results |
 
 The scripts exit with status 1 when anything differs. You need your own ROM; saves aren't needed, the scripts
-make them.
+make them. To run every game's tests in order, finding each ROM by its profile:
+
+```bash
+scripts/check.sh ROMDIR
+```
 
 ## Project layout
 
@@ -290,6 +298,7 @@ make them.
 
 | Document | |
 |---|---|
+| [AGENTS.md](AGENTS.md) | For contributors and coding agents: rules, branches, how to add a game |
 | [ROADMAP.md](ROADMAP.md) | Phases, status, measurements and risks |
 | [RESEARCH.md](RESEARCH.md) | The original feasibility study: gba-ds, the hardware, choosing a core |
 | [third_party/lakesnes/PATCHES.md](third_party/lakesnes/PATCHES.md) | Every change made to LakeSnes |

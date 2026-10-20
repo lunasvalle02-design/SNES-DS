@@ -18,8 +18,8 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente
 | 2 | App de escritorio con dos pantallas, lista de juegos y menú de pausa | ✅ |
 | 3 | Segunda pantalla para A Link to the Past | 🔶 Falta la pantalla de reserva |
 | 4 | La consola (ROCKNIX) | 🔶 Falta medir en la consola la velocidad de la v0.2 en adelante |
-| 5 | Táctil y comodidad | 🔶 |
-| 6 | Más juegos | ⬜ |
+| 5 | Táctil y comodidad | ✅ Cerrada por ahora |
+| 6 | Más juegos | 🔶 La base está hecha; aún ningún juego nuevo |
 | 7 | Integración (EmulationStation, RetroAchievements) | ⬜ |
 
 ## Versiones
@@ -158,23 +158,39 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente
   log apunta las dos cosas).
 - ⬜ BananaOS (KMSDRM, una ventana por panel).
 
-## Fase 5: Táctil y comodidad 🔶
+## Fase 5: Táctil y comodidad ✅
+
+Cerrada por ahora. El táctil maneja las pantallas propias de SNES DS; los juegos no lo usan, por decisión (comodidad
+y estabilidad), así que el inventario táctil de A Link to the Past queda descartado.
 
 - ✅ La lista de juegos y el menú por táctil; tocar la pantalla de abajo pausa el juego y abre el menú.
-- ✅ Intercambiar pantallas (ajustes). ⬜ Ocultar la segunda pantalla, ajustes por juego.
-- ✅ Carátulas en la lista de juegos. ⬜ Mostrar también los juegos sin perfil (jugables a una pantalla).
-- ⬜ **Inventario táctil en A Link to the Past:** tocar un objeto escribe `$7E0202` y pone `$7E0016` a 1, solo en
-  `07|09/00` y solo con los objetos que se tienen (`$7EF340…`).
+- ✅ Intercambiar pantallas (ajustes).
+- ✅ Carátulas en la lista de juegos.
+- ✅ La interfaz en inglés y en español.
+- ❌ Inventario táctil en A Link to the Past (descartado).
+- Más adelante: ocultar la segunda pantalla, ajustes por juego, mostrar los juegos sin perfil (jugables a una
+  pantalla).
 
-## Fase 6: Más juegos ⬜
+## Fase 6: Más juegos 🔶
 
-El mismo camino para cada uno: harness → `layershot` para las capas → `watch`/`ramdiff` para los indicadores →
-perfil → prueba en la consola.
+**Paso 0, hecho ✅: la base para añadir juegos en ramas separadas**, ya sean agentes o personas:
 
-1. **Super Metroid**: el mapa de pausa y el minimapa del HUD.
-2. Super Mario World: el mapa del mundo y el HUD.
-3. Secret of Mana, Chrono Trigger y Final Fantasy VI: menús y el mapa del mundo en Mode 7.
-4. Super Castlevania IV y Dracula X: el HUD.
+- ✅ [AGENTS.md](AGENTS.md) ([en español](AGENTS_ES.md)): las reglas básicas, el esquema de ramas (`game/<id>`,
+  `engine/<tema>`, `fix/<tema>`, `docs/<tema>`), el flujo investigación → perfil → tests → documentación, y cómo llegan
+  al motor el código y las optimizaciones propias de un juego (hooks genéricos y opcionales en ramas `engine/`).
+- ✅ [`scripts/check.sh`](scripts/check.sh): los tests de todos los juegos con un solo comando, cada ROM encontrada por
+  su perfil (`harness --find`), con los hashes de referencia del núcleo guardados en el repositorio
+  (`core_check.expected`).
+- ✅ [`docs/game-template/`](docs/game-template): un perfil, los README y un primer test de los que partir.
+
+Después, el mismo camino para cada juego: harness → `layershot` para las capas → `watch` para los indicadores →
+perfil → tests → prueba en la consola. Una rama cada uno:
+
+1. ⬜ **Super Metroid** (`game/super_metroid`): el mapa de pausa y el minimapa del HUD.
+2. ⬜ Super Mario World (`game/super_mario_world`): el mapa del mundo y el HUD.
+3. ⬜ Secret of Mana, Chrono Trigger y Final Fantasy VI (`game/secret_of_mana`, `game/chrono_trigger`,
+   `game/final_fantasy_vi`): menús y el mapa del mundo en Mode 7.
+4. ⬜ Super Castlevania IV y Dracula X (`game/super_castlevania_iv`, `game/castlevania_dracula_x`): el HUD.
 
 ## Fase 7: Integración ⬜
 

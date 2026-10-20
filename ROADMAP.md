@@ -17,8 +17,8 @@ Legend: ✅ done · 🔶 in progress · ⬜ to do
 | 2 | Desktop app with two screens, game list and pause menu | ✅ |
 | 3 | Second screen for A Link to the Past | 🔶 A fallback screen is missing |
 | 4 | The device (ROCKNIX) | 🔶 The speed of v0.2+ is still to be measured on the console |
-| 5 | Touch and comfort | 🔶 |
-| 6 | More games | ⬜ |
+| 5 | Touch and comfort | ✅ Closed for now |
+| 6 | More games | 🔶 The groundwork is done; no new game yet |
 | 7 | Integration (EmulationStation, RetroAchievements) | ⬜ |
 
 ## Versions
@@ -153,23 +153,37 @@ Legend: ✅ done · 🔶 in progress · ⬜ to do
   output (the log records both).
 - ⬜ BananaOS (KMSDRM, one window per panel).
 
-## Phase 5: Touch and comfort 🔶
+## Phase 5: Touch and comfort ✅
+
+Closed for now. Touch drives SNES DS's own screens; games themselves don't use it, by choice (convenience and
+stability), so the touch inventory for A Link to the Past is dropped.
 
 - ✅ The game list and the menu by touch; a tap on the bottom screen pauses the game into the menu.
-- ✅ Swap the screens (settings). ⬜ Hide the second screen, per-game settings.
-- ✅ Covers in the game list. ⬜ Also list the games without a profile (playable on one screen).
-- ⬜ **Touch inventory in A Link to the Past:** tapping an item writes `$7E0202` and sets `$7E0016` to 1, only in
-  `07|09/00` and only for items the player has (`$7EF340…`).
+- ✅ Swap the screens (settings).
+- ✅ Covers in the game list.
+- ✅ The interface in English and Spanish.
+- ❌ Touch inventory in A Link to the Past (dropped).
+- Later: hide the second screen, per-game settings, list the games without a profile (playable on one screen).
 
-## Phase 6: More games ⬜
+## Phase 6: More games 🔶
 
-The same path for each: harness → `layershot` for the layers → `watch`/`ramdiff` for the indicators → profile →
-test on the device.
+**Step 0, done ✅: the groundwork for adding games on separate branches**, by agents or people alike:
 
-1. **Super Metroid**: the pause map and the HUD's minimap.
-2. Super Mario World: the world map and the HUD.
-3. Secret of Mana, Chrono Trigger and Final Fantasy VI: menus and the Mode 7 world map.
-4. Super Castlevania IV and Dracula X: the HUD.
+- ✅ [AGENTS.md](AGENTS.md): the ground rules, the branch scheme (`game/<id>`, `engine/<topic>`, `fix/<topic>`,
+  `docs/<topic>`), the research → profile → tests → documentation workflow, and how game-specific code and
+  optimisations reach the engine (generic, opt-in hooks in `engine/` branches).
+- ✅ [`scripts/check.sh`](scripts/check.sh): every game's tests in one command, each ROM found by its profile
+  (`harness --find`), with the core's reference hashes kept in the repository (`core_check.expected`).
+- ✅ [`docs/game-template/`](docs/game-template): a profile, READMEs and a first test to start from.
+
+Then the same path for each game: harness → `layershot` for the layers → `watch` for the indicators → profile →
+tests → test on the device. One branch each:
+
+1. ⬜ **Super Metroid** (`game/super_metroid`): the pause map and the HUD's minimap.
+2. ⬜ Super Mario World (`game/super_mario_world`): the world map and the HUD.
+3. ⬜ Secret of Mana, Chrono Trigger and Final Fantasy VI (`game/secret_of_mana`, `game/chrono_trigger`,
+   `game/final_fantasy_vi`): menus and the Mode 7 world map.
+4. ⬜ Super Castlevania IV and Dracula X (`game/super_castlevania_iv`, `game/castlevania_dracula_x`): the HUD.
 
 ## Phase 7: Integration ⬜
 

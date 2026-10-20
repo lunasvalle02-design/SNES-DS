@@ -242,14 +242,18 @@ games/
     tests/*.txt           sus guiones del harness
 ```
 
+El procedimiento completo, con la rama que usar (`game/<id>`) y lo que necesita un pull request, está en
+[AGENTS_ES.md](AGENTS_ES.md); en resumen:
+
 1. **Investígalo con el harness:** `layershot` muestra qué capa lleva el HUD o un menú; `watch` y `dumpram`
    encuentran los valores de memoria que distinguen cada pantalla.
 2. **Escribe `games/<id>/profile.c`** con `const Profile game_<id> = { .id = "<id>", ... }`, junto con su
    `README.md` y sus `tests/`.
 3. **Regístralo** en [`games/games.c`](games/games.c): `extern const Profile game_<id>;` y `&game_<id>,`.
 
-CMake recoge `games/*/*.c` por sí solo. Si algún día un juego necesita código propio (un inventario táctil, por
-ejemplo), irá en su directorio y su perfil lo enganchará.
+CMake recoge `games/*/*.c` por sí solo. Si algún día un juego necesita código propio (una segunda pantalla dibujada a su manera, por
+ejemplo), irá en su directorio y su perfil lo enganchará, mediante un hook genérico que el motor gane antes (ver
+[AGENTS_ES.md](AGENTS_ES.md#código-propio-de-un-juego-y-optimizaciones)).
 
 ## Pruebas
 
@@ -269,6 +273,11 @@ Sus comandos (pulsaciones, capturas por capa, `peek`/`watch`/`expect` sobre la m
 | `core_check.txt` | Hashes de la imagen, la imagen separada y la RAM, para demostrar que un cambio en el núcleo da exactamente los mismos resultados |
 
 Los guiones salen con código 1 si algo cambia. Hace falta tu propia ROM; las partidas no, los guiones las crean.
+Para pasar los tests de todos los juegos en orden, encontrando cada ROM por su perfil:
+
+```bash
+scripts/check.sh CARPETA_DE_ROMS
+```
 
 ## Estructura del proyecto
 
@@ -292,6 +301,7 @@ Los guiones salen con código 1 si algo cambia. Hace falta tu propia ROM; las pa
 
 | Documento | |
 |---|---|
+| [AGENTS_ES.md](AGENTS_ES.md) | Para colaboradores y agentes: reglas, ramas, cómo añadir un juego |
 | [ROADMAP_ES.md](ROADMAP_ES.md) | Fases, estado, medidas y riesgos |
 | [INVESTIGACION_ES.md](INVESTIGACION_ES.md) | El estudio de viabilidad inicial: gba-ds, el hardware, la elección del núcleo |
 | [third_party/lakesnes/PATCHES.md](third_party/lakesnes/PATCHES.md) | Todos los cambios hechos a LakeSnes (en inglés) |

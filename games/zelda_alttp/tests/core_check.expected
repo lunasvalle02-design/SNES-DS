@@ -1,0 +1,27 @@
+# core_check.txt's hashes from the original core: any change to the core must give these
+hash frame 120: picture 37F8DB0A split AA8E0D21 wram F27E7EC9
+hash frame 420: picture 61FCC478 split AA8E0D21 wram 14F9D023
+hash frame 720: picture B488FEFC split AA8E0D21 wram 72992EF1
+hash frame 1320: picture C8B8067F split AA8E0D21 wram DB7777A4
+hash frame 1320: picture C8B8067F split AA8E0D21 wram 04C848F5
+hash frame 1350: picture 977E2399 split AA8E0D21 wram 76A55F88
+hash frame 1410: picture AA8E0D21 split AA8E0D21 wram 4AEE31C8
+hash frame 1500: picture 54FB2C24 split AA8E0D21 wram EBFF68AD
+hash frame 1620: picture 3CCB83FA split AA8E0D21 wram C8FFE474
+hash frame 1622: picture 691D9A8C split 8190988E wram B05A8755
+hash frame 1662: picture 13115BCC split 8190988E wram FBC3137E
+hash frame 1664: picture ECAEF78E split AA8E0D21 wram 917C6198
+hash frame 1704: picture 05B0ABCA split AA8E0D21 wram DD634FDD
+hash frame 1744: picture 5DE40992 split AA8E0D21 wram 42CB69DD
+hash frame 1746: picture 0F70C49B split 98D37641 wram B40D4CAC
+hash frame 1776: picture 0F70C49B split 98D37641 wram 1EE42228
+hash frame 1778: picture E538459B split AA8E0D21 wram B92CF1EC
+hash frame 1786: picture 954D6D3C split AA8E0D21 wram 22AB9F84
+hash frame 1796: picture E58E2ED4 split AA8E0D21 wram 7E02F82C
+hash frame 1826: picture E58E2ED4 split AA8E0D21 wram 7E1FD15A
+hash frame 1886: picture E58E2ED4 split AA8E0D21 wram F89CE743
+hash frame 1914: picture AA8E0D21 split AA8E0D21 wram DDCE8214
+hash frame 1954: picture 7B32D005 split AA8E0D21 wram 1E0B40FF
+hash frame 2014: picture C7361000 split AA8E0D21 wram 4D997827
+hash frame 2044: picture BB29C710 split AA8E0D21 wram 77E2EAE9
+hash frame 2064: picture 3D6A42A8 split AA8E0D21 wram 7044691B

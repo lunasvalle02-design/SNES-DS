@@ -1,0 +1,15 @@
+# <Full title>: from power-on to normal play, checking the memory flags the
+# profile relies on (exits 1 if one is off), with save states along the way
+# (in OUTDIR) for the other scripts:
+#   play     normal play, the HUD on screen
+#
+#   scripts/check.sh ROMDIR <id>
+watch 0x0000 1     # <the main mode byte>
+wait 300
+tap START          # <title -> file select>
+until 0x0000 0xFF 0x00 900
+save play
+expect 0x0000 00   # <normal play>
+split 4 0 32
+splitbox           # <the HUD is lines …>
+split 0
