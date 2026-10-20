@@ -16,6 +16,8 @@
   the game screen in a level (`$0100` = `14`), paused too. The level's BG1, BG2 and sprites are drawn behind it, so the
   game screen keeps all 224 lines; the level's own BG3 below line 37 (message boxes, tides) stays on the game screen.
   Between levels (fading, loading, the world map) there is no rule, and the second screen keeps the last status bar.
+  **The item in the item box stays on the game screen:** it's a sprite (x 120-135, lines 15-30), so the box goes down
+  empty and the item floats at the top of the level, without its frame.
 - **Map:** the world map itself. The game has no map to open from a level, so the hidden core captures the world map
   while Mario stands on it (`$0100` = `0E`, `$13D9` = `03`): nothing to open, and the picture settles in about 5
   frames. It's captured again when Mario moves to another tile or submap, and every 2 seconds while he stands still
@@ -43,8 +45,9 @@ the top (Mario's lives and the tile's name), and Mario is a sprite.
 
 - The status bar's tiles don't reach line 37: `splitbox` on BG3 lines 0-36 gives lines 9-36 in every level tried
   (the intro, Yoshi's Island 1, paused), and the intro's message box (BG3, lines 40-110) stays on the game screen.
-- The item in the item box is a sprite: it stays on the game screen (only BG3 goes down, so Mario and the level's
-  sprites, which can go up to the top lines when Mario jumps or flies, never split).
+- The item in the item box is a sprite: with a mushroom poked in (`$0DC2` = `01`), `split 16 0 37` and `splitbox`
+  give x 120-135, lines 15-30. It stays on the game screen: only BG3 goes down, because sprites over lines 0-36 are
+  also Mario and the level's own when he jumps or flies, and a profile can only pick sprites by lines, not by place.
 - The world map has its own top line (Mario's face, his lives and the tile's name, lines 17-37), which the status
   bar is drawn over on the second screen: the two overlap a little (the status bar's lower row and the item box over
   the tile's name). Both stay readable; a profile can't leave lines out of a capture yet.
@@ -70,6 +73,8 @@ scripts/check.sh ROMDIR super_mario_world
 
 - The Mode 7 boss rooms (Iggy, Morton, Bowser…), the castles' and ghost houses' intros, the bonus game, the
   switch palaces and the ending, which the tests don't reach yet: if one draws the status bar elsewhere, it shows.
+- The item in the item box on the second screen, with its frame: it needs the engine to send sprites down by place
+  (a rectangle, x 120-135 by lines 15-30), in an `engine/` branch first.
 - On the RG DS Plus: how the status bar looks over the world map's top line, and the map's refresh.
 - Two players: whether the capture follows Luigi on his turns (his position and submap aren't checked yet).
 - Other regions (Europe, Japan's *Super Mario World: Super Mario Bros. 4*): their CRC32s and addresses.

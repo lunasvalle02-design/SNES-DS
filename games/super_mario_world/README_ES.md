@@ -17,6 +17,8 @@
   BG2 y los sprites del nivel se dibujan detrás, así que la pantalla de juego conserva sus 224 líneas; el BG3 propio
   del nivel por debajo de la línea 37 (cuadros de mensaje, mareas) se queda en la pantalla de juego. Entre niveles
   (fundidos, cargas, el mapa del mundo) no hay regla, y la segunda pantalla conserva la última barra de estado.
+  **El objeto de reserva se queda en la pantalla de juego:** es un sprite (x 120-135, líneas 15-30), así que el cuadro
+  baja vacío y el objeto flota arriba del nivel, sin su marco.
 - **Mapa:** el propio mapa del mundo. El juego no tiene un mapa que abrir desde un nivel, así que el núcleo oculto
   captura el mapa del mundo mientras Mario está parado en él (`$0100` = `0E`, `$13D9` = `03`): no hay nada que abrir,
   y la imagen se estabiliza en unos 5 fotogramas. Se vuelve a capturar cuando Mario pasa a otra casilla o a otro
@@ -45,8 +47,10 @@ mapa, el BG3 su marco y la línea de arriba (las vidas de Mario y el nombre de l
 - Los tiles de la barra de estado no llegan a la línea 37: `splitbox` sobre el BG3 de las líneas 0-36 da las líneas
   9-36 en todos los niveles probados (la intro, Yoshi's Island 1, en pausa), y el cuadro de mensaje de la intro (BG3,
   líneas 40-110) se queda en la pantalla de juego.
-- El objeto de reserva es un sprite: se queda en la pantalla de juego (solo baja el BG3, así que Mario y los sprites
-  del nivel, que pueden subir a las líneas de arriba cuando Mario salta o vuela, nunca se parten).
+- El objeto de reserva es un sprite: con un champiñón escrito a mano (`$0DC2` = `01`), `split 16 0 37` y `splitbox`
+  dan x 120-135, líneas 15-30. Se queda en la pantalla de juego: solo baja el BG3, porque los sprites de las líneas
+  0-36 también son Mario y los del nivel cuando salta o vuela, y un perfil solo puede elegir sprites por líneas, no
+  por sitio.
 - El mapa del mundo tiene su propia línea de arriba (la cara de Mario, sus vidas y el nombre de la casilla, líneas
   17-37), sobre la que se dibuja la barra de estado en la segunda pantalla: las dos se solapan un poco (la fila de
   abajo de la barra y el cuadro de reserva sobre el nombre de la casilla). Las dos se leen; un perfil todavía no puede
@@ -75,6 +79,8 @@ scripts/check.sh ROMDIR super_mario_world
 - Las salas de jefe en Mode 7 (Iggy, Morton, Bowser…), las entradas de castillos y casas fantasma, el juego de bonus,
   los palacios de interruptores y el final, a los que los tests aún no llegan: si alguno dibuja la barra de estado en
   otro sitio, se notará.
+- El objeto de reserva en la segunda pantalla, con su marco: hace falta que el motor baje sprites por sitio (un
+  rectángulo, x 120-135 por las líneas 15-30), antes en una rama `engine/`.
 - En la RG DS Plus: cómo se ve la barra de estado sobre la línea de arriba del mapa del mundo, y el refresco del mapa.
 - Dos jugadores: si la captura sigue a Luigi en sus turnos (su posición y su submapa aún no se han comprobado).
 - Otras regiones (Europa, la japonesa *Super Mario World: Super Mario Bros. 4*): sus CRC32 y direcciones.

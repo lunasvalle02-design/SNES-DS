@@ -17,15 +17,18 @@
  * time, coins, score). An IRQ under it changes BG3's scroll, so the level's
  * own BG3 (message boxes, tides, backgrounds) stays on the game screen.
  * The level's BG1/BG2 and its sprites are drawn behind it, so the game
- * screen keeps all its lines */
+ * screen keeps all its lines. The item in the box is a sprite (x 120-135,
+ * lines 15-30, seen with $0DC2 = 01): it stays on the game screen, and the
+ * box goes down empty; sprites can't go down with it, or Mario would too
+ * when he jumps that high */
 #define HUD .kind = SPLIT_HUD, .layers = LAYER_BG3, .y0 = 0, .y1 = 37
 
 const Profile game_super_mario_world = {
 	.id = "super_mario_world",
 	.title = "Super Mario World",
 	.about = {
-		[LANG_EN] = "The world map, where you last stood on it, with the status bar (lives, item box, time, coins and score) over it, on the bottom screen.",
-		[LANG_ES] = "El mapa del mundo, donde estuviste por última vez, con la barra de estado (vidas, objeto de reserva, tiempo, monedas y puntos) encima, en la pantalla de abajo.",
+		[LANG_EN] = "The world map, where you last stood on it, with the status bar (lives, time, coins and score) over it, on the bottom screen. The item in reserve stays on the top screen.",
+		[LANG_ES] = "El mapa del mundo, donde estuviste por última vez, con la barra de estado (vidas, tiempo, monedas y puntos) encima, en la pantalla de abajo. El objeto de reserva se queda en la de arriba.",
 	},
 	.crc32 = { 0xB19ED489 }, /* USA, v1.0 */
 	/* in a level; the modes in between (fading, loading, the world map)
