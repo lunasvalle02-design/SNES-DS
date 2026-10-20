@@ -1,0 +1,272 @@
+# A Link to the Past (USA): from power-on to Link outside his house, checking
+# the memory flags and the map capture on the way (exits 1 if one is off), with save
+# states along the way (in OUTDIR) for the other scripts:
+#   house    Link's house, intro dialogue
+#   free     control of Link, indoors ($10/$11 = 07/00)
+#   outside  in front of the house, raining ($10/$11 = 09/00)
+#   map      the world map open, close-up ($10/$11 = 0E/07)
+#   menu     the item menu open ($10/$11 = 0E/01)
+#
+#   harness ROM out scripts/zelda/new_game.txt
+watch 0x10 2
+wait 700
+tap START          # title -> player select
+wait 120
+tap START
+wait 120
+tap A              # empty file 1
+wait 120
+tap A              # -> register your name
+wait 60
+tap A              # enter a few letters
+wait 10
+tap A
+wait 10
+tap A
+wait 10
+tap START          # -> END
+wait 60
+tap A              # pick the new file
+until 0x10 0xFF 0x0E 600
+wait 60
+save house
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+tap A
+wait 30
+until 0x11 0xFF 0x00 600
+wait 300
+save free
+expect 0x10 07 00
+expect 0x1B 01      # indoors
+map house no_map    # no map in Link's house
+hold DOWN 40       # out of the house
+hold RIGHT 60
+hold DOWN 120
+hold LEFT 28
+hold DOWN 150
+until 0x10 0xFF 0x09 600
+wait 60
+save outside
+expect 0x10 09 00
+expect 0x1B 00      # outdoors
+expect 0x8A 2C      # the area of Link's house
+map world ok        # the hidden core's capture: the whole world
+split 4 0 224       # BG3 alone: the HUD is lines 15-59
+wait 2
+splitbox
+split 0
+tap X              # world map
+wait 180
+expect 0x10 0E 07
+shot map
+save map
+tap X              # whole world
+wait 90
+shot world
+tap X              # closed
+wait 120
+tap START          # item menu
+wait 90
+expect 0x10 0E 01
+shot menu
+save menu
+tap START
+wait 90
+sheet new_game

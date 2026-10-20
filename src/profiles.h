@@ -1,0 +1,79 @@
+/* Everything game-specific: one Profile per game (profiles.c). Adding a game
+ * mostly means adding a profile; find its values with tools/harness. */
+#ifndef SNESDS_PROFILES_H
+#define SNESDS_PROFILES_H
+
+#include <stdbool.h>
+#include <stdint.h>
+
+#include "core.h"
+
+#define PROBES 4
+
+/* a byte in memory: (byte & mask) == val, or == alt when hasAlt.
+ * addr 0 ends a list; lists match when every probe matches */
+typedef struct {
+	uint32_t addr; /* full address, $7E0010 */
+	uint8_t mask, val;
+	bool hasAlt;
+	uint8_t alt;
+} MemProbe;
+
+/* buttons held for some frames (buttons 0: just wait) */
+typedef struct {
+	uint16_t buttons;
+	int frames;
+} Step;
+
+#define STEPS 6
+
+/* layers the second screen takes from the game's picture */
+typedef enum {
+	SPLIT_HUD,  /* a strip, drawn over the second screen's top */
+	SPLIT_FULL, /* a whole screen (a menu), shown instead of the map */
+} SplitKind;
+
+typedef struct {
+	MemProbe when[PROBES];
+	SplitKind kind;
+	uint8_t layers; /* LAYER_* */
+	int y0, y1;     /* picture lines */
+} SplitRule;
+
+#define SPLITS 4
+
+typedef struct {
+	bool enabled;
+	Step open[STEPS];          /* opens the map from normal play */
+	MemProbe open2If[PROBES];  /* then, when these match... */
+	int open2Delay;            /* ...after this many frames... */
+	Step open2[STEPS];         /* ...this (another zoom level) */
+	MemProbe live[PROBES];     /* normal play: a capture can start */
+	MemProbe shown[PROBES];    /* the map is on screen */
+	uint32_t room[4];          /* 16-bit values whose change starts a capture */
+	int openWithin;            /* frames for `shown` to match, else no map here */
+	int settleMax;             /* frames for the picture to settle */
+	int stableFrames;          /* frames in a row that differ by under maxDiff pixels */
+	int maxDiff;
+	int minForeground;         /* pixels not bgColor, or the capture is empty */
+	uint32_t bgColor;
+	int animFrames, animStep;  /* frames recorded, frames between them */
+	int refresh;               /* frames between captures in normal play */
+} MapSpec;
+
+typedef struct {
+	const char* title;
+	uint32_t crc32[4]; /* of the ROM without a copier header */
+	SplitRule split[SPLITS]; /* first match wins */
+	MapSpec map;
+} Profile;
+
+/* the profile for a ROM, or NULL */
+const Profile* profile_find(const uint8_t* rom, size_t size);
+uint32_t rom_crc32(const uint8_t* rom, size_t size);
+
+bool probes_match(Core* c, const MemProbe* p);
+/* the split rule that matches now, or NULL */
+const SplitRule* profile_split(const Profile* p, Core* c);
+
+#endif
