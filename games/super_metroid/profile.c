@@ -36,6 +36,10 @@ const Profile game_super_metroid = {
 	/* the whole HUD: energy, missiles, super missiles, power bombs, grapple,
 	 * x-ray and the minimap */
 	.hudShowY0 = 0, .hudShowY1 = 32,
+	/* nothing of the room is drawn behind the HUD's lines (BG1/BG2 start
+	 * at the IRQ of line 31), so the game screen shows lines 32-223 alone:
+	 * 256x192, which fills a 4:3 panel at 4x */
+	.gameShowY0 = 32, .gameShowY1 = CORE_H,
 	.map = {
 		.enabled = true,
 		/* Start pauses: 0C 6 frames later, the map (0F) 60 frames after that */
