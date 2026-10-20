@@ -4,8 +4,8 @@
 # Checks the dungeon map capture and the text box against the HUD split.
 # Leaves `sanct` (Link in the Sanctuary) in OUTDIR.
 #
-#   harness ROM out scripts/zelda/new_game.txt
-#   harness ROM out scripts/zelda/sanctuary.txt
+#   harness ROM out games/zelda_alttp/tests/new_game.txt
+#   harness ROM out games/zelda_alttp/tests/sanctuary.txt
 load free
 poke 0xF3C5 2      # progress: Zelda rescued
 tap SELECT         # Continue Game / Save and Quit

@@ -34,8 +34,8 @@ static int foreground(const MapSpec* m, const uint32_t* f) {
 }
 
 /* run until the picture holds still (blinking markers allowed). A (nearly)
- * empty picture doesn't count: A Link to the Past's dungeon map sits on a
- * black screen for a while before it's drawn */
+ * empty picture doesn't count: a map can sit on a black screen for a while
+ * before it's drawn */
 static bool settle(Core* c, const MapSpec* m, uint32_t* prev) {
 	int still = 0;
 	memcpy(prev, core_frame(c), sizeof(uint32_t) * CORE_W * CORE_H);

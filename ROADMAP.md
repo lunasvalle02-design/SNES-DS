@@ -30,7 +30,7 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente · ❓ decisión abierta
   entre núcleos, SRAM, ocultar y separar capas.
 - ✅ `tools/harness.c`: `wait/hold/tap/until`, `shot/layershot/splitshot/splitbox/sheet`, `peek/poke/watch/expect`,
   `dumpram`, `save/load`, `savesram/loadsram`, `hide/split`, `map`, `bench`.
-- ✅ Scripts para llegar al juego desde cero en [`scripts/zelda/`](scripts/zelda/).
+- ✅ Scripts para llegar al juego desde cero en [`games/zelda_alttp/tests/`](games/zelda_alttp/tests/).
 - ✅ **Comprobado en vivo con tu ROM:**
   - `$7E0010/11`: `07/00` es control libre en interior, `09/00` en exterior, `0E/02` diálogo, `0E/01` menú de
     objetos, `0E/07` mapa del mundo, y `09/20-22` el cierre del mapa.
@@ -43,8 +43,8 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente · ❓ decisión abierta
     220 ms en PC. En la casa de Link responde correctamente "no hay mapa aquí".
   - Velocidad de LakeSnes en PC: unos 240 fps (4× tiempo real).
 - ⬜ `tools/ramdiff.py`: comparar volcados de RAM, como en gba-ds.
-- ✅ Tests de regresión: `scripts/zelda/new_game.txt` (del encendido al mapa y el menú) y
-  `scripts/zelda/sanctuary.txt` (mazmorra: mapa de mazmorra y cuadro de texto arriba y abajo). Usan `expect`,
+- ✅ Tests de regresión: `games/zelda_alttp/tests/new_game.txt` (del encendido al mapa y el menú) y
+  `sanctuary.txt` (mazmorra: mapa de mazmorra y cuadro de texto arriba y abajo). Usan `expect`,
   `map … ok` y `untiltap`, salen con 1 si algo cambia y no necesitan partidas guardadas.
 
 ## Fase 2: App de escritorio con dos pantallas 🔶 (falta el menú de pausa)
@@ -62,8 +62,9 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente · ❓ decisión abierta
 - ⬜ Menú de pausa básico (continuar, guardar o cargar estado, cambiar de pantalla, salir).
 
 ## Fase 3: Segunda pantalla para Zelda 🔶 (falta la pantalla de reserva)
-- ✅ `src/profiles.c`: perfiles por juego basados en datos (sondas de memoria con máscara y valor, reglas de
-  separación de capas, cómo abrir el mapa).
+- ✅ Perfiles por juego basados en datos (sondas de memoria con máscara y valor, reglas de separación de capas, cómo
+  abrir el mapa). Hay un módulo por juego en `games/<id>/` (perfil, `README.md` con su mapa de memoria, tests)
+  registrado en `games/games.c`; el motor (`src/profiles.c`) no contiene datos de ningún juego.
 - ✅ **HUD abajo:** en los módulos `07`/`09` (incluido el paso entre salas), BG3 de las líneas 0-64 va a la
   pantalla inferior. También durante los diálogos (`0E/02`) y al cruzar puertas (`0F`/`10`): el cuadro de texto
   empieza en la fila 9 de BG3 (línea 72) si está arriba y en la 18 si está abajo (`$7E1CD2`), así que nunca toca el HUD.
@@ -124,6 +125,6 @@ perfil → prueba en el dispositivo.
 ```bash
 export PATH=/c/msys64/ucrt64/bin:$PATH
 cmake -S . -B build -G Ninja && cmake --build build
-./build/harness.exe "ROM.sfc" out scripts/zelda/new_game.txt
+./build/harness.exe "ROM.sfc" out games/zelda_alttp/tests/new_game.txt
 ./build/snes-ds.exe "ROM.sfc"
 ```

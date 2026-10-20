@@ -1,5 +1,7 @@
-/* Everything game-specific: one Profile per game (profiles.c). Adding a game
- * mostly means adding a profile; find its values with tools/harness. */
+/* What a game's second screen is made of, as data: one Profile per game,
+ * each in its own directory (games/<id>/profile.c, listed in games/games.c),
+ * so no game's settings or code mix with another's. Find a game's values
+ * with tools/harness. */
 #ifndef SNESDS_PROFILES_H
 #define SNESDS_PROFILES_H
 
@@ -18,6 +20,10 @@ typedef struct {
 	bool hasAlt;
 	uint8_t alt;
 } MemProbe;
+
+/* a byte equal to v (or to v or w) */
+#define PROBE(a, v) { (a), 0xFF, (v), false, 0 }
+#define PROBE_EITHER(a, v, w) { (a), 0xFF, (v), true, (w) }
 
 /* buttons held for some frames (buttons 0: just wait) */
 typedef struct {
@@ -62,6 +68,7 @@ typedef struct {
 } MapSpec;
 
 typedef struct {
+	const char* id;    /* its directory under games/ */
 	const char* title;
 	uint32_t crc32[4]; /* of the ROM without a copier header */
 	SplitRule split[SPLITS]; /* first match wins */

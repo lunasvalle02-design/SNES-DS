@@ -7,7 +7,7 @@
 #   map      the world map open, close-up ($10/$11 = 0E/07)
 #   menu     the item menu open ($10/$11 = 0E/01)
 #
-#   harness ROM out scripts/zelda/new_game.txt
+#   harness ROM out games/zelda_alttp/tests/new_game.txt
 watch 0x10 2
 wait 700
 tap START          # title -> player select

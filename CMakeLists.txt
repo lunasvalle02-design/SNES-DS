@@ -19,7 +19,9 @@ add_library(lakesnes STATIC ${LAKESNES_SRC})
 target_include_directories(lakesnes PUBLIC third_party/lakesnes)
 target_compile_options(lakesnes PRIVATE -w)
 
-add_library(snesds_core STATIC src/core.c src/profiles.c src/mapcap.c src/screen2.c)
+# the games' profiles: games/games.c lists them, one directory each
+file(GLOB GAME_SRC games/games.c games/*/*.c)
+add_library(snesds_core STATIC src/core.c src/profiles.c src/mapcap.c src/screen2.c ${GAME_SRC})
 target_include_directories(snesds_core PUBLIC src)
 find_package(Threads REQUIRED)
 target_link_libraries(snesds_core PUBLIC lakesnes Threads::Threads)

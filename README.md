@@ -42,21 +42,48 @@ Opciones (`--aspect=4:3`, `--layout=side`, `--screen=1024x768`, `--save-dir`, `-
 ## Harness (investigar juegos sin la consola)
 
 ```bash
-./build/harness.exe ROM out scripts/zelda/new_game.txt
+./build/harness.exe ROM out games/zelda_alttp/tests/new_game.txt
 ```
 
 Ejecuta el juego frame a frame desde un script: pulsaciones, capturas por capa, `peek`/`watch`/`expect`
 sobre la RAM, estados y captura del mapa. Los comandos están en la cabecera de [tools/harness.c](tools/harness.c).
-`scripts/zelda/new_game.txt` y `scripts/zelda/sanctuary.txt` (que necesita los estados del primero) hacen de
-tests de regresión: llegan desde el encendido hasta el mapa y el menú, y hasta una mazmorra, comprobando por el
+Los tests de cada juego están en `games/<id>/tests/`. Los de Zelda (`new_game.txt` y `sanctuary.txt`, que usa los
+estados del primero) hacen de tests de regresión: llegan desde el encendido hasta el mapa y el menú, y hasta una mazmorra, comprobando por el
 camino los valores de RAM, la captura del mapa y la separación del HUD.
+
+## Juegos: un módulo por juego
+
+Todo lo específico de un juego vive en su directorio y en ningún otro sitio:
+
+```
+games/
+  games.c                 la lista de juegos (una línea por juego)
+  zelda_alttp/
+    profile.c             su perfil: lo único que ve el motor
+    README.md             su mapa de memoria, capas y hallazgos
+    tests/*.txt           sus scripts del harness
+```
+
+El motor (`src/`) no sabe nada de ningún juego: lee el perfil (sondas de memoria, reglas de capas, cómo abrir el
+mapa) y lo aplica. Encuentra el perfil por el CRC32 de la ROM.
+
+**Añadir un juego:**
+1. Investigarlo con el harness: `layershot` para ver qué capa lleva el HUD o el menú, y `watch`/`dumpram` para
+   encontrar los valores de memoria que indican cada pantalla.
+2. Crear `games/<id>/profile.c` con `const Profile game_<id> = { .id = "<id>", ... }`, junto con su `README.md` y sus
+   `tests/`.
+3. Añadir `extern const Profile game_<id>;` y `&game_<id>,` en `games/games.c`.
+
+CMake recoge solo los `.c` de `games/*/`. Si algún día un juego necesita código propio (por ejemplo, el inventario
+táctil de Zelda), irá en su directorio y el perfil lo enganchará, sin tocar el motor ni los demás juegos.
 
 ## Estructura
 
 | Ruta | Qué es |
 |---|---|
 | `src/core.h/.c` | Interfaz del núcleo (LakeSnes detrás) |
-| `src/profiles.h/.c` | Todo lo específico de cada juego |
+| `src/profiles.h/.c` | El motor de perfiles (tipos, búsqueda por CRC32, evaluación de sondas) |
+| `games/` | Un directorio por juego, con su perfil, documentación y tests |
 | `src/mapcap.h/.c` | Captura del mapa con núcleo oculto, síncrona o en hilo |
 | `src/screen2.h/.c` | Qué muestra la segunda pantalla |
 | `src/main.c` | La app (SDL2) |
