@@ -426,6 +426,9 @@ int main(int argc, char** argv) {
 	}
 	uint64_t scanT = SDL_GetPerformanceCounter();
 	library_scan(&a->lib, opt.romDir, cachePath);
+	char icons[1200];
+	snprintf(icons, sizeof(icons), "%s/games", assets);
+	library_add_icons(&a->lib, icons);
 	printf("library: %s: %d games with a profile (of %d ROMs) in %.0f ms\n", opt.romDir, a->lib.count, a->lib.scanned,
 	       ms_since(scanT));
 	a->ui = ui_new(a->gfx, &a->set, &a->lib, opt.romDir, "v" SNESDS_VERSION);

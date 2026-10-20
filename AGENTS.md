@@ -156,6 +156,11 @@ map refreshing. Check the start-up sound. Keep any screenshots in `out/`.
 
 ### 6. Finish it
 
+- **Its icon** for the game list: `games/<id>/icon.py` (from the template) describes an original drawing with simple
+  shapes, and `python tools/icon.py games/<id>/icon.py` turns it into `games/<id>/icon.png` (512x384); commit both.
+  Never the game's logo, box art, sprites or anything else of its own (ground rule 1): a scene or object that calls
+  the game to mind, drawn from scratch. A cover the player's frontend downloaded (EmulationStation's) still comes
+  first.
 - `games/<id>/README.md` and `README_ES.md` (from the template): ROM, what the second screen shows, the memory map
   with how each value was checked, findings, tests, what's left.
 - Add the game's row to "Supported games" in [README.md](README.md) and [README_ES.md](README_ES.md), and tick it in

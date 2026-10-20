@@ -22,6 +22,10 @@ typedef struct {
 
 /* cachePath may be NULL (no cache) */
 void library_scan(Library* lib, const char* dir, const char* cachePath);
+/* the games with no cover of their own get their module's icon,
+ * DIR/<id>.png, when it's there (games/<id>/icon.png, copied beside the
+ * program) */
+void library_add_icons(Library* lib, const char* dir);
 void library_free(Library* lib);
 
 #endif

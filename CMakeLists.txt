@@ -77,3 +77,12 @@ target_compile_options(snes-ds PRIVATE -Wall -Wextra)
 # the fonts go beside the program
 add_custom_command(TARGET snes-ds POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:snes-ds>/assets)
+# and each game's icon, as assets/games/<id>.png
+file(GLOB GAME_ICONS ${CMAKE_SOURCE_DIR}/games/*/icon.png)
+foreach(icon ${GAME_ICONS})
+	get_filename_component(dir ${icon} DIRECTORY)
+	get_filename_component(id ${dir} NAME)
+	add_custom_command(TARGET snes-ds POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:snes-ds>/assets/games
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different ${icon} $<TARGET_FILE_DIR:snes-ds>/assets/games/${id}.png)
+endforeach()

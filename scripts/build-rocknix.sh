@@ -47,6 +47,10 @@ cp "dist/SNES DS.sh" "$PKG/"
 cp third_party/lakesnes/LICENSE.txt "$PKG/snes-ds/licenses/LakeSnes-LICENSE.txt"
 cp third_party/zip/README.md "$PKG/snes-ds/licenses/zip-miniz.txt"
 cp -r assets "$PKG/snes-ds/"
+mkdir -p "$PKG/snes-ds/assets/games"
+for icon in games/*/icon.png; do
+	[ -f "$icon" ] && cp "$icon" "$PKG/snes-ds/assets/games/$(basename "$(dirname "$icon")").png"
+done
 cp assets/fonts/OFL.txt "$PKG/snes-ds/licenses/Nunito-OFL.txt"
 chmod +x "$PKG/snes-ds/"*.sh "$PKG/snes-ds/snes-ds" "$PKG/snes-ds/harness" "$PKG/SNES DS.sh"
 mkdir -p dist
