@@ -9,7 +9,8 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-FF8A1F" alt="License: GPL-3.0-or-later"></a>
-  <img src="https://img.shields.io/badge/version-1.0.0-FF8A1F" alt="Version 1.0.0">
+  <a href="https://github.com/lunasvalle02-design/SNES-DS/releases/latest"><img src="https://img.shields.io/badge/version-1.0.0-FF8A1F" alt="Version 1.0.0"></a>
+  <a href="https://github.com/lunasvalle02-design/SNES-DS/actions/workflows/build.yml"><img src="https://github.com/lunasvalle02-design/SNES-DS/actions/workflows/build.yml/badge.svg" alt="Build"></a>
   <img src="https://img.shields.io/badge/platform-ROCKNIX%20%7C%20Windows%20%7C%20Linux-3B3129" alt="Platforms: ROCKNIX, Windows, Linux">
   <img src="https://img.shields.io/badge/language-C11-3B3129" alt="Language: C11">
 </p>
@@ -25,8 +26,9 @@ game, a small **profile** tells the emulator which parts of the picture belong e
 move to the second screen, and a hidden second emulator core keeps the game's own **map** open there, live.
 
 > [!NOTE]
-> SNES DS is in early development. One game is supported so far; it runs at full speed on the RG DS Plus (about
-> 9.5 ms per frame, with the map captured in the background).
+> **Version 1.0 is out**, with three games: A Link to the Past, Super Metroid and Super Castlevania IV. They run at
+> full speed on the RG DS Plus (about 9.5 ms per frame, with the map captured in the background).
+> [Download it from the releases page](https://github.com/lunasvalle02-design/SNES-DS/releases/latest).
 
 ## Contents
 
@@ -51,9 +53,11 @@ move to the second screen, and a hidden second emulator core keeps the game's ow
   picture unit can draw chosen layers into a picture of their own.
 - **Live map.** A hidden core copies the game's state, opens the in-game map, waits for it to settle and records a
   few animation frames, on a background thread, every ~1.5 s and on every room change.
-- **Touch interface.** A game list on the bottom (touch) screen, with covers from EmulationStation when it has
-  scraped them, and a pause menu: four save-state slots with screenshots, settings, and leaving the game or the app.
-  Everything works with the buttons too.
+- **Touch interface.** A game list on the bottom (touch) screen, with an icon for each game (or the covers
+  EmulationStation has scraped), and a pause menu: four save-state slots with screenshots, settings, and leaving the
+  game or the app. Everything works with the buttons too.
+- **Controls your way.** Any SNES button, and one more for the menu, can be moved to another of the console's
+  buttons, a trigger or a key, from the settings.
 - **Picture as you like it.** The SNES' own aspect at whole-number scales, or 4:3 like a TV, filling the
   RG DS Plus' 1024×768 panels without uneven pixels.
 - **Settings that stick.** Aspect, screen swap, HUD split, map, volume, an FPS counter, the language and the
@@ -110,13 +114,15 @@ when no cover has been scraped; no game content is shown here.
 | Super Metroid | Japan and USA (v1.0) | `D63ED5F8` | The pause map of the area Samus is in, refreshed as she explores, with the HUD (energy, ammo, minimap) over it; the HUD stays down there on the pause screen too. |
 | Super Castlevania IV | USA (v1.0) | `B64FFB12` | The HUD (score, health bars, the subweapon, hearts, lives, time), in play and paused; the game has no map. |
 
-Each game lives in its own module under [`games/`](games); see
-[games/zelda_alttp/README.md](games/zelda_alttp/README.md) for what was found about this one.
+Each game lives in its own module under [`games/`](games), with a README on what was found about it:
+[A Link to the Past](games/zelda_alttp/README.md), [Super Metroid](games/super_metroid/README.md),
+[Super Castlevania IV](games/super_castlevania_iv/README.md). More are on the way, each on its own branch
+(see the [roadmap](ROADMAP.md#phase-6-more-games-)); the game list only shows the games that have a profile.
 
 ## Installation (ROCKNIX)
 
-1. Download `snes-ds-v<version>-rocknix-aarch64.zip` (or [build it](#cross-compiling-for-rocknix)) and unzip it
-   into `/storage/roms/ports/`:
+1. Download `snes-ds-v<version>-rocknix-aarch64.zip` from the [latest release](https://github.com/lunasvalle02-design/SNES-DS/releases/latest) (or
+   [build it](#cross-compiling-for-rocknix)) and unzip it into `/storage/roms/ports/`:
    ```
    /storage/roms/ports/SNES DS.sh     the entry in Ports
    /storage/roms/ports/snes-ds/       the program
@@ -247,6 +253,7 @@ games/
     profile.c             its profile: all the engine sees
     README.md             its memory map, layers and findings
     tests/*.txt           its harness scripts
+    icon.py, icon.png     its icon for the game list (an original drawing)
 ```
 
 The full procedure, with the branch to use (`game/<id>`) and what a pull request needs, is in
@@ -257,6 +264,7 @@ The full procedure, with the branch to use (`game/<id>`) and what a pull request
 2. **Write `games/<id>/profile.c`** with `const Profile game_<id> = { .id = "<id>", ... }`, plus its `README.md`
    and `tests/`.
 3. **Register it** in [`games/games.c`](games/games.c): `extern const Profile game_<id>;` and `&game_<id>,`.
+4. **Draw its icon** with `python tools/icon.py games/<id>/icon.py`: simple shapes, never the game's own artwork.
 
 CMake picks up `games/*/*.c` on its own. Should a game ever need code of its own (a second screen drawn its own way, say), it goes
 in its directory and its profile hooks it in, through a generic hook the engine gains first (see
@@ -271,7 +279,8 @@ The harness runs a game frame by frame from a script, with no window:
 ```
 
 Its commands (presses, per-layer screenshots, `peek`/`watch`/`expect` on memory, states, map captures, `bench`,
-`hash`, `audio`) are listed at the top of [tools/harness.c](tools/harness.c). For A Link to the Past:
+`hash`, `audio`) are listed at the top of [tools/harness.c](tools/harness.c). Every game has its scripts in
+`games/<id>/tests/`; for A Link to the Past, for instance:
 
 | Script | Checks |
 |---|---|
@@ -285,6 +294,11 @@ make them. To run every game's tests in order, finding each ROM by its profile:
 ```bash
 scripts/check.sh ROMDIR
 ```
+
+It also drives the app itself without a window ([`tools/app_tests/`](tools/app_tests): the menu, the controls page)
+through a virtual controller. On GitHub, [the CI](.github/workflows/build.yml) builds every pull request for PC and
+for ROCKNIX, with no compiler warnings allowed, and attaches the ROCKNIX package to each tagged release; the games'
+tests need ROMs, so they're run locally before a merge.
 
 ## Project layout
 
@@ -300,6 +314,8 @@ scripts/check.sh ROMDIR
 | `src/video.c`, `src/pad.c` | Putting both screens on the window; input and shortcuts |
 | `games/` | One directory per game |
 | `tools/harness.c` | The headless harness |
+| `tools/app_tests/`, `tools/icon.py` | The app's own tests; the drawing tool for the games' icons |
+| `.github/workflows/` | The CI: the builds, and the package on each release |
 | `dist/`, `scripts/`, `cmake/` | Device scripts, build scripts, toolchain files |
 | `assets/fonts/` | Nunito (SIL OFL 1.1) |
 | `third_party/` | LakeSnes (MIT, patched), kuba--/zip and miniz, stb (public domain) |
@@ -314,6 +330,8 @@ scripts/check.sh ROMDIR
 | [RESEARCH.md](RESEARCH.md) | The original feasibility study: gba-ds, the hardware, choosing a core |
 | [third_party/lakesnes/PATCHES.md](third_party/lakesnes/PATCHES.md) | Every change made to LakeSnes |
 | [games/zelda_alttp/README.md](games/zelda_alttp/README.md) | A Link to the Past: memory map, layers, tests |
+| [games/super_metroid/README.md](games/super_metroid/README.md) | Super Metroid: memory map, layers, tests |
+| [games/super_castlevania_iv/README.md](games/super_castlevania_iv/README.md) | Super Castlevania IV: memory map, layers, tests |
 
 ## Credits
 
