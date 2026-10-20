@@ -1,0 +1,41 @@
+# Super Mario World: from power-on to the world map, through a new file and
+# the intro's message, checking the game mode, the status bar's split and
+# the world map's capture on the way (exits 1 if one is off). Leaves in
+# OUTDIR:
+#   intro         the intro level, its message box up ($0100 = 14)
+#   yoshis_house  Mario on the world map at Yoshi's House ($0100 = 0E)
+#
+#   scripts/check.sh ROMDIR super_mario_world
+watch 0x100 1
+until 0x100 0xFF 0x07 900             # the title
+untiltap 0x100 0xFF 0x08 300 START    # file select
+wait 30
+untiltap 0x100 0xFF 0x0A 300 A        # file A (empty: a new game) -> players
+untiltap 0x100 0xFF 0x14 600 A        # 1 player -> the intro level
+wait 60
+save intro
+expect 0x100 14    # a level
+expect 0xDBE 04    # lives: the status bar shows one more (5)
+map intro not_live # in a level: no capture
+
+# the status bar: BG3, lines 9-36 drawn of 0-36; the message box, BG3 too,
+# is under it (lines 40-110) and stays on the game screen
+split 4 0 224
+wait 1
+splitbox           # lines 9-110: the status bar and the message box
+split 4 0 37
+wait 1
+splitbox           # lines 9-36: the status bar alone
+split 0
+
+# A closes the message: the world map, Mario at Yoshi's House
+untiltap 0x100 0xFF 0x0E 3000 A
+watch 0x13D9 1
+until 0x13D9 0xFF 0x03 300
+wait 30
+save yoshis_house
+expect 0x100 0E    # the world map
+expect 0x13D9 03   # Mario standing, waiting for a button
+expect 0x1F11 01   # submap: Yoshi's Island
+expect 0x1F17 68 00 78 00  # Yoshi's House
+map yoshis_house ok   # the hidden core's capture: the world map

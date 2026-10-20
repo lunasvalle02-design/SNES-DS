@@ -113,6 +113,7 @@ when no cover has been scraped; no game content is shown here.
 | The Legend of Zelda: A Link to the Past | USA (v1.0) | `777AAC2F` | Live world and dungeon maps; the item menu, while the world stays visible above. The HUD stays on the game screen. |
 | Super Metroid | Japan and USA (v1.0) | `D63ED5F8` | The pause map of the area Samus is in, refreshed as she explores, with the HUD (energy, ammo, minimap) over it; the HUD stays down there on the pause screen too. |
 | Super Castlevania IV | USA (v1.0) | `B64FFB12` | The HUD (score, health bars, the subweapon, hearts, lives, time), in play and paused; the game has no map. |
+| Super Mario World | USA (v1.0) | `B19ED489` | The world map as Mario last stood on it, with the status bar (lives, item box, time, coins, score) over it in levels. |
 
 Each game lives in its own module under [`games/`](games), with a README on what was found about it:
 [A Link to the Past](games/zelda_alttp/README.md), [Super Metroid](games/super_metroid/README.md),

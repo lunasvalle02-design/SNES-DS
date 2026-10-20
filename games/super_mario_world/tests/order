@@ -1,0 +1,4 @@
+# the tests, in the order scripts/check.sh runs them (each may use the
+# states the ones before it leave in the output folder)
+new_game.txt
+yoshis_island_1.txt
