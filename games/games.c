@@ -4,8 +4,10 @@
 #include "profiles.h"
 
 extern const Profile game_zelda_alttp;
+extern const Profile game_super_metroid;
 
 const Profile* const games[] = {
 	&game_zelda_alttp,
+	&game_super_metroid,
 	NULL,
 };

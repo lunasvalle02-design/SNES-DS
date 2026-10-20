@@ -1,0 +1,21 @@
+# Super Metroid: from power-on to Ceres Station, through a new file and the
+# intro (A turns the intro's pages; it waits on each one otherwise), checking
+# the game state and the HUD split on the way (exits 1 if one is off). Leaves
+# in OUTDIR:
+#   ceres    Samus on Ceres Station, in control ($0998 = 08, area 06)
+#
+#   scripts/check.sh ROMDIR super_metroid
+watch 0x998 1
+until 0x998 0xFF 0x01 900             # the title screen
+untiltap 0x998 0xFF 0x1E 3000 A       # file A, new game, Start Game -> the intro
+untiltap 0x998 0xFF 0x08 20000 A      # the intro's pages -> Ceres Station
+wait 60
+save ceres
+expect 0x998 08    # play
+expect 0x79F 06    # area: Ceres Station
+expect 0x9C2 63 00 63 00   # energy 99 of 99
+map ceres no_map   # no pausing on Ceres Station
+split 4 0 224      # BG3 alone: the HUD is lines 0-30
+wait 2
+splitbox
+split 0

@@ -1,0 +1,58 @@
+# Super Metroid: Zebes, the pause map and a door, from new_game.txt's `ceres`
+# state. Ceres's escape is skipped: game state 20 (Samus reached the
+# elevator) runs the cutscene and lands the ship on Zebes, which the game
+# then plays as it would after the escape. Leaves in OUTDIR:
+#   landing  Samus out of the ship on Crateria's landing site
+#   parlor   in the room left of it, through the door
+#   paused   the pause map open there ($0998 = 0F, $0727 = 00)
+#
+#   scripts/check.sh ROMDIR super_metroid
+load ceres
+watch 0x998 1
+watch 0x79B 2
+poke 0x998 0x20    # escaped Ceres
+until 0x998 0xFF 0x08 3000
+expect 0x79F 00    # area: Crateria
+expect 0x79B F8 91 # the landing site ($91F8)
+map ship no_map    # no pausing while the ship lands and Samus gets out
+wait 650
+save landing
+map landing ok     # the hidden core's capture: Crateria's pause map
+
+# the HUD: BG3, lines 0-30 (the room's own BG3 below it stays put)
+split 4 0 32
+wait 1
+splitbox
+split 0
+
+# left, shoot the door open, through it: the HUD is drawn all the way
+hold LEFT 600
+tap X
+wait 30
+split 4 0 32
+until 0x998 0xFF 0x0B 120 LEFT
+wait 10
+expect 0x998 0B
+splitbox           # still lines 0-30
+split 0
+until 0x998 0xFF 0x08 300
+wait 30
+expect 0x79B FD 92 # the next room ($92FD)
+save parlor
+map parlor ok      # a new room: the map again, with it on
+
+# the pause screen: the map first, R the equipment, Start back to play
+untiltap 0x998 0xFF 0x0F 300 START
+until 0x727 0xFF 0x00 10
+wait 60
+save paused
+split 4 0 32
+wait 1
+splitbox           # the HUD is on the pause screen too: lines 0-31
+split 0
+map paused not_live # paused already: no capture
+hold R 12
+until 0x727 0xFF 0x01 120
+expect 0x998 0F
+hold START 12
+until 0x998 0xFF 0x08 300
