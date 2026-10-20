@@ -17,7 +17,7 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente
 | 1 | Núcleo y harness en PC | ✅ |
 | 2 | App de escritorio con dos pantallas, lista de juegos y menú de pausa | ✅ |
 | 3 | Segunda pantalla para A Link to the Past | 🔶 Falta la pantalla de reserva |
-| 4 | La consola (ROCKNIX) | ✅ A velocidad completa en la RG DS Plus; falta confirmar el botón de menú |
+| 4 | La consola (ROCKNIX) | ✅ A velocidad completa en la RG DS Plus; entrada y táctil confirmados |
 | 5 | Táctil y comodidad | ✅ Cerrada por ahora |
 | 6 | Más juegos | 🔶 La base está hecha; aún ningún juego nuevo |
 | 7 | Integración (EmulationStation, RetroAchievements) | ⬜ |
@@ -29,14 +29,14 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente
 | 0.1.0-dev | La primera versión para ROCKNIX. Medida en la consola: 18-39 ms por fotograma emulado (25-50 fps), con cortes de audio |
 | 0.2.0-dev | El núcleo unas 3,7 veces más rápido (idéntico bit a bit); captura del mapa más barata; L1 + Start + Select para salir |
 | 0.3.0-dev | La interfaz táctil, en inglés y en español: lista de juegos, menú de pausa, cuatro ranuras de estado con captura, ajustes. El menú se abre también tocando la pantalla de abajo o con cualquier botón libre. Corregido: un estallido de ruido al arrancar un juego |
-| 0.4.0-dev | Comprobada en la consola: 60 fps sin cortes de audio. Partidas, estados y ajustes escritos de forma segura (un apagado no puede corromperlos); el log de velocidad ya no cuenta el tiempo en el menú |
+| 0.4.0-dev | Comprobada en la consola: 60 fps sin cortes de audio; el menú se abre con L3 o el botón R (inicio). Partidas, estados y ajustes escritos de forma segura (un apagado no puede corromperlos); el log de velocidad ya no cuenta el tiempo en el menú |
 
 ## Camino a la 1.0
 
 | Versión | Objetivo | Estado |
 |---|---|---|
-| 0.4 | Comprobada en la consola: velocidad, entrada, táctil; partidas que un apagado no puede corromper | 🔶 Botón de menú corregido; falta confirmarlo en la consola |
-| 0.5 | Un segundo y un tercer juego, en ramas `game/…`, con los hooks del motor que necesiten; el formato del perfil se asienta | ⬜ |
+| 0.4 | Comprobada en la consola: velocidad, entrada, táctil; partidas que un apagado no puede corromper | ✅ |
+| 0.5 | Un segundo y un tercer juego, en ramas `game/…` (Super Metroid, Super Castlevania IV), con los hooks del motor que necesiten; el formato del perfil se asienta | 🔶 |
 | 0.6 (candidata) | Suspender y reanudar, sesiones largas, CI en GitHub Actions, `CHANGELOG.md`, releases en GitHub, las instrucciones de la consola en inglés | ⬜ |
 | 1.0.0 | La candidata usada en la consola durante unos días sin problemas | ⬜ |
 
@@ -168,11 +168,10 @@ perfil en el que se escriben los módulos de juego.
   más; los juegos más pesados (chips de mejora, Mode 7 todo el rato) se medirán según lleguen.
 - ✅ El táctil en la consola: un panel Goodix, asignado por sway a todo el escritorio; como la ventana de SNES DS ocupa
   los dos paneles, los toques caen donde deben (el panel de abajo es la mitad derecha).
-- 🔶 El botón de menú. El log de la consola muestra que guide (botón 10) y L3 (11) llegan a la app, pero el menú no se
-  abría: el bucle principal descartaba la acción de menú del mando (solo pasaban Esc y los toques). Corregido en la
-  0.4, con un test que maneja la app con un mando virtual (`tools/app_tests/menu.txt`, lo pasa `scripts/check.sh`).
-  L3 es el botón de menú en la RG DS Plus (su botón "R" nunca llega a las apps: se lo queda ROCKNIX). Falta
-  confirmarlo en la consola.
+- ✅ El botón de menú. El log de la consola mostraba que guide (botón 10) y L3 (11) llegaban a la app, pero el menú no
+  se abría: el bucle principal descartaba la acción de menú del mando (solo pasaban Esc y los toques). Corregido en
+  la 0.4, con un test que maneja la app con un mando virtual (`tools/app_tests/menu.txt`, lo pasa
+  `scripts/check.sh`). Confirmado en la consola: **L3 y el botón R** (el de inicio, guide en SDL) abren el menú.
 - ✅ Las partidas, los estados, sus capturas, los ajustes y la caché de la lista se escriben en un fichero temporal,
   se fuerzan al disco y se renombran sobre el anterior ([`src/fileutil.c`](src/fileutil.c)): un apagado deja el
   fichero viejo o el nuevo.

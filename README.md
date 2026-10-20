@@ -9,7 +9,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-FF8A1F" alt="License: GPL-3.0-or-later"></a>
-  <img src="https://img.shields.io/badge/version-0.4.0--dev-FF8A1F" alt="Version 0.4.0-dev">
+  <img src="https://img.shields.io/badge/version-0.5.0--dev-FF8A1F" alt="Version 0.5.0-dev">
   <img src="https://img.shields.io/badge/platform-ROCKNIX%20%7C%20Windows%20%7C%20Linux-3B3129" alt="Platforms: ROCKNIX, Windows, Linux">
   <img src="https://img.shields.io/badge/language-C11-3B3129" alt="Language: C11">
 </p>
@@ -128,7 +128,7 @@ SNES buttons go by position: bottom = B, right = A, top = X, left = Y.
 
 | Action | Handheld | Keyboard (PC) |
 |---|---|---|
-| Pause menu | **L3** (click the left stick) · tap the bottom screen · the home button · Select + Start | Esc · a click on the bottom screen |
+| Pause menu | **L3** (click the left stick) · **R** (the RG DS Plus' home button) · tap the bottom screen · Select + Start | Esc · a click on the bottom screen |
 | Quit | L1 + Start + Select | — |
 | Save / load state (slot 1) | Select + R / Select + L (on release) | F5 / F7 |
 | Swap screens | Select + X | F2 |

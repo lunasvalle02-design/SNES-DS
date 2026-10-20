@@ -16,7 +16,7 @@ Legend: ✅ done · 🔶 in progress · ⬜ to do
 | 1 | Core and harness on PC | ✅ |
 | 2 | Desktop app with two screens, game list and pause menu | ✅ |
 | 3 | Second screen for A Link to the Past | 🔶 A fallback screen is missing |
-| 4 | The device (ROCKNIX) | ✅ Full speed on the RG DS Plus; the menu button is still to be confirmed |
+| 4 | The device (ROCKNIX) | ✅ Full speed on the RG DS Plus; input and touch confirmed |
 | 5 | Touch and comfort | ✅ Closed for now |
 | 6 | More games | 🔶 The groundwork is done; no new game yet |
 | 7 | Integration (EmulationStation, RetroAchievements) | ⬜ |
@@ -28,14 +28,14 @@ Legend: ✅ done · 🔶 in progress · ⬜ to do
 | 0.1.0-dev | The first build for ROCKNIX. Measured on the console: 18-39 ms per emulated frame (25-50 fps), audio dropouts |
 | 0.2.0-dev | The core about 3.7× faster (bit-identical); a cheaper map capture; L1 + Start + Select to quit |
 | 0.3.0-dev | The touch interface, in English and Spanish: game list, pause menu, four save-state slots with screenshots, settings. The menu also opens with a tap on the bottom screen or any spare button. Fixed: a burst of noise when a game started |
-| 0.4.0-dev | Checked on the console: 60 fps with no audio dropouts. Saves, states and settings written safely (a power cut can't corrupt them); the speed log no longer counts time in the menu |
+| 0.4.0-dev | Checked on the console: 60 fps with no audio dropouts; the menu opens with L3 or the R (home) button. Saves, states and settings written safely (a power cut can't corrupt them); the speed log no longer counts time in the menu |
 
 ## The road to 1.0
 
 | Version | Goal | Status |
 |---|---|---|
-| 0.4 | Checked on the console: speed, input, touch; saves that a power cut can't corrupt | 🔶 The menu button fixed; to confirm on the console |
-| 0.5 | A second and third game, on `game/…` branches, with whatever engine hooks they need; the profile format settles | ⬜ |
+| 0.4 | Checked on the console: speed, input, touch; saves that a power cut can't corrupt | ✅ |
+| 0.5 | A second and third game, on `game/…` branches (Super Metroid, Super Castlevania IV), with whatever engine hooks they need; the profile format settles | 🔶 |
 | 0.6 (release candidate) | Sleep and resume, long sessions, CI on GitHub Actions, `CHANGELOG.md`, GitHub releases, the device instructions in English | ⬜ |
 | 1.0.0 | The release candidate used on the console for some days without problems | ⬜ |
 
@@ -164,10 +164,10 @@ in.
   (enhancement chips, Mode 7 throughout) will be measured as they come.
 - ✅ Touch on the device: one Goodix panel, tied by sway to the whole layout; since SNES DS's window spans both
   panels, taps land where they should (the bottom panel is the right half).
-- 🔶 The menu button. The console's log shows guide (button 10) and L3 (11) reaching the app, but the menu didn't
+- ✅ The menu button. The console's log showed guide (button 10) and L3 (11) reaching the app, but the menu didn't
   open: the main loop dropped the controller's menu action (only Esc and taps got through). Fixed in 0.4, with a test
-  that drives the app through a virtual controller (`tools/app_tests/menu.txt`, run by `scripts/check.sh`). L3 is
-  the menu button on the RG DS Plus (its "R" button never reaches apps: ROCKNIX keeps it). To confirm on the console.
+  that drives the app through a virtual controller (`tools/app_tests/menu.txt`, run by `scripts/check.sh`).
+  Confirmed on the console: **L3 and the R button** (the home button, SDL's guide) open the menu.
 - ✅ Battery saves, save states, their pictures, the settings and the game list's cache are written to a temporary
   file, flushed to the disk and renamed over the old one ([`src/fileutil.c`](src/fileutil.c)): a power cut leaves the
   old file or the new one.

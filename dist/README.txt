@@ -28,8 +28,8 @@ El menú (en partida)
 Pulsar el stick izquierdo (L3) durante la partida pausa el juego y abre
 el menú en la pantalla de abajo: continuar, guardar y cargar estado (4
 ranuras, con su captura), ajustes, salir del juego (a la lista) o salir de
-SNES DS. También lo abren tocar la pantalla de abajo, el botón de inicio
-(guide), R3 y Select + Start. B o L3 vuelven al juego.
+SNES DS. También lo abren el botón R (el de inicio), tocar la pantalla de
+abajo, R3 y Select + Start. B, L3 o R vuelven al juego.
 
 Si el botón de menú no hace nada, snes-ds.log apunta los dispositivos de
 entrada y las primeras pulsaciones ("input: ..."): pásamelo y lo ajusto (o

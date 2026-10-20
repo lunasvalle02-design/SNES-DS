@@ -3,8 +3,8 @@
  * button the SNES doesn't use (guide/home, misc, paddles, stick clicks,
  * the controller's raw buttons its mapping leaves out, other input
  * devices' buttons, Menu/Home keys; handhelds name theirs differently;
- * --menu-button adds one; on the RG DS Plus it's L3, the left stick's
- * click), or a tap on the bottom screen (main.c), and a few shortcuts are
+ * --menu-button adds one; on the RG DS Plus, L3 and the R (home) button),
+ * or a tap on the bottom screen (main.c), and a few shortcuts are
  * Select held with another button:
  *
  *   L3 (or guide...)   the menu         Select + X   swap the screens
