@@ -51,10 +51,12 @@ mapa, el BG3 su marco y la línea de arriba (las vidas de Mario y el nombre de l
   dan x 120-135, líneas 15-30. Se queda en la pantalla de juego: solo baja el BG3, porque los sprites de las líneas
   0-36 también son Mario y los del nivel cuando salta o vuela, y un perfil solo puede elegir sprites por líneas, no
   por sitio.
-- El mapa del mundo tiene su propia línea de arriba (la cara de Mario, sus vidas y el nombre de la casilla, líneas
-  17-37), sobre la que se dibuja la barra de estado en la segunda pantalla: las dos se solapan un poco (la fila de
-  abajo de la barra y el cuadro de reserva sobre el nombre de la casilla). Las dos se leen; un perfil todavía no puede
-  dejar líneas fuera de una captura.
+- El mapa del mundo tiene su propia línea de arriba (la cara de Mario, sus vidas y el nombre de la casilla), justo
+  donde va la barra de estado en la segunda pantalla: dibujada encima, las dos se solapaban. La captura la deja fuera
+  (`hideLayers`, líneas 0-38): el BG3 cubre los 256 píxeles de las líneas 0-39 (el marco y esa línea), la cara de
+  Mario es un sprite (x 24-55, líneas 7-38) y el BG1 tiene algunas nubes ahí (líneas 0-22), como muestra `split`
+  sobre cada capa en el estado `yoshis_house`. Quitando solo el BG3 asoman tiles del BG1 de fuera del mapa, así que
+  se quitan todas las capas: la franja queda del color liso del marco, y la barra de estado va sobre ella.
 - En el mapa del mundo, la segunda pantalla muestra el mismo mapa que la de juego (una captura de hace un momento),
   con la barra de estado del último nivel encima.
 - Al encender: el primer sonido es el tintineo de Nintendo Presents (fotograma 88, con el logo en pantalla), nada que
@@ -81,6 +83,7 @@ scripts/check.sh ROMDIR super_mario_world
   otro sitio, se notará.
 - El objeto de reserva en la segunda pantalla, con su marco: hace falta que el motor baje sprites por sitio (un
   rectángulo, x 120-135 por las líneas 15-30), antes en una rama `engine/`.
-- En la RG DS Plus: cómo se ve la barra de estado sobre la línea de arriba del mapa del mundo, y el refresco del mapa.
+- En la RG DS Plus: cómo se ve la barra de estado sobre la franja lisa encima del mapa del mundo, y el refresco del
+  mapa.
 - Dos jugadores: si la captura sigue a Luigi en sus turnos (su posición y su submapa aún no se han comprobado).
 - Otras regiones (Europa, la japonesa *Super Mario World: Super Mario Bros. 4*): sus CRC32 y direcciones.

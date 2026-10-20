@@ -48,9 +48,12 @@ the top (Mario's lives and the tile's name), and Mario is a sprite.
 - The item in the item box is a sprite: with a mushroom poked in (`$0DC2` = `01`), `split 16 0 37` and `splitbox`
   give x 120-135, lines 15-30. It stays on the game screen: only BG3 goes down, because sprites over lines 0-36 are
   also Mario and the level's own when he jumps or flies, and a profile can only pick sprites by lines, not by place.
-- The world map has its own top line (Mario's face, his lives and the tile's name, lines 17-37), which the status
-  bar is drawn over on the second screen: the two overlap a little (the status bar's lower row and the item box over
-  the tile's name). Both stay readable; a profile can't leave lines out of a capture yet.
+- The world map has its own top line (Mario's face, his lives and the tile's name), right where the status bar goes
+  on the second screen: drawn over it, the two overlapped. The capture leaves it out (`hideLayers`, lines 0-38): BG3
+  covers all 256 pixels of lines 0-39 (the frame and that line), Mario's face is a sprite (x 24-55, lines 7-38) and
+  BG1 has a few clouds there (lines 0-22), as `split` on each layer of the `yoshis_house` state shows. With BG3 alone
+  left out, BG1's tiles from off the map show through, so every layer goes: the strip is the frame's plain colour,
+  and the status bar sits on it.
 - On the world map the second screen shows the same map as the game screen (a capture a moment old), with the last
   level's status bar over it.
 - Power-on: the first sound is the Nintendo Presents chime (frame 88, with the logo on screen), nothing to mute.
@@ -75,6 +78,6 @@ scripts/check.sh ROMDIR super_mario_world
   switch palaces and the ending, which the tests don't reach yet: if one draws the status bar elsewhere, it shows.
 - The item in the item box on the second screen, with its frame: it needs the engine to send sprites down by place
   (a rectangle, x 120-135 by lines 15-30), in an `engine/` branch first.
-- On the RG DS Plus: how the status bar looks over the world map's top line, and the map's refresh.
+- On the RG DS Plus: how the status bar looks on the plain strip over the world map, and the map's refresh.
 - Two players: whether the capture follows Luigi on his turns (his position and submap aren't checked yet).
 - Other regions (Europe, Japan's *Super Mario World: Super Mario Bros. 4*): their CRC32s and addresses.

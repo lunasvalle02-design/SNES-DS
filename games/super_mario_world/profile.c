@@ -53,5 +53,13 @@ const Profile game_super_mario_world = {
 		.minForeground = 2000, .bgColor = 0x000000,
 		.animFrames = 1, .animStep = 4,
 		.refresh = 120,
+		/* the world map's own top line, under the status bar: BG3 on lines
+		 * 0-39 (its frame, Mario's lives, the tile's name), Mario's face
+		 * (a sprite, x 24-55, lines 7-38) and a few clouds of BG1 (0-22).
+		 * BG3 alone left out shows BG1's tiles from off the map, so all of
+		 * them go: the strip is the frame's plain colour, as split and
+		 * hide on the yoshis_house state show */
+		.hideLayers = LAYER_BG1 | LAYER_BG2 | LAYER_BG3 | LAYER_BG4 | LAYER_OBJ,
+		.hideY0 = 0, .hideY1 = 39,
 	},
 };
