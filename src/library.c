@@ -217,6 +217,16 @@ void library_scan(Library* lib, const char* dir, const char* cachePath) {
 	cache_save(&cache, cachePath);
 }
 
+void library_add_icons(Library* lib, const char* dir) {
+	for (int i = 0; i < lib->count; i++) {
+		LibGame* g = &lib->games[i];
+		if (g->cover) continue;
+		char p[1100];
+		snprintf(p, sizeof(p), "%s/%s.png", dir, g->profile->id);
+		if (exists(p)) g->cover = strdup(p);
+	}
+}
+
 void library_free(Library* lib) {
 	for (int i = 0; i < lib->count; i++) {
 		free(lib->games[i].path);

@@ -158,6 +158,11 @@ las dos y que el mapa se actualice. Comprueba el sonido del arranque. Las captur
 
 ### 6. Terminarlo
 
+- **Su icono** para la lista de juegos: `games/<id>/icon.py` (desde la plantilla) describe un dibujo original con
+  formas sencillas, y `python tools/icon.py games/<id>/icon.py` lo convierte en `games/<id>/icon.png` (512x384);
+  sube los dos. Nunca el logo del juego, su carátula, sus sprites ni nada suyo (regla 1): una escena u objeto que
+  recuerde al juego, dibujado desde cero. La carátula que haya descargado el frontend del jugador (la de
+  EmulationStation) sigue yendo primero.
 - `games/<id>/README.md` y `README_ES.md` (desde la plantilla): la ROM, lo que muestra la segunda pantalla, el mapa
   de memoria con cómo se comprobó cada valor, los hallazgos, los tests y lo que falta.
 - Añade la fila del juego a "Juegos compatibles" en [README.md](README.md) y [README_ES.md](README_ES.md), y márcalo
