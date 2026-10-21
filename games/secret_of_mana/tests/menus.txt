@@ -1,0 +1,67 @@
+# Secret of Mana: the ring menu, a screen it opens (Status) and a text
+# box, from new_game.txt's `play` state, checking the bytes and layers the
+# profile's rules go by (exits 1 if something is off).
+#
+#   scripts/check.sh ROMDIR secret_of_mana
+load play
+watch 0x7D 1
+watch 0xCC 1
+
+# the ring (Y): $007D = 01, $00CC = 00; the item's name on BG3 at the top,
+# the HUD still at the bottom, the ring and the boy as sprites
+tap Y
+wait 60
+expect 0x9B 02
+expect 0x7D 01
+expect 0xCC 00
+split 4 0 224
+wait 1
+splitbox           # BG3: the name, lines 9-36, and the HUD, 199-216
+split 16 0 224
+wait 1
+splitbox           # the sprites: the ring around the boy, and his face
+split 0
+
+# down: the settings ring; left twice: Status, opened with B ($00CC = 08)
+tap DOWN
+wait 40
+tap LEFT
+wait 20
+tap LEFT
+wait 30
+tap B
+wait 60
+expect 0x9B 02
+expect 0x7D 01
+expect 0xCC 08
+split 2 0 224
+wait 1
+splitbox           # its windows, on BG2: the whole screen
+split 0
+
+# Y closes it all: $00CC = 0C while the screen goes dark, then play
+tap Y
+until 0x7D 0xFF 0x00 120
+wait 2
+expect 0xCC 00
+expect 0x9B 02
+wait 60
+
+# back to the undergrowth: "I can cut through with this sword!", a text
+# box at the top, clear of the HUD's lines
+hold UP 150
+hold RIGHT 150
+hold DOWN 80
+hold RIGHT 20
+hold DOWN 60
+hold RIGHT 30
+wait 40
+expect 0x9B 02
+expect 0x7D 00     # the ring rules don't match: the HUD's does
+split 4 0 199
+wait 1
+splitbox           # the box: lines 9-68, none of it near the HUD
+split 4 199 217
+wait 1
+splitbox           # the HUD, as in play
+split 0

@@ -120,11 +120,13 @@ juegos.
 | Super Metroid | Japón y EE. UU. (v1.0) | `D63ED5F8` | El mapa de pausa de la zona en la que está Samus, que se actualiza mientras explora, con el HUD (energía, munición, minimapa) encima; el HUD sigue ahí también en la pantalla de pausa. |
 | Super Castlevania IV | EE. UU. (v1.0) | `B64FFB12` | El HUD (puntos, barras de vida, el arma secundaria, corazones, vidas, tiempo), al jugar y en pausa; el juego no tiene mapa. |
 | Super Mario World | EE. UU. (v1.0) | `B19ED489` | El mapa del mundo tal como Mario lo dejó, con la barra de estado (vidas, tiempo, monedas, puntos) encima en los niveles; el objeto de reserva se queda en la pantalla de juego. |
+| Secret of Mana | EE. UU. | `D0176B24` | El HUD (la vida y la carga del arma de cada personaje) al jugar; el menú en anillo, y las pantallas que abre (estado, equipo, ajustes), mientras están abiertos. El mapa del mundo en Mode 7 aún no. |
 
 Cada juego vive en su propio módulo dentro de [`games/`](games), con un README sobre lo averiguado de él:
 [A Link to the Past](games/zelda_alttp/README_ES.md), [Super Metroid](games/super_metroid/README_ES.md),
 [Super Castlevania IV](games/super_castlevania_iv/README_ES.md),
-[Super Mario World](games/super_mario_world/README_ES.md). Vendrán más, cada uno en su rama (ver la
+[Super Mario World](games/super_mario_world/README_ES.md), [Secret of Mana](games/secret_of_mana/README_ES.md).
+Vendrán más, cada uno en su rama (ver la
 [hoja de ruta](ROADMAP_ES.md#fase-6-más-juegos-)); la lista solo muestra los juegos que tienen perfil.
 
 ## Instalación (ROCKNIX)
