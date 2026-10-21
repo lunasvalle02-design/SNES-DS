@@ -120,6 +120,7 @@ juegos.
 | Super Metroid | Japón y EE. UU. (v1.0) | `D63ED5F8` | El mapa de pausa de la zona en la que está Samus, que se actualiza mientras explora, con el HUD (energía, munición, minimapa) encima; el HUD sigue ahí también en la pantalla de pausa. |
 | Super Castlevania IV | EE. UU. (v1.0) | `B64FFB12` | El HUD (puntos, barras de vida, el arma secundaria, corazones, vidas, tiempo), al jugar y en pausa; el juego no tiene mapa. |
 | Super Mario World | EE. UU. (v1.0) | `B19ED489` | El mapa del mundo tal como Mario lo dejó, con la barra de estado (vidas, tiempo, monedas, puntos) encima en los niveles; el objeto de reserva se queda en la pantalla de juego. |
+| Super Mario World 2: Yoshi's Island | EE. UU. (Rev 1) | `CF98DDAA` | La pantalla de pausa, siempre al día: las estrellas, monedas rojas y flores del nivel, los puntos, las vidas, monedas y objetos, sin pausar. Funciona con el Super FX 2 propio del núcleo. |
 
 Cada juego vive en su propio módulo dentro de [`games/`](games), con un README sobre lo averiguado de él:
 [A Link to the Past](games/zelda_alttp/README_ES.md), [Super Metroid](games/super_metroid/README_ES.md),
