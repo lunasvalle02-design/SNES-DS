@@ -561,17 +561,39 @@ static void ppu_composeLineFast(Ppu* ppu, int y) {
 // pixels (each tile row decoded once instead of once per pixel and
 // priority). Gives the very same pixels.
 // the 8 pixels of a tile row (bitDepth 2, 4 or 8), by bit position
-static inline void ppu_decodeRow(Ppu* ppu, int base, int bitDepth, uint8_t* decoded) {
+// snes-ds: a byte of one bit plane spread out, bit c to byte c (bit 0 of
+// it), so a row is a few lookups and shifts instead of a loop over its bits
+#define PPU_SPREAD(b) ( \
+  (uint64_t) ((b) & 1) | (uint64_t) (((b) >> 1) & 1) << 8 | (uint64_t) (((b) >> 2) & 1) << 16 | \
+  (uint64_t) (((b) >> 3) & 1) << 24 | (uint64_t) (((b) >> 4) & 1) << 32 | (uint64_t) (((b) >> 5) & 1) << 40 | \
+  (uint64_t) (((b) >> 6) & 1) << 48 | (uint64_t) (((b) >> 7) & 1) << 56)
+#define PPU_SPREAD4(b) PPU_SPREAD(b), PPU_SPREAD((b) + 1), PPU_SPREAD((b) + 2), PPU_SPREAD((b) + 3)
+#define PPU_SPREAD16(b) PPU_SPREAD4(b), PPU_SPREAD4((b) + 4), PPU_SPREAD4((b) + 8), PPU_SPREAD4((b) + 12)
+#define PPU_SPREAD64(b) PPU_SPREAD16(b), PPU_SPREAD16((b) + 16), PPU_SPREAD16((b) + 32), PPU_SPREAD16((b) + 48)
+static const uint64_t ppu_spread[256] = {
+  PPU_SPREAD64(0), PPU_SPREAD64(64), PPU_SPREAD64(128), PPU_SPREAD64(192)
+};
+
+// the 8 pixels of a tile row as one value: byte c is the pixel of bit c
+// (byte 7 the leftmost when not flipped)
+static inline uint64_t ppu_decodeRow64(Ppu* ppu, int base, int bitDepth) {
   uint16_t p1 = ppu->vram[base & 0x7fff];
-  uint16_t p2 = bitDepth > 2 ? ppu->vram[(base + 8) & 0x7fff] : 0;
-  uint16_t p3 = bitDepth > 4 ? ppu->vram[(base + 16) & 0x7fff] : 0;
-  uint16_t p4 = bitDepth > 4 ? ppu->vram[(base + 24) & 0x7fff] : 0;
-  for(int c = 0; c < 8; c++) {
-    decoded[c] = ((p1 >> c) & 1) | (((p1 >> (8 + c)) & 1) << 1) |
-      (((p2 >> c) & 1) << 2) | (((p2 >> (8 + c)) & 1) << 3) |
-      (((p3 >> c) & 1) << 4) | (((p3 >> (8 + c)) & 1) << 5) |
-      (((p4 >> c) & 1) << 6) | (((p4 >> (8 + c)) & 1) << 7);
+  uint64_t v = ppu_spread[p1 & 0xff] | ppu_spread[p1 >> 8] << 1;
+  if(bitDepth > 2) {
+    uint16_t p2 = ppu->vram[(base + 8) & 0x7fff];
+    v |= ppu_spread[p2 & 0xff] << 2 | ppu_spread[p2 >> 8] << 3;
   }
+  if(bitDepth > 4) {
+    uint16_t p3 = ppu->vram[(base + 16) & 0x7fff];
+    uint16_t p4 = ppu->vram[(base + 24) & 0x7fff];
+    v |= ppu_spread[p3 & 0xff] << 4 | ppu_spread[p3 >> 8] << 5 | ppu_spread[p4 & 0xff] << 6 | ppu_spread[p4 >> 8] << 7;
+  }
+  return v;
+}
+
+static inline void ppu_decodeRow(Ppu* ppu, int base, int bitDepth, uint8_t* decoded) {
+  uint64_t v = ppu_decodeRow64(ppu, base, bitDepth);
+  for(int c = 0; c < 8; c++) decoded[c] = v >> (8 * c);
 }
 
 // a layer's line without mosaic or offset-per-tile: tile by tile (one
@@ -589,7 +611,6 @@ static void ppu_fillBgLineTiles(Ppu* ppu, int layer, int y) {
   uint16_t* out0 = ppu->bgLine[layer][0];
   uint16_t* out1 = ppu->bgLine[layer][1];
   bool has[2] = {false, false};
-  uint8_t decoded[8];
   int x = 0;
   while(x < 256) {
     uint16_t tilemapAdr = rowAdr + ((lx >> tileBits) & 0x1f);
@@ -603,23 +624,31 @@ static void ppu_fillBgLineTiles(Ppu* ppu, int layer, int y) {
       if(((bool) (ly & 8)) ^ ((bool) (tile & 0x8000))) tileNum += 0x10;
     }
     if(ppu->mode == 0) paletteNum += 8 * layer;
-    ppu_decodeRow(ppu, bg->tileAdr + ((tileNum & 0x3ff) * 4 * bitDepth) + row, bitDepth, decoded);
+    uint64_t v = ppu_decodeRow64(ppu, bg->tileAdr + ((tileNum & 0x3ff) * 4 * bitDepth) + row, bitDepth);
+    // in screen order: byte i is the row's i-th pixel from the left
+    if(!(tile & 0x4000)) v = __builtin_bswap64(v);
     int palBase = paletteSize * paletteNum;
     uint8_t prio = (tile & 0x2000) ? 1 : 0;
-    bool hFlip = tile & 0x4000;
-    int n = 8 - (lx & 7);
+    int start = lx & 7;
+    int n = 8 - start;
     if(n > 256 - x) n = 256 - x;
+    uint64_t pixels = v >> (8 * start); // byte 0: the pixel at x
+    if(n < 8) pixels &= (1ull << (8 * n)) - 1;
     uint16_t* outHere = prio ? out1 : out0;
     uint16_t* outOther = prio ? out0 : out1;
-    for(int i = 0; i < n; i++) {
-      int sub = lx & 7;
-      int pixel = decoded[hFlip ? sub : 7 - sub];
-      outHere[x] = pixel == 0 ? 0 : palBase + pixel;
-      outOther[x] = 0;
-      if(pixel) has[prio] = true;
-      x++;
-      lx = (lx + 1) & 0x3ff;
+    if(pixels == 0) {
+      // nothing of this tile here (a common case: sky, empty layers)
+      memset(&outHere[x], 0, n * sizeof(uint16_t));
+    } else {
+      for(int i = 0; i < n; i++) {
+        int pixel = (pixels >> (8 * i)) & 0xff;
+        outHere[x + i] = pixel == 0 ? 0 : palBase + pixel;
+      }
+      has[prio] = true;
     }
+    memset(&outOther[x], 0, n * sizeof(uint16_t));
+    x += n;
+    lx = (lx + n) & 0x3ff;
   }
   ppu->lineHas[layer][0] = has[0];
   ppu->lineHas[layer][1] = has[1];
