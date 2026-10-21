@@ -830,8 +830,13 @@ int main(int argc, char** argv) {
 				int caps = 0;
 				double capAvg = 0, capMax = 0;
 				bool haveMap = screen2_map_stats(a->game->s2, &caps, &capAvg, &capMax);
+				double renderMs, waitMs;
+				core_render_stats(a->game->core, &renderMs, &waitMs);
 				printf("stats: %.1f fps, emulation %.2f ms/frame (max %.2f), drawing %.2f ms, audio underruns %ld",
 				       st.frames / secs, st.emuMs / st.frames, st.emuMax, st.drawMs / st.frames, st.underruns);
+				/* the picture's lines, drawn on a thread of their own: when the
+				 * emulation waits for them, they set the pace */
+				if (renderMs > 0) printf(", render thread %.2f ms/frame (emulation waited %.2f)", renderMs / st.frames, waitMs / st.frames);
 				if (haveMap) printf(", map captures %d (%.0f ms avg, %.0f max)", caps, capAvg, capMax);
 				printf("\n");
 				fflush(stdout);

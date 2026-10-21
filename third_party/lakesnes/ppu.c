@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdatomic.h>
+#include <time.h>
 #include <pthread.h>
 
 #include "ppu.h"
@@ -328,10 +329,18 @@ typedef struct PpuAsync {
   atomic_uint head, tail; // lines handed over, lines drawn
   atomic_bool sleeping;
   atomic_bool quit;
+  // for the log: nanoseconds spent drawing, and waiting for it in ppu_sync
+  atomic_ullong busyNs, waitNs;
   int lines[PPU_QUEUE];
   uint8_t snaps[PPU_QUEUE][PPU_SNAP_SIZE];
   Ppu worker; // the thread's own copy (its per-line work lives here)
 } PpuAsync;
+
+static uint64_t ppu_nowNs(void) {
+  struct timespec t;
+  timespec_get(&t, TIME_UTC);
+  return (uint64_t) t.tv_sec * 1000000000u + t.tv_nsec;
+}
 
 static void* ppu_threadMain(void* arg) {
   PpuAsync* a = arg;
@@ -339,9 +348,11 @@ static void* ppu_threadMain(void* arg) {
   for(;;) {
     unsigned tail = atomic_load_explicit(&a->tail, memory_order_relaxed);
     if(tail != atomic_load_explicit(&a->head, memory_order_acquire)) {
+      uint64_t t0 = ppu_nowNs();
       memcpy(&a->worker, a->snaps[tail % PPU_QUEUE], PPU_SNAP_SIZE);
       ppu_renderLine(&a->worker, a->lines[tail % PPU_QUEUE]);
       atomic_store_explicit(&a->tail, tail + 1, memory_order_release);
+      atomic_fetch_add_explicit(&a->busyNs, ppu_nowNs() - t0, memory_order_relaxed);
       spins = 0;
       continue;
     }
@@ -382,7 +393,16 @@ void ppu_sync(Ppu* ppu) {
   PpuAsync* a = ppu->async;
   if(!a) return;
   unsigned head = atomic_load_explicit(&a->head, memory_order_relaxed);
+  if(atomic_load_explicit(&a->tail, memory_order_acquire) == head) return;
+  uint64_t t0 = ppu_nowNs();
   while(atomic_load_explicit(&a->tail, memory_order_acquire) != head) PPU_RELAX();
+  atomic_fetch_add_explicit(&a->waitNs, ppu_nowNs() - t0, memory_order_relaxed);
+}
+
+void ppu_threadStats(Ppu* ppu, double* busyMs, double* waitMs) {
+  PpuAsync* a = ppu->async;
+  *busyMs = a ? atomic_exchange(&a->busyNs, 0) / 1e6 : 0;
+  *waitMs = a ? atomic_exchange(&a->waitNs, 0) / 1e6 : 0;
 }
 
 void ppu_setAsync(Ppu* ppu, bool on) {
