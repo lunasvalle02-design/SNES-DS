@@ -212,6 +212,8 @@ tests → test on the device. One branch each:
 3. ⬜ Secret of Mana, Chrono Trigger and Final Fantasy VI (`game/secret_of_mana`, `game/chrono_trigger`,
    `game/final_fantasy_vi`): menus and the Mode 7 world map.
 4. 🔶 Super Castlevania IV ✅ and Dracula X ⬜ (`game/super_castlevania_iv`, `game/castlevania_dracula_x`): the HUD.
+5. ✅ **Super Mario World 2: Yoshi's Island** (`game/super_mario_world_2_yoshis_island`): the pause screen, kept
+   up to date. It needed the Super FX 2, now in the core (`engine/superfx`).
 
 ## Phase 7: Integration ⬜
 

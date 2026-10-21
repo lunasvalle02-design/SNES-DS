@@ -218,6 +218,8 @@ perfil → tests → prueba en la consola. Una rama cada uno:
 3. ⬜ Secret of Mana, Chrono Trigger y Final Fantasy VI (`game/secret_of_mana`, `game/chrono_trigger`,
    `game/final_fantasy_vi`): menús y el mapa del mundo en Mode 7.
 4. 🔶 Super Castlevania IV ✅ y Dracula X ⬜ (`game/super_castlevania_iv`, `game/castlevania_dracula_x`): el HUD.
+5. ✅ **Super Mario World 2: Yoshi's Island** (`game/super_mario_world_2_yoshis_island`): la pantalla de pausa,
+   siempre al día. Necesitó el Super FX 2, ahora en el núcleo (`engine/superfx`).
 
 ## Fase 7: Integración ⬜
 

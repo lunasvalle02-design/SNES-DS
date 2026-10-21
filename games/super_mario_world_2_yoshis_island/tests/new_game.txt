@@ -1,0 +1,30 @@
+# Super Mario World 2: Yoshi's Island: from power-on to 1-1 on a new file,
+# checking the game mode on the way and the pause screen's capture at the
+# end. Leaves in OUTDIR:
+#   level    1-1, Yoshi standing at the start, the hint boxes read
+#
+#   scripts/check.sh ROMDIR super_mario_world_2_yoshis_island
+watch 0x118 1
+until 0x118 0xFF 0x07 600            # the opening (01-07)
+untiltap 0x118 0xFF 0x0A 600 START   # the title (08, 09 fading in)
+wait 60
+tap START                            # the file menu, still 0A
+wait 60
+untiltap 0x118 0xFF 0x37 600 A       # file 1, new: out of the menu
+until 0x118 0xFF 0x39 300            # the story
+untiltap 0x118 0xFF 0x0E 3000 A      # its pages, then 1-1's title card
+untiltap 0x118 0xFF 0x0F 600 A       # 1-1
+
+# the hint boxes at the start ($0D0F: 09 to 0D while one is up)
+until 0xD0F 0xFF 0x09 600
+map in_message not_live              # START would do nothing: no capture
+untiltap 0xD0F 0xFF 0x00 900 A
+wait 60
+save level
+expect 0x118 0F
+expect 0xB10 00                      # not paused
+expect 0x379 03                      # 3 lives
+expect 0x37B 00                      # no coins yet
+expect 0x3B4 00 00                   # red coins
+expect 0x3B8 00 00                   # flowers
+map level ok                         # the pause screen, on the hidden core
