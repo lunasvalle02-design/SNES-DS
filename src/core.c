@@ -44,7 +44,8 @@ void core_free(Core* c) {
 /* the header title of whichever mapping the core picked */
 static void read_title(Core* c) {
 	const Cart* cart = c->snes->cart;
-	uint32_t at = cart->type == 1 ? 0x7FC0 : cart->type == 3 ? 0x40FFC0 : 0xFFC0;
+	/* 1 LoROM, 2 HiROM, 3 ExHiROM, 4 Super FX (laid out as LoROM) */
+	uint32_t at = cart->type == 1 || cart->type == 4 ? 0x7FC0 : cart->type == 3 ? 0x40FFC0 : 0xFFC0;
 	memset(c->title, 0, sizeof(c->title));
 	if (!cart->rom || at + 21 > cart->romSize) return;
 	for (int i = 0; i < 21; i++) {

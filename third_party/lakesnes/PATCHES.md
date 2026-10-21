@@ -42,9 +42,37 @@ aarch64.
     the picture (snes-ds's `core_run_frame`).
   - The thread spins briefly between lines and sleeps between frames.
 
+## Super FX
+
+LakeSnes has no enhancement chips. snes-ds adds the Super FX (GSU-1 and GSU-2: Star Fox, Yoshi's Island, Doom…),
+written for snes-ds in `gsu.c` / `gsu.h`, modelled on how [ares](https://github.com/ares-emulator/ares) (ISC)
+emulates it.
+Only a cartridge of the new type 4 has one, so for every other game nothing runs differently: the core's hashes
+(`games/zelda_alttp/tests/core_check.expected`) are unchanged.
+
+- `snes_other.c`: a LoROM header with coprocessor 1 (the high nibble of `$FFD6`) and RAM is type 4, `SuperFX`. Its
+  RAM is the size in the extended header (`$FFBD`, 32K on Yoshi's Island), else 64K.
+- `cart.c`: type 4's map: the GSU's registers and cache at `00-3f,80-bf:3000-34ff`, ROM as LoROM at `8000-ffff` and
+  linear in banks `40-5f`, RAM in `70-71` and its first 8K at `6000-7fff`. While the GSU has the ROM bus (`SFR.G` and
+  `SCMR.RON`), the CPU reads the GSU's interrupt vectors (into WRAM at `$0100-$010C`); while it has the RAM bus, the
+  CPU gets open bus.
+- `snes.c`: `snes_runCycles` hands each step's master cycles to the GSU (`gsu_run`), which runs its instructions for
+  as long as they last (one master cycle per cached instruction at 21 MHz, two at 10.7). Its IRQ (on `STOP`) shares
+  the CPU's IRQ line with the H/V timer, so reading `$4211` or turning the timer off leaves the line as the cartridge
+  holds it (`cart_irq`); reading `$3031` clears it.
+- `gsu.c`: every instruction with its ALT1/ALT2/B prefixes, the one-byte pipeline (with the delay slot after jumps),
+  the 512-byte instruction cache, the two-entry pixel cache of `PLOT` and `RPIX`, the four bit depths and screen
+  heights of `SCMR` and `POR`. Simplified, as games don't need it: the ROM buffer and RAM writes take effect at once
+  instead of some cycles later, the GSU doesn't stall when the CPU takes the ROM or RAM back while it runs, and
+  `STOP` flushes the pixel cache.
+- `src/core.c` (outside the core) reads the title of a type 4 cartridge from the LoROM header.
+
 ## Save states
 
 LakeSnes' states start with an id, `stateVersion` (in `snes_other.c`), their length and the cartridge's type, and a
 state that doesn't match is refused. The snes-ds patches don't change what goes into a state (the masks, the
 caches and the render thread are left out of it), so states keep loading across them. **Any change to what a state
 holds must raise `stateVersion`**, so that older states are refused instead of loaded wrongly.
+
+The Super FX's registers, caches and timing are saved after the cartridge's RAM, only in a type 4 cartridge's states:
+there were none of those before, and every other game's states hold the same as before, so `stateVersion` stays 2.

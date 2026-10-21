@@ -240,7 +240,8 @@ flowchart LR
   [`src/core.h`](src/core.h) so it can be swapped without touching anything else. The patches
   ([PATCHES.md](third_party/lakesnes/PATCHES.md)) add per-scanline layer masks (hide layers, or draw them into a
   second picture) and make it about 3.7× faster: a line-based picture unit, batched timing and a render thread,
-  all checked to give bit-identical results.
+  all checked to give bit-identical results. They also add the Super FX coprocessor (Star Fox, Yoshi's Island),
+  which LakeSnes doesn't have.
 - **Profiles** are data: memory probes (a byte, a mask, a value), layer-split rules, how to open the map and when a
   capture is valid. The engine in [`src/profiles.c`](src/profiles.c) knows nothing about any particular game.
 - **The map** is opened on a second, hidden core running from a copy of the game's state, on a low-priority thread
@@ -343,6 +344,7 @@ tests need ROMs, so they're run locally before a merge.
 
 - [gba-ds](https://github.com/kyannon/gba-ds) by kyannon, the project whose idea this follows.
 - [LakeSnes](https://github.com/angelo-wf/LakeSnes) by angelo-wf, the emulation core.
+- [ares](https://github.com/ares-emulator/ares) (ISC), whose Super FX emulation the core's is modelled on.
 - [snesrev/zelda3](https://github.com/snesrev/zelda3), whose reverse engineering pointed to A Link to the Past's
   memory addresses.
 - [kuba--/zip](https://github.com/kuba--/zip) and miniz, [stb](https://github.com/nothings/stb) by Sean Barrett,
