@@ -11,8 +11,11 @@
 /* $7E0B10 is 01 from the moment START pauses a level until START closes
  * the pause screen again */
 #define PAUSED 0x7E0B10
-/* $7E0B0F is the pause screen coming in: 01 to 13, 13 when it's all up
- * (some 35 frames after START), and back down to 00 when it goes */
+/* $7E0B0F is the pause screen coming in: 01 to 13 over some 35 frames
+ * after START, back down to 00 when it goes. The game fades out and the
+ * screen stays black (01-0A); the panel fades in through 0B-0D (frames
+ * 21-29, every pixel of it changing each frame) and holds still from 0E
+ * on, while only the PAUSE title drops in */
 #define PAUSE_IN 0x7E0B0F
 /* $7E0D0F is the message box of a hint block: 09, 0B, 0D as it opens and
  * turns its pages, 00 when there's none */
@@ -39,15 +42,19 @@ const Profile game_super_mario_world_2_yoshis_island = {
 		/* in a level, not paused, no message box up (START does nothing
 		 * then) */
 		.live = { PROBE(MODE, 0x0F), PROBE(PAUSED, 0x00), PROBE(MESSAGE, 0x00) },
-		.shown = { PROBE(PAUSED, 0x01), PROBE(PAUSE_IN, 0x13) },
+		/* the panel all up: $0B0F 10-13 (mask FC), not waiting for 13, as
+		 * the title is left out anyway. Earlier would draw the black frames
+		 * on the hidden core, which costs more than it saves */
+		.shown = { PROBE(PAUSED, 0x01), { PAUSE_IN, 0xFC, 0x10, false, 0 } },
 		/* coins, red coins, flowers, lives: each change shows at once. The
-		 * stars ($03B6 isn't a plain count: 6D with 10 stars) go by
-		 * `refresh` */
+		 * stars are $03B6 in tenths (6D with 10 stars, 19 with 2), which
+		 * changes every few frames while the countdown runs: they go by
+		 * `refresh`, every 5 seconds (the countdown is on the game screen) */
 		.room = { 0x7E037B, 0x7E03B4, 0x7E03B8, 0x7E0379 },
 		.openWithin = 60, .settleMax = 60, .stableFrames = 3, .maxDiff = 200,
 		.minForeground = 2000, .bgColor = 0x000000,
 		.animFrames = 1, .animStep = 4,
-		.refresh = 120,
+		.refresh = 300,
 		/* the title, PAUSE, left out: on the second screen the game isn't
 		 * paused. It's the only thing in sprites above the counts (lines
 		 * 21-49, as split 16 and splitbox show); the counts are BG1 */

@@ -21,9 +21,9 @@ Funciona con el Super FX 2, que LakeSnes no tiene: el Super FX del núcleo está
   juego solo muestra esto en la pantalla de pausa, que ocupa toda la imagen (`PAUSE` en sprites, el resto BG1, sobre
   negro). Así que el núcleo oculto pausa el juego para la segunda pantalla (el "mapa" del perfil): desde el juego
   normal (`$0118` = `0F`, sin pausa, sin cuadro de mensaje) pulsa START y toma la imagen cuando la pantalla de pausa
-  está entera (`$0B10` = `01`, `$0B0F` = `13`, ~39 frames). El título `PAUSE` se deja fuera (sprites en las líneas
-  0-49): en la segunda pantalla el juego no está en pausa. Se vuelve a tomar en cuanto cambian las monedas, las
-  monedas rojas, las flores o las vidas, y cada 2 segundos por las estrellas.
+  está entera (`$0B10` = `01`, `$0B0F` = `10`-`13`, ~36 frames). El título `PAUSE` se deja fuera (sprites en las
+  líneas 0-49): en la segunda pantalla el juego no está en pausa. Se vuelve a tomar en cuanto cambian las monedas, las
+  monedas rojas, las flores o las vidas, y cada 5 segundos por las estrellas.
 - **Sin división.** La cuenta atrás de estrellas (un sprite arriba cuando baby Mario cae) va y viene sobre el juego;
   los cuadros de mensaje de los bloques de pistas son BG3, que también lleva parte del nivel, y una ventana tapa de
   negro las otras capas bajo ellos, así que dejarían un agujero negro en la pantalla del juego. La pantalla de pausa
@@ -43,17 +43,27 @@ Funciona con el Super FX 2, que LakeSnes no tiene: el Super FX del núcleo está
 | `$7E03B8` | Flores del nivel | escrito `02`: la pantalla de pausa muestra 2/5 |
 
 El byte siguiente a cada cuenta se queda en `00` (la segunda pantalla las lee como valores de 16 bits). La cuenta de
-estrellas no es un byte sin más: `$7E03B6` vale `6D` con 10 estrellas, y al escribirlo salían otros valores, así que
-las estrellas van por el refresco periódico.
+estrellas no es un byte sin más: `$7E03B6` las guarda en décimas (`6D` = 109 con 10 estrellas, `19` = 25 con 2; la
+pantalla quita las décimas). Cambia cada pocos frames mientras corre la cuenta atrás o se recupera, así que como
+disparador tendría al núcleo oculto capturando sin parar: las estrellas van por el refresco periódico, cada 5 segundos
+(la cuenta atrás ya está en la pantalla del juego).
 
 ## Hallazgos
 
 - En un nivel, BG1 y BG2 son el nivel, BG3 los cuadros de mensaje (arriba) y parte del nivel (las plantas de abajo en
   1-1), y los sprites Yoshi, baby Mario, los enemigos y la cuenta atrás de estrellas.
-- La pantalla de pausa se dibuja sola (BG1 y sprites sobre negro, el juego oculto); en el núcleo oculto tarda unos
-  39 frames en aparecer y quedarse quieta: ~40 ms por captura en un PC.
-- Velocidad (PC, esta máquina): ~800 fps en la introducción, ~480 fps en 1-1: el Super FX trabaja mucho al jugar,
-  más o menos la mitad de velocidad que un juego sin él. Queda medirlo en la consola.
+- La pantalla de pausa se dibuja sola (BG1 y sprites sobre negro, el juego oculto). Tras START el juego se funde a
+  negro y la pantalla se queda negra (`$0B0F` `01`-`0A`), el panel aparece con un fundido (`0B`-`0D`, frames 21-29:
+  cambian todos sus píxeles en cada frame) y se queda quieto desde `0E`, mientras solo baja el título. La captura
+  espera a `10`-`13` y se asienta en ~36 frames: ~35 ms en un PC, ~300 ms en la consola. Empezarla antes obligaría a
+  dibujar los frames negros en el núcleo oculto (solo dibuja cuando la pausa ya está arriba), y eso cuesta más de lo
+  que ahorra.
+- Velocidad: en la consola (1.1.1 con el primer Super FX), 10,5-12 ms por frame de media, con picos de 20-37 ms que
+  se notaban como tirones en 1-1. En PC el coste por frame es estable (el más caro de 3.000 frames de juego: 1,3 veces
+  la media), así que los picos de la consola son otros hilos que se cruzan (el de dibujo, las capturas del núcleo
+  oculto, el audio): ayuda bajar la media y capturar menos. El Super FX ahora va por detrás de la CPU, a tramos (ver
+  PATCHES.md): 1-1 pasó de ~595 a ~780 fps en PC con el hilo de dibujo. Y las capturas pasaron de una cada 2 segundos
+  más cada cambio a una cada 5 segundos más cada cambio, de 36 frames en vez de 39.
 - Encendido: el primer sonido es la melodía de "Nintendo Presents" (frame 81, con el logo en pantalla): nada que
   silenciar.
 - Los estados guardados incluyen el Super FX: un estado guardado en 1-1 y vuelto a cargar sigue hasta la misma imagen
@@ -78,4 +88,4 @@ scripts/check.sh ROMDIR super_mario_world_2_yoshis_island
 - El resto del juego, al que no llegan los tests: el mapa del mundo entre niveles (ahí la segunda pantalla mantiene
   la última captura), los jefes (escalado y rotación del Super FX), los minijuegos. Si algo se dibuja mal, es cosa de
   la emulación del Super FX (de una rama `engine/`) más que del perfil.
-- La dirección de la cuenta de estrellas, para capturar en cuanto cambie en vez de cada 2 segundos.
+- La velocidad en la consola tras estos cambios: si desaparecen los tirones de 1-1.
