@@ -343,6 +343,8 @@ static void to_game(App* a) {
 }
 
 static void to_menu(App* a) {
+	/* whoever opens the menu may be about to quit or switch off */
+	if (a->game) game_flush_sram(a->game);
 	printf("menu: open\n");
 	fflush(stdout);
 	a->mode = MODE_UI;

@@ -24,7 +24,10 @@ typedef struct {
 	const Profile* profile;
 	Screen2* s2;
 	uint8_t* sram;        /* as last written */
+	uint8_t* sramSeen;    /* as at the last check */
 	size_t sramSize;
+	long sramWrittenAt;   /* the frame it was last handed to the writer */
+	struct SramWriter* sramWriter; /* writes it on a thread of its own */
 	bool mapOn, splitOn;
 	bool stateLoaded;     /* since power-on */
 	long frame;           /* frames run */
@@ -38,7 +41,8 @@ void game_close(Game* g);
 const char* game_title(Game* g);
 /* one frame with these buttons; its audio into samples (stereo) */
 void game_frame(Game* g, uint16_t buttons, int16_t* samples, int frames);
-/* write the battery save if it changed; done every few seconds by game_frame */
+/* write the battery save now if it changed (game_frame writes it a few
+ * seconds after it stops changing, or once a minute if it never does) */
 void game_flush_sram(Game* g);
 
 void game_set_split(Game* g, bool on);
