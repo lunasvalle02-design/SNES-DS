@@ -56,8 +56,12 @@ Only a cartridge of the new type 4 has one, so for every other game nothing runs
   linear in banks `40-5f`, RAM in `70-71` and its first 8K at `6000-7fff`. While the GSU has the ROM bus (`SFR.G` and
   `SCMR.RON`), the CPU reads the GSU's interrupt vectors (into WRAM at `$0100-$010C`); while it has the RAM bus, the
   CPU gets open bus.
-- `snes.c`: `snes_runCycles` hands each step's master cycles to the GSU (`gsu_run`), which runs its instructions for
-  as long as they last (one master cycle per cached instruction at 21 MHz, two at 10.7). Its IRQ (on `STOP`) shares
+- `snes.c`: `snes_runCycles` adds up the master cycles the CPU spends (`gsu_addCycles`), and the GSU catches up on
+  them (`gsu_catchUp`), running its instructions for as long as they last (one master cycle per cached instruction at
+  21 MHz, two at 10.7). It catches up before the CPU touches the cartridge (`cart.c`), every 256 cycles (so its IRQ
+  comes at most that late) and at the end of each frame (`snes_runFrame`), so a state never owes it any. That's the
+  same work as running it in step with the CPU, in about a quarter of the calls (2,800 per frame in Yoshi's Island's
+  1-1 instead of 12,000): ~25% faster there on PC. Its IRQ (on `STOP`) shares
   the CPU's IRQ line with the H/V timer, so reading `$4211` or turning the timer off leaves the line as the cartridge
   holds it (`cart_irq`); reading `$3031` clears it.
 - `gsu.c`: every instruction with its ALT1/ALT2/B prefixes, the one-byte pipeline (with the delay slot after jumps),
