@@ -34,6 +34,7 @@ Legend: ✅ done · 🔶 in progress · ⬜ to do
 | 1.0.0 | The first stable version: the release candidate, used on the console for some days without problems |
 | 1.1.0 | A picture of the game (its cover, its icon or one of your own) behind the HUD when the second screen has no map or menu, as in Super Castlevania IV or a game with no profile |
 | 1.1.1 | Super Mario World: the world map on the second screen, with the status bar over it in levels. The map capture can leave layers out under the HUD |
+| 1.1.2 | Yoshi's Island on the core's own Super FX, its pause screen always up to date on the second screen. A faster PPU for every game; battery saves off the emulation thread |
 
 ## The road to 1.0
 

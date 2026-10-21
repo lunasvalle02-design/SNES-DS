@@ -9,7 +9,7 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--or--later-FF8A1F" alt="License: GPL-3.0-or-later"></a>
-  <a href="https://github.com/lunasvalle02-design/SNES-DS/releases/latest"><img src="https://img.shields.io/badge/version-1.1.1-FF8A1F" alt="Version 1.1.1"></a>
+  <a href="https://github.com/lunasvalle02-design/SNES-DS/releases/latest"><img src="https://img.shields.io/badge/version-1.1.2-FF8A1F" alt="Version 1.1.2"></a>
   <a href="https://github.com/lunasvalle02-design/SNES-DS/actions/workflows/build.yml"><img src="https://github.com/lunasvalle02-design/SNES-DS/actions/workflows/build.yml/badge.svg" alt="Build"></a>
   <img src="https://img.shields.io/badge/platform-ROCKNIX%20%7C%20Windows%20%7C%20Linux-3B3129" alt="Platforms: ROCKNIX, Windows, Linux">
   <img src="https://img.shields.io/badge/language-C11-3B3129" alt="Language: C11">
@@ -26,9 +26,10 @@ game, a small **profile** tells the emulator which parts of the picture belong e
 move to the second screen, and a hidden second emulator core keeps the game's own **map** open there, live.
 
 > [!NOTE]
-> **Version 1.1.1 is out**, with four games: A Link to the Past, Super Metroid, Super Castlevania IV and, new,
-> Super Mario World. The first three run at full speed on the RG DS Plus (about 9.5 ms per frame, with the map
-> captured in the background).
+> **Version 1.1.2 is out**, with five games: A Link to the Past, Super Metroid, Super Castlevania IV, Super Mario
+> World and, new, Super Mario World 2: Yoshi's Island, which runs on the core's own Super FX. The first three run at
+> full speed on the RG DS Plus (about 9.5 ms per frame, with the map captured in the background); Yoshi's Island
+> still has a few slowdowns there.
 > [Download it from the releases page](https://github.com/lunasvalle02-design/SNES-DS/releases/latest).
 
 ## Contents
