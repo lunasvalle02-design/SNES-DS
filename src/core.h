@@ -34,6 +34,9 @@ const char* core_title(Core* c);
 /* draw the picture on a thread of its own while the emulation goes on
  * (the same pictures; another CPU core busy) */
 void core_set_threaded(Core* c, bool on);
+/* the render thread's time drawing, and the emulation's time waiting for
+ * it, in ms since the last call (0 without a render thread) */
+void core_render_stats(Core* c, double* drawMs, double* waitMs);
 
 /* off: frames run without being drawn (core_frame keeps the last one) */
 void core_set_render(Core* c, bool on);

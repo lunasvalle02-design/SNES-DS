@@ -75,6 +75,8 @@ void core_set_pad(Core* c, int player, uint16_t buttons) {
 
 void core_set_threaded(Core* c, bool on) { ppu_setAsync(c->snes->ppu, on); }
 
+void core_render_stats(Core* c, double* drawMs, double* waitMs) { ppu_threadStats(c->snes->ppu, drawMs, waitMs); }
+
 void core_set_render(Core* c, bool on) { c->snes->ppu->skipRender = !on; }
 
 void core_run_frame(Core* c) {

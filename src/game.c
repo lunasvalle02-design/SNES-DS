@@ -1,5 +1,6 @@
 #include "game.h"
 
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -62,15 +63,17 @@ Game* game_open(const char* romPath, const char* saveDir, const char* stateDir, 
 	snprintf(g->srmPath, sizeof(g->srmPath), "%s.srm", b);
 	base_path(g->base, sizeof(g->base), romPath, stateDir ? stateDir : saveDir);
 
-	/* battery save: loaded, then written whenever it changes */
+	/* battery save: loaded, then written when it changes */
 	g->sramSize = core_sram(g->core, NULL);
 	g->sram = g->sramSize ? calloc(1, g->sramSize) : NULL;
-	if (g->sram) {
+	g->sramSeen = g->sramSize ? calloc(1, g->sramSize) : NULL;
+	if (g->sram && g->sramSeen) {
 		size_t n;
 		uint8_t* d = romfile_read(g->srmPath, &n);
 		if (d && core_load_sram(g->core, d, n)) printf("loaded %s\n", g->srmPath);
 		free(d);
 		core_sram(g->core, g->sram);
+		memcpy(g->sramSeen, g->sram, g->sramSize);
 	}
 	g->mapOn = map;
 	g->splitOn = split;
@@ -80,24 +83,123 @@ Game* game_open(const char* romPath, const char* saveDir, const char* stateDir, 
 	return g;
 }
 
-void game_flush_sram(Game* g) {
-	if (!g->sram) return;
-	uint8_t* now = malloc(g->sramSize);
-	core_sram(g->core, now);
-	if (memcmp(now, g->sram, g->sramSize)) {
-		memcpy(g->sram, now, g->sramSize);
-		if (!write_file(g->srmPath, g->sram, g->sramSize)) fprintf(stderr, "can't save %s\n", g->srmPath);
+/* Battery saves are written on a thread of their own: an SD card can take
+ * tens of milliseconds to write one for sure (fsync), and the emulation
+ * shouldn't wait for it (the sound would stutter). */
+struct SramWriter {
+	pthread_t thread;
+	pthread_mutex_t lock;
+	pthread_cond_t wake;
+	char path[1100];
+	uint8_t* data; /* the next one to write */
+	size_t size;
+	bool pending, quit;
+};
+
+static void* sram_writer_main(void* arg) {
+	struct SramWriter* w = arg;
+	uint8_t* mine = malloc(w->size);
+	pthread_mutex_lock(&w->lock);
+	for (;;) {
+		while (!w->pending && !w->quit) pthread_cond_wait(&w->wake, &w->lock);
+		if (!w->pending) break; /* quitting, nothing left to write */
+		if (mine) memcpy(mine, w->data, w->size);
+		w->pending = false;
+		pthread_mutex_unlock(&w->lock);
+		bool ok = mine && write_file(w->path, mine, w->size);
+		printf(ok ? "saved %s\n" : "can't save %s\n", w->path);
+		fflush(stdout);
+		pthread_mutex_lock(&w->lock);
 	}
-	free(now);
+	pthread_mutex_unlock(&w->lock);
+	free(mine);
+	return NULL;
 }
+
+/* hands g->sram to the writer (started on first use; without it, written
+ * here) */
+static void sram_write(Game* g) {
+	struct SramWriter* w = g->sramWriter;
+	if (!w) {
+		w = calloc(1, sizeof(*w));
+		if (w) w->data = malloc(g->sramSize);
+		if (!w || !w->data) {
+			if (w) free(w);
+			if (!write_file(g->srmPath, g->sram, g->sramSize)) fprintf(stderr, "can't save %s\n", g->srmPath);
+			return;
+		}
+		snprintf(w->path, sizeof(w->path), "%s", g->srmPath);
+		w->size = g->sramSize;
+		pthread_mutex_init(&w->lock, NULL);
+		pthread_cond_init(&w->wake, NULL);
+		if (pthread_create(&w->thread, NULL, sram_writer_main, w) != 0) {
+			pthread_mutex_destroy(&w->lock);
+			pthread_cond_destroy(&w->wake);
+			free(w->data);
+			free(w);
+			if (!write_file(g->srmPath, g->sram, g->sramSize)) fprintf(stderr, "can't save %s\n", g->srmPath);
+			return;
+		}
+		g->sramWriter = w;
+	}
+	pthread_mutex_lock(&w->lock);
+	memcpy(w->data, g->sram, w->size);
+	w->pending = true;
+	pthread_cond_signal(&w->wake);
+	pthread_mutex_unlock(&w->lock);
+}
+
+/* the last write finished, the thread gone */
+static void sram_writer_stop(Game* g) {
+	struct SramWriter* w = g->sramWriter;
+	if (!w) return;
+	pthread_mutex_lock(&w->lock);
+	w->quit = true;
+	pthread_cond_signal(&w->wake);
+	pthread_mutex_unlock(&w->lock);
+	pthread_join(w->thread, NULL);
+	pthread_mutex_destroy(&w->lock);
+	pthread_cond_destroy(&w->wake);
+	free(w->data);
+	free(w);
+	g->sramWriter = NULL;
+}
+
+/* how long a battery save that never stops changing waits: a minute. Most
+ * games change it only when they save, but in some it's also working memory
+ * (the Super FX's, in Yoshi's Island), changing every frame */
+#define SRAM_MAX_WAIT (60 * 60)
+
+/* written once it holds still from one check to the next (a game saving
+ * writes it in a burst), or SRAM_MAX_WAIT frames after it was last; `now`:
+ * as soon as it changed */
+static void sram_check(Game* g, bool now) {
+	if (!g->sram || !g->sramSeen) return;
+	uint8_t* cur = malloc(g->sramSize);
+	if (!cur) return;
+	core_sram(g->core, cur);
+	bool changed = memcmp(cur, g->sram, g->sramSize) != 0;
+	bool moving = memcmp(cur, g->sramSeen, g->sramSize) != 0;
+	memcpy(g->sramSeen, cur, g->sramSize);
+	if (changed && (now || !moving || g->frame - g->sramWrittenAt >= SRAM_MAX_WAIT)) {
+		memcpy(g->sram, cur, g->sramSize);
+		g->sramWrittenAt = g->frame;
+		sram_write(g);
+	}
+	free(cur);
+}
+
+void game_flush_sram(Game* g) { sram_check(g, true); }
 
 void game_close(Game* g) {
 	if (!g) return;
 	game_flush_sram(g);
+	sram_writer_stop(g);
 	screen2_free(g->s2);
 	core_free(g->core);
 	free(g->rom);
 	free(g->sram);
+	free(g->sramSeen);
 	free(g);
 }
 
@@ -113,8 +215,8 @@ void game_frame(Game* g, uint16_t buttons, int16_t* samples, int frames) {
 	 * state is loaded: that isn't a start-up) */
 	if (g->profile && !g->stateLoaded && g->frame < g->profile->bootMuteFrames)
 		memset(samples, 0, sizeof(int16_t) * 2 * frames);
-	/* battery saves: written a few seconds after they change */
-	if (++g->frame % 300 == 0) game_flush_sram(g);
+	/* battery saves: looked at every 5 seconds (sram_check) */
+	if (++g->frame % 300 == 0) sram_check(g, false);
 }
 
 void game_set_split(Game* g, bool on) {

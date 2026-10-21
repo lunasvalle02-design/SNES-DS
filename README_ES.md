@@ -68,7 +68,8 @@ pasan a la segunda pantalla, y un segundo núcleo oculto mantiene allí abierto 
   volumen, contador de FPS, idioma y controles, guardados en `snes-ds.cfg`.
 - **En inglés y en español.** La interfaz arranca en inglés; el idioma se cambia en los ajustes, y el cambio se ve al
   momento.
-- **Partidas** (`.srm`) en el mismo formato que RetroArch, escritas unos segundos después de cambiar. Las partidas,
+- **Partidas** (`.srm`) en el mismo formato que RetroArch, escritas unos segundos después de cambiar y quedarse
+  quietas (como mínimo una vez por minuto si no dejan de cambiar), en un hilo propio, y al abrir el menú. Las partidas,
   los estados y los ajustes se escriben de forma que un apagado no pueda dejar un fichero a medias.
 - **ROMs** en `.sfc`, `.smc` o dentro de un `.zip`, reconocidas por su CRC32 (una caché mantiene el arranque rápido
   con bibliotecas grandes).

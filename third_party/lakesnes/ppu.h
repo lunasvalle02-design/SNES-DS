@@ -171,5 +171,8 @@ void ppu_setPixelOutputFormat(Ppu* ppu, int pixelOutputFormat);
 // before vram/cgram change, states, and by whoever reads outBuffer)
 void ppu_setAsync(Ppu* ppu, bool on);
 void ppu_sync(Ppu* ppu);
+// snes-ds: the render thread's time drawing, and the time ppu_sync waited
+// for it, in ms since the last call (0 without one)
+void ppu_threadStats(Ppu* ppu, double* busyMs, double* waitMs);
 
 #endif
