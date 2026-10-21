@@ -1,10 +1,13 @@
 
 // snes-ds: the Super FX (GSU-1/GSU-2). See gsu.h and PATCHES.md.
 //
-// It runs alongside the cpu: snes_runCycles hands it the master cycles the
-// cpu just spent (gsu_run), and it runs instructions for as long as those
-// last, one master cycle per cached instruction at 21 MHz (clsr 1), two at
-// 10.7 MHz. Its rom buffer and ram writes take effect at once instead of
+// It runs behind the cpu: snes_runCycles adds up the master cycles the cpu
+// spends (gsu_addCycles), and it catches up on them (gsu_catchUp), running
+// instructions for as long as those last (one master cycle per cached
+// instruction at 21 MHz, clsr 1, two at 10.7 MHz), before the cpu touches
+// the cartridge, every GSU_SLICE cycles and at the end of a frame. Run that
+// way it does the same work as in step with the cpu, in a quarter of the
+// calls: the cpu sees it only through the cartridge and its irq. Its rom buffer and ram writes take effect at once instead of
 // some cycles later, and it doesn't wait when the cpu has the rom or ram
 // back while it runs: games don't rely on either.
 
@@ -83,9 +86,14 @@ void gsu_reset(Gsu* gsu) {
   memset(gsu->cacheValid, 0, sizeof(gsu->cacheValid));
   memset(gsu->pixelcache, 0, sizeof(gsu->pixelcache));
   gsu->budget = 0;
+  gsu->pending = 0;
 }
 
 void gsu_handleState(Gsu* gsu, StateHandler* sh) {
+  // what the cpu's time still owes it isn't part of a state (states are taken
+  // between frames, when nothing is owed)
+  if(sh->saving) gsu_catchUp(gsu);
+  else gsu->pending = 0;
   sh_handleWordArray(sh, gsu->r, 16);
   sh_handleWords(sh, &gsu->sfr, &gsu->cbr, &gsu->ramaddr, NULL);
   sh_handleBytes(sh,
@@ -687,7 +695,9 @@ static void gsu_execute(Gsu* gsu, uint8_t op) {
   }
 }
 
-void gsu_run(Gsu* gsu, int cycles) {
+void gsu_catchUp(Gsu* gsu) {
+  int32_t cycles = gsu->pending;
+  gsu->pending = 0;
   if(!(gsu->sfr & SFR_G)) return;
   gsu->budget += cycles;
   while(gsu->budget > 0) {

@@ -127,6 +127,7 @@ void snes_runFrame(Snes* snes) {
     cpu_runOpcode(snes->cpu);
   }
   snes_catchupApu(snes); // catch up the apu after running
+  if(snes->cart->gsu != NULL) gsu_catchUp(snes->cart->gsu); // snes-ds: and the Super FX
 }
 
 // snes-ds: the steps between "events" in one go. snes_runCycle only does
@@ -167,7 +168,7 @@ void snes_runCycles(Snes* snes, int cycles) {
     cycles += 40;
   }
   // snes-ds: the Super FX runs alongside
-  if(snes->cart->gsu != NULL) gsu_run(snes->cart->gsu, cycles);
+  if(snes->cart->gsu != NULL) gsu_addCycles(snes->cart->gsu, cycles);
   int steps = (cycles + 1) / 2;
   while(steps > 0) {
     int quiet = snes->irqDirty ? 0 : snes_quietSteps(snes);

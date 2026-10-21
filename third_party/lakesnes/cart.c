@@ -205,6 +205,7 @@ static void cart_writeSuperFxRam(Cart* cart, uint32_t offset, uint8_t val) {
 }
 
 static uint8_t cart_readSuperFx(Cart* cart, uint8_t bank, uint16_t adr) {
+  if(cart->gsu->pending) gsu_catchUp(cart->gsu); // up to now, before the cpu looks
   bank &= 0x7f;
   if(bank < 0x40) {
     if(adr >= 0x3000 && adr < 0x3500) return gsu_read(cart->gsu, adr);
@@ -218,6 +219,7 @@ static uint8_t cart_readSuperFx(Cart* cart, uint8_t bank, uint16_t adr) {
 }
 
 static void cart_writeSuperFx(Cart* cart, uint8_t bank, uint16_t adr, uint8_t val) {
+  if(cart->gsu->pending) gsu_catchUp(cart->gsu);
   bank &= 0x7f;
   if(bank < 0x40) {
     if(adr >= 0x3000 && adr < 0x3500) gsu_write(cart->gsu, adr, val);

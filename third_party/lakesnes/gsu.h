@@ -50,14 +50,26 @@ struct Gsu {
   bool cacheValid[32];
   GsuPixelCache pixelcache[2];
   int32_t budget; // master cycles it may still run
+  int32_t pending; // master cycles the cpu spent that it hasn't run yet (0 between frames)
 };
+
+// it runs behind the cpu, in slices: when the cpu touches the cartridge (its
+// registers, ram or rom), every GSU_SLICE master cycles (so its irq comes at
+// most that late) and at the end of a frame
+#define GSU_SLICE 256
 
 Gsu* gsu_init(Snes* snes, uint8_t* rom, uint32_t romSize, uint8_t* ram, uint32_t ramSize);
 void gsu_free(Gsu* gsu);
 void gsu_reset(Gsu* gsu);
 void gsu_handleState(Gsu* gsu, StateHandler* sh);
-// runs for the master cycles the cpu just spent
-void gsu_run(Gsu* gsu, int cycles);
+// runs for the master cycles the cpu spent so far
+void gsu_catchUp(Gsu* gsu);
+// the master cycles the cpu just spent
+static inline void gsu_addCycles(Gsu* gsu, int cycles) {
+  if(!(gsu->sfr & 0x0020)) return; // not running (sfr.g)
+  gsu->pending += cycles;
+  if(gsu->pending >= GSU_SLICE) gsu_catchUp(gsu);
+}
 // $3000-$34ff
 uint8_t gsu_read(Gsu* gsu, uint16_t adr);
 void gsu_write(Gsu* gsu, uint16_t adr, uint8_t val);
