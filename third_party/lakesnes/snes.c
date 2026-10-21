@@ -12,6 +12,7 @@
 #include "dma.h"
 #include "ppu.h"
 #include "cart.h"
+#include "gsu.h"
 #include "input.h"
 #include "statehandler.h"
 
@@ -165,6 +166,8 @@ void snes_runCycles(Snes* snes, int cycles) {
     // if we go past 536, add 40 cycles for dram refersh
     cycles += 40;
   }
+  // snes-ds: the Super FX runs alongside
+  if(snes->cart->gsu != NULL) gsu_run(snes->cart->gsu, cycles);
   int steps = (cycles + 1) / 2;
   while(steps > 0) {
     int quiet = snes->irqDirty ? 0 : snes_quietSteps(snes);
@@ -353,7 +356,7 @@ static uint8_t snes_readReg(Snes* snes, uint16_t adr) {
     case 0x4211: {
       uint8_t val = snes->inIrq << 7;
       snes->inIrq = false;
-      cpu_setIrq(snes->cpu, false);
+      cpu_setIrq(snes->cpu, cart_irq(snes->cart)); // snes-ds: or the cartridge's
       return val | (snes->openBus & 0x7f);
     }
     case 0x4212: {
@@ -405,7 +408,7 @@ static void snes_writeReg(Snes* snes, uint16_t adr, uint8_t val) {
       snes->irqDirty = true;
       if(!snes->hIrqEnabled && !snes->vIrqEnabled) {
         snes->inIrq = false;
-        cpu_setIrq(snes->cpu, false);
+        cpu_setIrq(snes->cpu, cart_irq(snes->cart)); // snes-ds: or the cartridge's
       }
       // if nmi is enabled while inNmi is still set, immediately generate nmi
       if(!snes->nmiEnabled && (val & 0x80) && snes->inNmi) {

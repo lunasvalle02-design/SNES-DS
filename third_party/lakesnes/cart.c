@@ -8,12 +8,15 @@
 #include "cart.h"
 #include "snes.h"
 #include "statehandler.h"
+#include "gsu.h"
 
 static uint8_t cart_readLorom(Cart* cart, uint8_t bank, uint16_t adr);
 static void cart_writeLorom(Cart* cart, uint8_t bank, uint16_t adr, uint8_t val);
 static uint8_t cart_readHirom(Cart* cart, uint8_t bank, uint16_t adr);
 static uint8_t cart_readExHirom(Cart* cart, uint8_t bank, uint16_t adr);
 static void cart_writeHirom(Cart* cart, uint8_t bank, uint16_t adr, uint8_t val);
+static uint8_t cart_readSuperFx(Cart* cart, uint8_t bank, uint16_t adr);
+static void cart_writeSuperFx(Cart* cart, uint8_t bank, uint16_t adr, uint8_t val);
 
 Cart* cart_init(Snes* snes) {
   Cart* cart = malloc(sizeof(Cart));
@@ -23,10 +26,12 @@ Cart* cart_init(Snes* snes) {
   cart->romSize = 0;
   cart->ram = NULL;
   cart->ramSize = 0;
+  cart->gsu = NULL;
   return cart;
 }
 
 void cart_free(Cart* cart) {
+  if(cart->gsu != NULL) gsu_free(cart->gsu);
   if(cart->rom != NULL) free(cart->rom);
   if(cart->ram != NULL) free(cart->ram);
   free(cart);
@@ -34,6 +39,7 @@ void cart_free(Cart* cart) {
 
 void cart_reset(Cart* cart) {
   // do not reset ram, assumed to be battery backed
+  if(cart->gsu != NULL) gsu_reset(cart->gsu);
 }
 
 bool cart_handleTypeState(Cart* cart, StateHandler* sh) {
@@ -54,10 +60,14 @@ bool cart_handleTypeState(Cart* cart, StateHandler* sh) {
 
 void cart_handleState(Cart* cart, StateHandler* sh) {
   if(cart->ram != NULL) sh_handleByteArray(sh, cart->ram, cart->ramSize);
+  // snes-ds: only a Super FX cartridge's states hold this, so the others' don't change
+  if(cart->gsu != NULL) gsu_handleState(cart->gsu, sh);
 }
 
 void cart_load(Cart* cart, int type, uint8_t* rom, int romSize, int ramSize) {
   cart->type = type;
+  if(cart->gsu != NULL) gsu_free(cart->gsu);
+  cart->gsu = NULL;
   if(cart->rom != NULL) free(cart->rom);
   if(cart->ram != NULL) free(cart->ram);
   cart->rom = malloc(romSize);
@@ -70,6 +80,7 @@ void cart_load(Cart* cart, int type, uint8_t* rom, int romSize, int ramSize) {
   }
   cart->ramSize = ramSize;
   memcpy(cart->rom, rom, romSize);
+  if(type == 4) cart->gsu = gsu_init(cart->snes, cart->rom, romSize, cart->ram, ramSize);
 }
 
 bool cart_handleBattery(Cart* cart, bool save, uint8_t* data, int* size) {
@@ -92,6 +103,7 @@ uint8_t cart_read(Cart* cart, uint8_t bank, uint16_t adr) {
     case 1: return cart_readLorom(cart, bank, adr);
     case 2: return cart_readHirom(cart, bank, adr);
     case 3: return cart_readExHirom(cart, bank, adr);
+    case 4: return cart_readSuperFx(cart, bank, adr);
   }
   return cart->snes->openBus;
 }
@@ -102,6 +114,7 @@ void cart_write(Cart* cart, uint8_t bank, uint16_t adr, uint8_t val) {
     case 1: cart_writeLorom(cart, bank, adr, val); break;
     case 2: cart_writeHirom(cart, bank, adr, val); break;
     case 3: cart_writeHirom(cart, bank, adr, val); break;
+    case 4: cart_writeSuperFx(cart, bank, adr, val); break;
   }
 }
 
@@ -158,4 +171,58 @@ static void cart_writeHirom(Cart* cart, uint8_t bank, uint16_t adr, uint8_t val)
     // banks 00-3f and 80-bf, adr 6000-7fff
     cart->ram[(((bank & 0x3f) << 13) | (adr & 0x1fff)) & (cart->ramSize - 1)] = val;
   }
+}
+
+// snes-ds: a Super FX cartridge. Its registers at 3000-34ff; rom as lorom
+// at 8000-ffff and linear in banks 40-5f; ram in banks 70-71 and its first
+// 8K at 6000-7fff. While the Super FX has the rom, the cpu reads the
+// interrupt vectors it gives instead (pointing into wram); while it has the
+// ram, the cpu gets nothing from it.
+
+bool cart_irq(Cart* cart) {
+  return cart->gsu != NULL && (cart->gsu->sfr & 0x8000);
+}
+
+static uint8_t cart_readSuperFxRom(Cart* cart, uint32_t offset) {
+  if(gsu_ownsRom(cart->gsu)) {
+    static const uint8_t vector[16] = {
+      0x00, 0x01, 0x00, 0x01, 0x04, 0x01, 0x00, 0x01,
+      0x00, 0x01, 0x08, 0x01, 0x00, 0x01, 0x0c, 0x01,
+    };
+    return vector[offset & 15];
+  }
+  return cart->rom[offset & (cart->romSize - 1)];
+}
+
+static uint8_t cart_readSuperFxRam(Cart* cart, uint32_t offset) {
+  if(gsu_ownsRam(cart->gsu)) return cart->snes->openBus;
+  return cart->ram[offset & (cart->ramSize - 1)];
+}
+
+static void cart_writeSuperFxRam(Cart* cart, uint32_t offset, uint8_t val) {
+  if(gsu_ownsRam(cart->gsu)) return;
+  cart->ram[offset & (cart->ramSize - 1)] = val;
+}
+
+static uint8_t cart_readSuperFx(Cart* cart, uint8_t bank, uint16_t adr) {
+  bank &= 0x7f;
+  if(bank < 0x40) {
+    if(adr >= 0x3000 && adr < 0x3500) return gsu_read(cart->gsu, adr);
+    if(adr >= 0x6000 && adr < 0x8000) return cart_readSuperFxRam(cart, adr & 0x1fff);
+    if(adr >= 0x8000) return cart_readSuperFxRom(cart, (bank << 15) | (adr & 0x7fff));
+    return cart->snes->openBus;
+  }
+  if(bank < 0x60) return cart_readSuperFxRom(cart, ((bank & 0x1f) << 16) | adr);
+  if(bank == 0x70 || bank == 0x71) return cart_readSuperFxRam(cart, ((bank & 1) << 16) | adr);
+  return cart->snes->openBus;
+}
+
+static void cart_writeSuperFx(Cart* cart, uint8_t bank, uint16_t adr, uint8_t val) {
+  bank &= 0x7f;
+  if(bank < 0x40) {
+    if(adr >= 0x3000 && adr < 0x3500) gsu_write(cart->gsu, adr, val);
+    if(adr >= 0x6000 && adr < 0x8000) cart_writeSuperFxRam(cart, adr & 0x1fff, val);
+    return;
+  }
+  if(bank == 0x70 || bank == 0x71) cart_writeSuperFxRam(cart, ((bank & 1) << 16) | adr, val);
 }

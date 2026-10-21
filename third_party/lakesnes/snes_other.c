@@ -79,8 +79,16 @@ bool snes_loadRom(Snes* snes, const uint8_t* data, int length) {
     data += 0x200; // move pointer past header
     length -= 0x200; // and subtract from size
   }
+  // snes-ds: a Super FX cartridge (coprocessor 1, lorom), its ram size in
+  // the extended header (or 64K)
+  int ramSize = headers[used].chips > 0 ? headers[used].ramSize : 0;
+  if(headers[used].cartType == 1 && headers[used].coprocessor == 1 && headers[used].chips >= 3) {
+    headers[used].cartType = 4;
+    bool exRam = headers[used].headerVersion == 3 && headers[used].exRamSize >= 0x8000;
+    ramSize = exRam ? headers[used].exRamSize : 0x10000;
+  }
   // check if we can load it
-  if(headers[used].cartType > 3) {
+  if(headers[used].cartType > 4) {
     printf("Failed to load rom: unsupported type (%d)\n", headers[used].cartType);
     return false;
   }
@@ -103,17 +111,17 @@ bool snes_loadRom(Snes* snes, const uint8_t* data, int length) {
     test *= 2;
   }
   // load it
-  const char* typeNames[4] = {"(none)", "LoROM", "HiROM", "ExHiROM"};
+  const char* typeNames[5] = {"(none)", "LoROM", "HiROM", "ExHiROM", "SuperFX"};
   printf("Loaded %s rom (%s)\n", typeNames[headers[used].cartType], headers[used].pal ? "PAL" : "NTSC");
   printf("\"%s\"\n", headers[used].name);
   int bankSize = used >= 2 ? 0x10000 : 0x8000; // 0, 1: LoROM, else HiROM
   printf(
     "%s banks: %d, ramsize: %d\n",
-    bankSize == 0x8000 ? "32K" : "64K", newLength / bankSize, headers[used].chips > 0 ? headers[used].ramSize : 0
+    bankSize == 0x8000 ? "32K" : "64K", newLength / bankSize, ramSize
   );
   cart_load(
     snes->cart, headers[used].cartType,
-    newData, newLength, headers[used].chips > 0 ? headers[used].ramSize : 0
+    newData, newLength, ramSize
   );
   snes_reset(snes, true); // reset after loading
   snes->palTiming = headers[used].pal; // set region
