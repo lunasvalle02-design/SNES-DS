@@ -6,6 +6,23 @@ What each version of SNES DS brought. Versions follow [semantic versioning](http
 may still change (see [what 1.0 promises](ROADMAP.md#the-road-to-10)). Downloads are on the
 [releases page](https://github.com/lunasvalle02-design/SNES-DS/releases).
 
+## 1.1.2
+
+### Added
+- **Super Mario World 2: Yoshi's Island** (USA, Rev 1): the second screen shows the pause screen, always up to date,
+  without pausing: the level's stars, red coins and flowers, the points, lives, coins and items, captured in the
+  background. Its own icon in the game list. On the RG DS Plus it still has a few slowdowns in levels (what's left is
+  listed in its README).
+- **The Super FX** (GSU-1 and GSU-2) in the emulation core, which LakeSnes didn't have: Super FX games (Star Fox,
+  Yoshi's Island, Doom…) no longer stay on a black screen. Run behind the CPU, in slices.
+- The log's `stats:` line says how long the render thread takes per frame, and how long the emulation waits for it.
+
+### Changed
+- **The PPU decodes background tiles with a table**: about a third less drawing time, for every game, with the same
+  pictures.
+- **Battery saves are written on a thread of their own**, once they stop changing (or once a minute if they never
+  do, as with the Super FX's memory), and when the menu opens: the emulation no longer waits for the SD card.
+
 ## 1.1.1
 
 ### Added

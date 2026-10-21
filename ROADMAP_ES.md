@@ -35,6 +35,7 @@ Leyenda: ✅ hecho · 🔶 en curso · ⬜ pendiente
 | 1.0.0 | La primera versión estable: la candidata, usada en la consola varios días sin problemas |
 | 1.1.0 | Una imagen del juego (su carátula, su icono o una tuya) tras el HUD cuando la segunda pantalla no tiene mapa ni menú, como en Super Castlevania IV o un juego sin perfil |
 | 1.1.1 | Super Mario World: el mapa del mundo en la segunda pantalla, con la barra de estado encima en los niveles. La captura del mapa puede dejar capas fuera bajo el HUD |
+| 1.1.2 | Yoshi's Island con el Super FX propio del núcleo, su pantalla de pausa siempre al día en la segunda pantalla. Una PPU más rápida para todos los juegos; las partidas guardadas, fuera del hilo de emulación |
 
 ## Camino a la 1.0
 
