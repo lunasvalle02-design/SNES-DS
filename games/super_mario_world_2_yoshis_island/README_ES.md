@@ -84,8 +84,22 @@ scripts/check.sh ROMDIR super_mario_world_2_yoshis_island
 
 ## Pendiente
 
-- La velocidad en la consola: el Super FX es lo más pesado que ha movido el núcleo hasta ahora.
+- **La velocidad en la consola: quedan algunos tirones en 1-1, aceptables por ahora.** En la RG DS Plus (con el Super
+  FX a tramos, las capturas más ligeras y la partida guardada fuera del hilo de emulación) el log da 10,3-11,5 ms de
+  emulación por frame de media y picos de 17-20 ms (antes 20-37 ms), sin cortes de audio. El hilo de dibujo tarda
+  ~6 ms y la emulación solo lo espera 0,2-0,6 ms por frame: **el propio hilo de emulación (CPU, Super FX, sonido)
+  marca el ritmo**, y sus picos por encima de 16,7 ms son los tirones que quedan. Dónde mirar después, por orden:
+  - **La CPU esperando al Super FX.** Mientras el GSU trabaja, la CPU lee `$3030` en bucle, unas 1.400 veces por frame
+    en 1-1, cada una emulada entera. Saltar hasta que el GSU pare (o hasta el siguiente evento: NMI, IRQ, la siguiente
+    línea que necesite la PPU) ahorraría casi todo ese trabajo, pero tiene que mantener las interrupciones a su hora:
+    un cambio de `engine/`, comprobado con los hashes del núcleo y los estados guardados, como se hizo en la #23.
+  - **El intérprete del Super FX** (~12% del tiempo en PC, ~25% del hilo de emulación): el despacho y los flags, la
+    lectura del pipeline, `gsu_resetPrefix` en cada instrucción.
+  - **Las capturas** de la pantalla de pausa, ~300 ms del núcleo oculto cada una, compitiendo por los mismos 4
+    núcleos: unas 4 cada 10 segundos mientras se recogen monedas. Menos (las monedas cada pocos segundos en vez de
+    al momento) o más baratas.
+  - **Más sonido en cola** (ahora 3 frames, ~50 ms) escondería los picos que quedan, a costa de latencia, para todos
+    los juegos: un ajuste de la app más que un arreglo.
 - El resto del juego, al que no llegan los tests: el mapa del mundo entre niveles (ahí la segunda pantalla mantiene
   la última captura), los jefes (escalado y rotación del Super FX), los minijuegos. Si algo se dibuja mal, es cosa de
   la emulación del Super FX (de una rama `engine/`) más que del perfil.
-- La velocidad en la consola tras estos cambios: si desaparecen los tirones de 1-1.

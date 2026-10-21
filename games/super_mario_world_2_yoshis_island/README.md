@@ -82,8 +82,21 @@ scripts/check.sh ROMDIR super_mario_world_2_yoshis_island
 
 ## To do
 
-- Speed on the console: the Super FX is the heaviest thing the core has run so far.
+- **Speed on the console: some slowdowns left in 1-1, acceptable for now.** On the RG DS Plus (with the Super FX run
+  in slices, the lighter captures and the battery save off the emulation thread) the log shows 10.3-11.5 ms of
+  emulation per frame on average and peaks of 17-20 ms (they were 20-37 ms), no audio underruns. The render thread
+  draws in ~6 ms and the emulation waits for it only 0.2-0.6 ms per frame: **the emulation thread itself (CPU,
+  Super FX, sound) sets the pace**, and its peaks over 16.7 ms are the slowdowns left. Where to look next, in order:
+  - **The CPU waiting for the Super FX.** While the GSU runs, the CPU reads `$3030` in a loop, ~1,400 times a frame
+    in 1-1, each one emulated in full. Skipping ahead to when the GSU stops (or to the next event: NMI, IRQ, the next
+    line the PPU needs) would save most of that work, but it has to keep interrupts on time: an `engine/` change, to
+    be checked against the core's hashes and save states as #23 was.
+  - **The Super FX interpreter** (~12% of the time on PC, ~25% of the emulation thread): its dispatch and flags, the
+    pipeline fetch, `gsu_resetPrefix` on every instruction.
+  - **The captures** of the pause screen, ~300 ms of the hidden core each, competing for the same 4 cores: about 4 per
+    10 seconds while coins are being collected. Fewer (coins every few seconds instead of at once) or cheaper.
+  - **More sound queued** (3 frames now, ~50 ms) would hide the peaks that are left, at the cost of latency, for every
+    game: an app setting rather than a fix.
 - The rest of the game, which the tests don't reach: the world map between levels (the second screen keeps the last
   capture there), bosses (Super FX scaling and rotation), the mini-games. If something draws wrong, it's the Super
   FX's emulation (an `engine/` matter) rather than the profile.
-- Speed on the console after these changes: whether 1-1's slowdowns are gone.
