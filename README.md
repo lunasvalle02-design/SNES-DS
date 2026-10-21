@@ -68,7 +68,8 @@ move to the second screen, and a hidden second emulator core keeps the game's ow
   the language and the controls, kept in `snes-ds.cfg`.
 - **In English and Spanish.** The interface starts in English; the language can be changed from the settings, and
   the change shows at once.
-- **Battery saves** in the same `.srm` format as RetroArch, written a few seconds after they change. Saves, states
+- **Battery saves** in the same `.srm` format as RetroArch, written a few seconds after they change and settle (at
+  least once a minute while they keep changing), on a thread of their own, and when the menu opens. Saves, states
   and settings are written so that a power cut can't leave half a file.
 - **ROMs** as `.sfc`, `.smc` or inside a `.zip`, recognised by CRC32 (a cache keeps startup fast with large
   libraries).

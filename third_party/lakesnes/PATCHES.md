@@ -21,7 +21,9 @@ aarch64.
 
 - **Lines, not pixels** (`ppu_prepareLine`, `ppu_composeLineFast`). Per line, before drawing:
   - each background layer is decoded once, tile by tile (one tilemap read and one row decode per 8 pixels; pixel by
-    pixel only with mosaic or offset-per-tile), into `bgLine[layer][priority][x]`;
+    pixel only with mosaic or offset-per-tile), into `bgLine[layer][priority][x]`. A row is decoded with a table
+    (`ppu_spread`: one bit plane's byte spread over the 8 pixels, a byte each), 2-8 lookups and shifts instead of a
+    loop over its bits, and a row with nothing in it is written in one go: about a third less PPU time;
   - mode 7 into `m7LinePixel`, the windows into `winLine`, the brightness into `brightLine`, and which layer and
     priority pairs have any pixel at all into `lineHas`.
 
@@ -41,6 +43,8 @@ aarch64.
     ($2122), reset and state handling first wait for every line handed over (`ppu_sync`), and so does whoever reads
     the picture (snes-ds's `core_run_frame`).
   - The thread spins briefly between lines and sleeps between frames.
+  - For the log, it adds up its time drawing and `ppu_sync` its time waiting (`ppu_threadStats`): which of the two
+    threads sets the pace.
 
 ## Super FX
 
