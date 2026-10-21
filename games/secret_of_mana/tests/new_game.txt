@@ -1,0 +1,236 @@
+# Secret of Mana: from power-on to the boy in control with the sword and
+# the HUD, through the title, a new game, the name (two letters), the
+# intro, the fall into the river, the way to the sword in the stone and
+# the ghost, checking the memory the profile relies on (exits 1 if
+# something is off). The way to the sword is walked with fixed presses:
+# the harness runs the same frames every time. Leaves in OUTDIR:
+#   field    the meadow west of the river, before the sword: no HUD yet
+#   play     at the stone with the sword, the HUD on screen
+#
+#   scripts/check.sh ROMDIR secret_of_mana
+watch 0x9B 1
+watch 0x7D 1
+
+# the Squaresoft logo, the title, Game Select (New Game), the name
+wait 400
+tap START
+wait 120
+tap START
+wait 120
+tap A
+wait 120
+tap A
+wait 120
+tap START
+wait 120
+tap A
+wait 200
+tap A
+wait 600
+expect 0x9B 00     # not the field: the name entry
+tap B              # two letters: the "attack" button enters one
+wait 10
+tap B
+wait 10
+tap START          # the name is done
+wait 60
+tap START
+
+# the intro: the war, Mana, the world from the air (Mode 7), then the boy
+# and his friends on the log over the falls
+wait 1020
+wait 600
+expect 0x9B 01     # the intro's captions
+tap B
+wait 300
+tap B
+wait 300
+tap B
+wait 300
+wait 240
+tap A
+wait 240
+tap A
+wait 240
+tap A
+wait 240
+tap A
+wait 240
+tap A
+wait 240
+tap A
+expect 0x9B 02     # the field: the log over the falls
+wait 240
+tap A
+wait 240
+tap A
+wait 240
+tap A
+wait 240
+tap A
+wait 240
+tap A
+wait 240
+tap A
+wait 240
+tap A
+wait 240
+tap A
+wait 240
+tap A
+wait 240
+tap A
+expect 0x9B 02     # fallen into the river below the falls
+expect 0x7D 00
+
+# out of the water, down the river and into the field west of it
+wait 120
+tap B
+wait 30
+hold DOWN 90
+hold LEFT 60
+hold DOWN 960
+hold LEFT 240
+hold DOWN+LEFT 120
+hold UP+LEFT 120
+save field
+expect 0x9B 02
+expect 0x7D 00
+
+# east to the river, south (the voice calls him twice), over the bridge
+hold UP 40
+hold RIGHT 60
+hold UP 150
+hold RIGHT 100
+hold DOWN 300
+hold RIGHT 200
+hold DOWN 100
+hold RIGHT 100
+hold UP 100
+tap A
+wait 90
+tap A
+wait 90
+tap A
+wait 90
+tap A
+wait 90
+tap A
+wait 90
+tap A
+wait 90
+hold DOWN 200
+hold LEFT 100
+hold DOWN 100
+hold RIGHT 100
+hold UP 200
+tap A
+wait 60
+tap A
+wait 60
+tap A
+wait 60
+tap A
+wait 60
+hold DOWN 70
+hold RIGHT 150
+
+# north along the east bank ("The village is this way...": the
+# undergrowth), into the water, west and south to the stone
+hold UP 10
+hold LEFT 24
+hold UP 100
+hold RIGHT 16
+hold UP 120
+wait 60
+tap A
+wait 60
+tap A
+wait 30
+hold UP 60
+hold LEFT 20
+hold UP 80
+hold LEFT 150
+hold DOWN 150
+
+# the sword: B by the stone, then the ghost; the HUD comes up after it
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 90
+tap B
+wait 200
+save play
+expect 0x9B 02
+expect 0x7D 00
+expect 0xCC 00
+
+# the HUD: BG3 lines 199-216 (HP 50/50 and the weapon's gauge) and the
+# boy's face beside it, a sprite (x 88-102, lines 199-214)
+split 4 0 224
+wait 1
+splitbox
+split 16 196 224
+wait 1
+splitbox
+split 0

@@ -7,11 +7,13 @@ extern const Profile game_zelda_alttp;
 extern const Profile game_super_metroid;
 extern const Profile game_super_castlevania_iv;
 extern const Profile game_super_mario_world;
+extern const Profile game_secret_of_mana;
 
 const Profile* const games[] = {
 	&game_zelda_alttp,
 	&game_super_metroid,
 	&game_super_castlevania_iv,
 	&game_super_mario_world,
+	&game_secret_of_mana,
 	NULL,
 };

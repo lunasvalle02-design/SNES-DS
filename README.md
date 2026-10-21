@@ -118,10 +118,12 @@ when no cover has been scraped; no game content is shown here.
 | Super Metroid | Japan and USA (v1.0) | `D63ED5F8` | The pause map of the area Samus is in, refreshed as she explores, with the HUD (energy, ammo, minimap) over it; the HUD stays down there on the pause screen too. |
 | Super Castlevania IV | USA (v1.0) | `B64FFB12` | The HUD (score, health bars, the subweapon, hearts, lives, time), in play and paused; the game has no map. |
 | Super Mario World | USA (v1.0) | `B19ED489` | The world map as Mario last stood on it, with the status bar (lives, time, coins, score) over it in levels; the item in reserve stays on the game screen. |
+| Secret of Mana | USA | `D0176B24` | The HUD (each character's HP and weapon gauge) in play; the ring menu, and the screens it opens (status, equipment, settings), while they're up. The Mode 7 world map isn't there yet. |
 
 Each game lives in its own module under [`games/`](games), with a README on what was found about it:
 [A Link to the Past](games/zelda_alttp/README.md), [Super Metroid](games/super_metroid/README.md),
-[Super Castlevania IV](games/super_castlevania_iv/README.md), [Super Mario World](games/super_mario_world/README.md).
+[Super Castlevania IV](games/super_castlevania_iv/README.md), [Super Mario World](games/super_mario_world/README.md),
+[Secret of Mana](games/secret_of_mana/README.md).
 More are on the way, each on its own branch (see the [roadmap](ROADMAP.md#phase-6-more-games-)); the game list
 only shows the games that have a profile.
 
